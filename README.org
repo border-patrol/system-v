@@ -1,0 +1,12 @@
+#+TITLE: README
+
+We are interested in the /physical/ structure of Hardware Designs, that is how they are wired rather than how they behave.
+SystemV is a featherweight version of SystemVerilog (a well-known Hardware Design & Verification language) that captures salient structural properties of Hardware Design as presented in SystemVerilog.
+Specifically, we are interested in:
+
+1. How to represent modular hardware designs;
+2. How to 'correctly' wire hardware components together;
+3. How to represent and automatically reason about the emergent properties of data structures both nominally and structurally;
+
+We have grounded the design and formalisation of SystemV as a typed lambda calculus, and use mathematical structures to reason about data.
+We have mechanised our formalisation in Idris2 a known dependently typed general purpose functional programming language.
