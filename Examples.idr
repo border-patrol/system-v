@@ -158,4 +158,29 @@ exampleHoriz =
                  )
             )
       )
+
+{- Port level redirects -}
+
+||| The Type
+ExampleRedirectTy : MTy (IDX VALUE)
+ExampleRedirectTy =
+  (FuncTy (PortVal LogicTyDesc OUT)
+          (FuncTy (PortVal LogicTyDesc IN)
+                  ModuleTy
+          )
+  )
+
+||| Here we demonstrate port level redirect.
+|||
+||| ```
+||| module Foo(output wire logic o, input wire logic i);
+|||   assign o = i;
+||| endmodule
+||| ```
+export
+exampleRedirect : SystemV Nil ExampleRedirectTy
+exampleRedirect =
+  Func (Func (seq (Connect (Var (T H)) (Var H) FlowOI)
+                  EndModule)
+       )
 -- --------------------------------------------------------------------- [ EOF ]

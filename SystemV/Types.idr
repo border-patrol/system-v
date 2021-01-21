@@ -66,8 +66,8 @@ data MTy : Universe -> Type where
   ParamVal : (type : MTy (DATA TYPE)) -> MTy (IDX VALUE)
 
   -- [ Misc ]
-  UnityTy  : MTy (IDX TYPE)
-  UnityVal : MTy (IDX VALUE)
+  UnitTy  : MTy (IDX TYPE)
+  UnitVal : MTy (IDX VALUE)
 
 ||| A predicate to type check data types against values
 public export

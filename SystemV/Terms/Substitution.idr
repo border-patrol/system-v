@@ -38,6 +38,10 @@ namespace General
   subst f (TyFunc param return)
     = TyFunc (subst f param) (subst f return)
 
+  -- Unit
+  subst f TyUnit = TyUnit
+  subst f MkUnit = MkUnit
+
   -- Data Types & Values
   subst f TyLogic = TyLogic
   subst f L = L

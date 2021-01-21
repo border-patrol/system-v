@@ -32,6 +32,10 @@ rename f (App func param) = App (rename f func) (rename f param)
 rename f (TyFunc param body)
   = TyFunc (rename f param) (rename f body)
 
+-- Unit
+rename f TyUnit = TyUnit
+rename f MkUnit = MkUnit
+
 -- Data Types & Values
 rename f TyLogic = TyLogic
 rename f L = L

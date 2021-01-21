@@ -47,6 +47,10 @@ progress (TyFunc param return) with (progress param)
   progress (TyFunc param return) | (Step prfP)
     = Step (SimplifyTyFuncParam prfP)
 
+-- Unit
+progress TyUnit = Done TyUnit
+progress MkUnit = Done MkUnit
+
 -- Type Constructors
 progress TyLogic = Done TyLogic
 progress L       = Done Logic

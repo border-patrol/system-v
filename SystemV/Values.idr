@@ -16,9 +16,11 @@ data Value : SystemV ctxt type -> Type where
         -> Value return
         -> Value (TyFunc param return)
 
-
   Func : {body : SystemV (ctxt += paramTy) bodyTy}
               -> Value (Func body)
+
+  TyUnit : Value TyUnit
+  MkUnit : Value MkUnit
 
   TyLogic : Value TyLogic
   Logic   : Value L

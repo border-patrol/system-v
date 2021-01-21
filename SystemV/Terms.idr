@@ -27,6 +27,10 @@ data SystemV : Context lvls -> MTy level -> Type where
         -> (returnTy : SystemV ctxt returnMTy)
                     -> SystemV ctxt (FuncTy paramMTy returnMTy)
 
+  -- Unityty
+  TyUnit : SystemV ctxt UnitTy
+  MkUnit : SystemV ctxt UnitVal
+
   -- Logic Type & Value Constructors
   TyLogic : SystemV ctxt LogicTyDesc
 
@@ -90,7 +94,7 @@ data SystemV : Context lvls -> MTy level -> Type where
          -> (portL : SystemV ctxt (PortVal type dirL))
          -> (portR : SystemV ctxt (PortVal type dirR))
          -> (prf   : ValidFlow dirL dirR)
-                  -> SystemV ctxt UnityTy
+                  -> SystemV ctxt UnitVal
 
   -- Params
   TyParam : {type  : MTy (DATA TYPE)}
@@ -111,4 +115,10 @@ data SystemV : Context lvls -> MTy level -> Type where
      -> (  body  : SystemV (ctxt += mtypeValue) bodyType)
                 -> SystemV  ctxt                bodyType
 
+public export
+seq : {a,b        : MTy (IDX VALUE)}
+   -> (this     : SystemV  ctxt       a)
+   -> (thenThis : SystemV (ctxt += a) b)
+               -> SystemV  ctxt       b
+seq this thenThis = App (Func thenThis) this
 -- --------------------------------------------------------------------- [ EOF ]
