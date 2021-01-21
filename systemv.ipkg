@@ -1,0 +1,18 @@
+package systemv
+
+modules = SystemV.Utilities
+        , SystemV.Types
+        , SystemV.Terms
+
+        , SystemV.Values
+
+        , SystemV.Terms.Renaming
+        , SystemV.Terms.Substitution
+        , SystemV.Terms.Reduction
+
+        , SystemV.Evaluation.Progress
+        , SystemV.Evaluation
+
+        , SystemV
+
+        , Examples

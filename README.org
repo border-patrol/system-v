@@ -2,6 +2,7 @@
 
 We are interested in the /physical/ structure of Hardware Designs, that is how they are wired rather than how they behave.
 SystemV is a featherweight version of SystemVerilog (a well-known Hardware Design & Verification language) that captures salient structural properties of Hardware Design as presented in SystemVerilog.
+
 Specifically, we are interested in:
 
 1. How to represent modular hardware designs;
@@ -10,3 +11,28 @@ Specifically, we are interested in:
 
 We have grounded the design and formalisation of SystemV as a typed lambda calculus, and use mathematical structures to reason about data.
 We have mechanised our formalisation in Idris2 a known dependently typed general purpose functional programming language.
+
+* Note
+
+This is a constant work in progress.
+Many of the ideas are currently scribbled on scraps of paper, or lost in the depths of complicated TeX for type-setting.
+We are currently mechanising them for demonstrable, reproducible proofs of correctness.
+
+* Nominal and Structural Typing.
+
+We provide a 'meta' type-system to provide intrinsic typing of terms in SystemV.
+Certain terms in SystemV are typed using nominal types: Where they are defined matters.
+We use the meta-type system to ensure that nominally typed values can be typed intrinsically against their nominal types.
+
+We treat type 'aliases' and 'newtypes' as term level constructs,
+which ensures named types can be differentiated by name i.e. De
+Bruijn indices.  Type universes are used to separate descriptions
+of how types are formed and their use to type values.
+
+Standard constructions are used to represent the language as an
+EDSL, together with proof of progress taken from PLFA Part 2.
+
+* Known Upstream Issues
+
+Although the code appears to be total, there are known issues with Idris2's totality checker that causes it to slow down when
+dealing with mutually defined terms.
