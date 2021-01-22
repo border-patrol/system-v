@@ -36,9 +36,12 @@ data SystemV : Context lvls -> MTy level -> Type where
   -- Logic Type & Value Constructors
   TyLogic : SystemV ctxt LogicTyDesc
 
-  L : SystemV ctxt LogicTy
+  I : SystemV ctxt LogicTy
+  O : SystemV ctxt LogicTy
+  X : SystemV ctxt LogicTy
+  Z : SystemV ctxt LogicTy
 
-  -- Vectors
+   -- Vectors
   TyVect : (s : Nat)
         -> SystemV ctxt type
         -> SystemV ctxt (VectorTyDesc n type)
@@ -96,6 +99,30 @@ data SystemV : Context lvls -> MTy level -> Type where
   ReadFrom : (chan : SystemV ctxt (ChanVal type))
                   -> SystemV ctxt (PortVal type IN)
 
+  Drive : {type    : MTy (DATA TYPE)}
+       -> {typeVal : MTy (DATA VALUE)}
+       -> (chan    : SystemV ctxt (ChanVal type))
+       -> (value   : SystemV ctxt typeVal)
+       -> (prf     : TyCheckData type typeVal)
+                  -> SystemV ctxt UnitVal
+
+  Catch : {type  : MTy (DATA TYPE)}
+       -> (chan : SystemV ctxt (ChanVal type))
+               -> SystemV ctxt UnitVal
+
+  -- Boolean...
+  IsOnParam : {type  : MTy (DATA TYPE)}
+           -> (param : SystemV ctxt (ParamVal type))
+                    -> SystemV ctxt LogicTy
+
+  IsOnPort : {type  : MTy (DATA TYPE)}
+          -> (port  : SystemV ctxt (PortVal type IN))
+                   -> SystemV ctxt LogicTy
+
+  IfThenElse : SystemV ctxt LogicTy
+            -> SystemV ctxt ModuleTy
+            -> SystemV ctxt ModuleTy
+            -> SystemV ctxt ModuleTy
 
   -- Connect two ports together.
   Connect : {type : MTy (DATA TYPE)}

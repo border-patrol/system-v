@@ -49,7 +49,10 @@ namespace General
 
   -- Data Types & Values
   subst f TyLogic = TyLogic
-  subst f L = L
+  subst f I = I
+  subst f O = O
+  subst f X = X
+  subst f Z = Z
 
   -- Vect
   subst f (TyVect s type) = TyVect s (subst f type)
@@ -76,6 +79,21 @@ namespace General
   subst f (MkChan   type) = MkChan   (subst f type)
   subst f (WriteTo  chan) = WriteTo  (subst f chan)
   subst f (ReadFrom chan) = ReadFrom (subst f chan)
+
+  subst f (Drive chan val prf)
+    = Drive (subst f chan) (subst f val) prf
+
+  subst f (Catch chan) = Catch (subst f chan)
+
+  -- Booleans...
+  subst f (IsOnParam param) = IsOnParam (subst f param)
+  subst f (IsOnPort  port)  = IsOnPort  (subst f port)
+
+  subst f (IfThenElse cond true false)
+    = IfThenElse (subst f cond)
+                 (subst f true)
+                 (subst f false)
+
 
   -- Connections
   subst f (Connect portL portR prf)

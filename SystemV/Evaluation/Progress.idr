@@ -53,7 +53,10 @@ progress MkUnit = Done MkUnit
 
 -- Type Constructors
 progress TyLogic = Done TyLogic
-progress L       = Done Logic
+progress I       = Done I
+progress O       = Done O
+progress X       = Done X
+progress Z       = Done Z
 
 progress (TyVect size type) with (progress type)
   progress (TyVect size type) | (Done typeValue) = Done (TyVect typeValue)
@@ -122,6 +125,50 @@ progress (ReadFrom chan) with (progress chan)
   progress (ReadFrom chan) | Step step
     = Step (SimplifyReadFrom step)
 
+progress (Drive chan val prf) with (progress chan)
+  progress (Drive chan val prf) | Done chanVal with (progress val)
+    progress (Drive chan val prf) | Done chanVal | Done valueVal
+      = Done (Drive chanVal valueVal)
+
+    progress (Drive chan val prf) | Done chanVal | Step step
+      = Step (SimplifyDriveVal chanVal step)
+
+  progress (Drive chan val prf) | Step step
+    = Step (SimplifyDriveChan step)
+
+progress (Catch chan) with (progress chan)
+  progress (Catch chan) | Done value
+    = Done (Catch value)
+  progress (Catch chan) | Step step
+    = Step (SimplifyCatch step)
+
+-- Booleans
+progress (IsOnParam param) with (progress param)
+  progress (IsOnParam param) | Done val
+    = Done (IsOnParam val)
+  progress (IsOnParam param) | Step step
+    = Step (SimplifyIsOnParam step)
+
+progress (IsOnPort port) with (progress port)
+  progress (IsOnPort port) | Done val
+    = Done (IsOnPort val)
+  progress (IsOnPort port) | Step step
+    = Step (SimplifyIsOnPort step)
+
+progress (IfThenElse cond true false) with (progress cond)
+  progress (IfThenElse cond true false) | Done condVal with (progress true)
+    progress (IfThenElse cond true false) | Done condVal | Done trueVal with (progress false)
+      progress (IfThenElse cond true false) | Done condVal | Done trueVal | Done falseVal
+        = Done (IfThenElse condVal trueVal falseVal)
+
+      progress (IfThenElse cond true false) | Done condVal | Done trueVal | Step step
+        = Step (SimplifyIfThenElseFalse condVal trueVal step)
+
+    progress (IfThenElse cond true false) | Done condVal | Step step
+      = Step (SimplifyIfThenElseTrue condVal step)
+
+  progress (IfThenElse cond true false) | Step step
+    = Step (SimplifyIfThenElseCond step)
 
 -- Connections
 progress (Connect portL portR prf) with (progress portL)

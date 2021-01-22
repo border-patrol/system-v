@@ -173,4 +173,113 @@ exampleRedirect =
                   EndModule)
              ChkPort)
        ChkPort
+
+{- Wiring Choices... -}
+
+||| Here we demonstrate wiring choices based on 'values'
+|||
+||| ```
+||| module maybeSwap #( parameter logic how)
+|||                   ( input  wire logic a
+|||                   , input  wire logic b
+|||                   , output wire logic x
+|||                   , output wire logic y);
+|||   if (how == 1) begin
+|||     assign a = x;
+|||     assign b = y;
+|||   end else begin
+|||     assign a = y;
+|||     assign b = x;
+|||   end
+||| ```
+export
+exampleIfThenElse : SystemV Nil
+ (FuncTy (ParamVal LogicTyDesc)
+          (FuncTy (PortVal LogicTyDesc IN)
+                  (FuncTy (PortVal LogicTyDesc IN)
+                           (FuncTy (PortVal LogicTyDesc OUT)
+                                   (FuncTy (PortVal LogicTyDesc OUT)
+                                            ModuleTy
+                                   )
+                           )
+                  )
+          )
+  )
+exampleIfThenElse =
+  Func (TyParam TyLogic)
+       (Func (TyPort TyLogic IN)
+             (Func (TyPort TyLogic IN)
+                   (Func (TyPort TyLogic OUT)
+                         (Func (TyPort TyLogic OUT)
+                               (IfThenElse (IsOnParam (Var (T (T (T (T H))))))
+                                           (seq (Connect (Var (T H))
+                                                         (Var (T (T (T H))))
+                                                         FlowOI)
+                                                (seq (Connect (Var (T H))
+                                                              (Var (T (T (T H))))
+                                                              FlowOI)
+                                                     EndModule))
+                                           (seq (Connect (Var (T H))
+                                                         (Var (T (T H)))
+                                                         FlowOI)
+                                                (seq (Connect (Var (T H))
+                                                              (Var (T (T (T H))))
+                                                              FlowOI)
+                                                     EndModule)))
+                               ChkPort)
+                         ChkPort)
+                   ChkPort)
+             ChkPort)
+       ChkParam
+
+||| Here we demonstrate wiring choices based on 'values'
+|||
+||| ```
+||| module maybeSwap #( parameter logic how)
+|||                   ( input  wire logic a
+|||                   , input  wire logic b
+|||                   , output wire logic x
+|||                   , output wire logic y);
+||| module Top();
+|||   wire logic a,b,x,y;
+|||
+|||   maybeSwap s(.a(a), .b(b), .x(x), .y(y));
+|||
+|||   assign a = 0;
+|||   assign b = 1;
+|||
+|||   ...
+||| endmodule
+||| ```
+exampleIfThenElseUse : SystemV Nil ModuleTy
+exampleIfThenElseUse =
+  Let exampleIfThenElse
+      (Let (MkChan TyLogic)
+           (Let (MkChan TyLogic)
+                (Let (MkChan TyLogic)
+                     (Let (MkChan TyLogic)
+                          (Let (App (App (App (App (App (Var (T (T (T (T H)))))
+                                                        (MkParam TyLogic))
+                                                   (ReadFrom (Var (T (T (T H))))))
+                                              (ReadFrom (Var (T (T H)))))
+                                         (WriteTo (Var (T H))))
+                                   (WriteTo (Var H)))
+                               (seq (Drive (Var (T (T (T (T H)))))
+                                     O
+                                     ChkDataLogic)
+                                    (seq (Drive (Var (T (T (T (T H)))))
+                                                I
+                                                ChkDataLogic)
+                                         (seq (Catch (Var (T (T (T (T H))))))
+                                              (seq (Catch (Var (T (T (T (T H))))))
+                                                   EndModule
+                                              )
+                                         )
+                                    )
+                               )
+                          )
+                     )
+                )
+           )
+      )
 -- --------------------------------------------------------------------- [ EOF ]

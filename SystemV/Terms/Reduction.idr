@@ -104,6 +104,43 @@ data Redux : (this : SystemV ctxt type)
     ReduceReadFrom : Value typeD
                   -> Redux (ReadFrom (MkChan typeD)) (MkPort typeD IN)
 
+    SimplifyDriveChan : (chan : Redux this that)
+                             -> Redux (Drive this val prf) (Drive that val prf)
+
+    SimplifyDriveVal : {type      : MTy (DATA TYPE)}
+                    -> {chan      : SystemV ctxt (ChanVal type)}
+                    -> {this, that : SystemV ctxt typeVal}
+                    -> {prf       : TyCheckData type typeVal}
+                    -> (chanValue : Value chan)
+                    -> (prfRedux  : Redux this that)
+                                 -> Redux (Drive chan this prf)
+                                          (Drive chan that prf)
+
+    SimplifyCatch : (chan : Redux this that)
+                         -> Redux (Catch this) (Catch that)
+
+    -- Booleans
+    SimplifyIsOnParam : (prf : Redux this that)
+                            -> Redux (IsOnParam this) (IsOnParam that)
+
+    SimplifyIsOnPort : (prf : Redux this that)
+                           -> Redux (IsOnPort this) (IsOnPort that)
+
+    SimplifyIfThenElseCond : (prf : Redux this that)
+                                 -> Redux (IfThenElse this true false)
+                                          (IfThenElse that true false)
+
+    SimplifyIfThenElseTrue : (condValue : Value cond)
+                          -> (prf       : Redux this that)
+                                       -> Redux (IfThenElse cond this false)
+                                                (IfThenElse cond that false)
+
+    SimplifyIfThenElseFalse : (condValue : Value cond)
+                           -> (condTrue  : Value true)
+                           -> (prf       : Redux this that)
+                                        -> Redux (IfThenElse cond true this)
+                                                 (IfThenElse cond true that)
+
     -- Connections
 
     SimplifyConnectLeft : {this,that : SystemV ctxt (PortVal type dirL)}

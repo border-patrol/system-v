@@ -25,7 +25,10 @@ data Value : SystemV ctxt type -> Type where
   MkUnit : Value MkUnit
 
   TyLogic : Value TyLogic
-  Logic   : Value L
+  I   : Value I
+  O   : Value O
+  X   : Value X
+  Z   : Value Z
 
   TyVect : Value type -> Value (TyVect s type)
   Vect   : Value V
@@ -38,6 +41,23 @@ data Value : SystemV ctxt type -> Type where
 
   TyChan : Value type -> Value (TyChan type)
   MkChan : Value type -> Value (MkChan type)
+
+  Drive : {chan : SystemV ctxt (ChanVal type)}
+       -> {val  : SystemV ctxt typeVal}
+       -> {prf  : TyCheckData type typeVal}
+       -> (c    : Value chan )
+       -> (v    : Value val)
+               -> Value (Drive chan val prf)
+
+  Catch : Value chan -> Value (Catch chan)
+
+  IsOnParam : Value type -> Value (IsOnParam type)
+  IsOnPort  : Value type -> Value (IsOnPort  type)
+
+  IfThenElse : Value cond
+            -> Value true
+            -> Value false
+            -> Value (IfThenElse cond true false)
 
   TyParam : Value type -> Value (TyParam type)
   MkParam : Value type -> Value (MkParam type)

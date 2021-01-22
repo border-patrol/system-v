@@ -38,7 +38,10 @@ rename f MkUnit = MkUnit
 
 -- Data Types & Values
 rename f TyLogic = TyLogic
-rename f L = L
+rename f I = I
+rename f O = O
+rename f X = X
+rename f Z = Z
 
 -- Vectors
 rename f (TyVect s type) = TyVect s (rename f type)
@@ -70,6 +73,19 @@ rename f (MkChan type) = MkChan (rename f type)
 
 rename f (WriteTo  chan) = WriteTo  (rename f chan)
 rename f (ReadFrom chan) = ReadFrom (rename f chan)
+
+rename f (Drive chan val prf)
+  = Drive (rename f chan) (rename f val) prf
+
+rename f (Catch chan) = Catch (rename f chan)
+
+-- Booleans
+rename f (IsOnParam param) = IsOnParam (rename f param)
+rename f (IsOnPort  port)  = IsOnPort  (rename f port)
+rename f (IfThenElse cond true false)
+  = IfThenElse (rename f cond)
+               (rename f true)
+               (rename f false)
 
 -- Connections
 rename f (Connect portL portR prf)
