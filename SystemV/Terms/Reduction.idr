@@ -28,7 +28,7 @@ data Redux : (this : SystemV ctxt type)
                                              (App func that)
 
     ReduceFunc : (prf : Value var)
-                     -> Redux (App (Func body) var)
+                     -> Redux (App (Func type body prfTyCheck) var)
                               (subst var body)
 
     -- Simplify Function Types
@@ -128,28 +128,16 @@ data Redux : (this : SystemV ctxt type)
                           -> Redux (MkParam this) (MkParam that)
 
     -- Let binding
-    SimplifyLetType : {this, that : SystemV ctxt typeM}
-                   -> {value : SystemV ctxt typeV}
-                   -> {body : SystemV (ctxt += typeV) typeB}
-                   -> (type : Redux this that)
-                           -> Redux (Let this value prf body)
-                                    (Let that value prf body)
-
-    SimplifyLetValue : {type : SystemV ctxt typeM}
-                    -> {this, that : SystemV ctxt typeV}
+    SimplifyLetValue : {this, that : SystemV ctxt typeV}
                     -> {body : SystemV (ctxt += typeV) typeB}
-                    -> (typeVal : Value type)
                     -> (value   : Redux this that)
-                               -> Redux (Let type this prf body)
-                                        (Let type that prf body)
+                               -> Redux (Let this body)
+                                        (Let that body)
 
-    ReduceLetBody : {type  : SystemV ctxt typeM}
-                 -> {value : SystemV ctxt typeV}
-                 -> {0 prf : TyCheck typeM typeV}
-                 -> {body : SystemV (ctxt += typeV) typeB}
-                 -> (typeVal  : Value type)
+    ReduceLetBody : {value    : SystemV  ctxt typeV}
+                 -> {body     : SystemV (ctxt += typeV) typeB}
                  -> (valueVal : Value value)
-                             -> Redux (Let type value prf body)
+                             -> Redux (Let value body)
                                       (subst value body)
 
 -- --------------------------------------------------------------------- [ EOF ]

@@ -27,10 +27,11 @@ progress : (term : SystemV Nil type)
         -> Progress term
 -- STLC
 progress {type} (Var _) impossible
-progress (Func body) = Done Func
+progress (Func theType body prf) = Done Func
+
 progress (App func var) with (progress func)
   progress (App func var) | (Done prfF) with (progress var)
-    progress (App (Func b) var) | (Done prfF) | (Done prfV)
+    progress (App (Func theType b prfTyCheck) var) | (Done prfF) | (Done prfV)
       = Step (ReduceFunc prfV {body=b})
     progress (App func var) | (Done prfF) | (Step prfV)
       = Step (SimplifyFuncAppVar prfF prfV)
@@ -148,13 +149,11 @@ progress (MkParam type) with (progress type)
     = Step (SimplifyMkParam step)
 
 -- Binders
-progress (Let type value prf body) with (progress type)
-  progress (Let type value prf body) | (Done valueT) with (progress value)
-    progress (Let type value prf body) | (Done valueT) | (Done valueV)
-      = Step (ReduceLetBody valueT valueV)
-    progress (Let type value prf body) | (Done valueT) | (Step prfV)
-      = Step (SimplifyLetValue valueT prfV)
-  progress (Let type value prf body) | (Step stepT)
-    = Step (SimplifyLetType stepT)
+progress (Let value body) with (progress value)
+  progress (Let value body) | Done this
+    = Step (ReduceLetBody this)
+
+  progress (Let value body) | Step step
+    = Step (SimplifyLetValue step)
 
 -- --------------------------------------------------------------------- [ EOF ]

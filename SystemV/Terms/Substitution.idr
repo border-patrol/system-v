@@ -32,9 +32,14 @@ namespace General
                  -> SystemV new type)
 
   -- STLC
-  subst f (Var idx)      = f idx
-  subst f (Func body)    = Func (subst (weakens f) body)
-  subst f (App func var) = App (subst f func) (subst f var)
+  subst f (Var idx) = f idx
+
+  subst f (Func type body prf)
+    = Func (subst f type) (subst (weakens f) body) prf
+
+  subst f (App func var)
+    = App (subst f func) (subst f var)
+
   subst f (TyFunc param return)
     = TyFunc (subst f param) (subst f return)
 
@@ -81,10 +86,8 @@ namespace General
   subst f (MkParam type) = MkParam (subst f type)
 
   -- Bindings
-  subst f (Let type value prf body)
-      = Let (subst f type)
-            (subst f value)
-            prf
+  subst f (Let value body)
+      = Let (subst f value)
             (subst (weakens f) body)
 
 namespace Single

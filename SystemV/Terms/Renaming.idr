@@ -26,9 +26,9 @@ rename : (f : {level : Universe}
        -> SystemV new type)
 
 -- STLC
-rename f (Var idx)        = Var (f idx)
-rename f (Func body)      = Func (rename (weaken f) body)
-rename f (App func param) = App (rename f func) (rename f param)
+rename f (Var idx)            = Var (f idx)
+rename f (Func type body prf) = Func (rename f type) (rename (weaken f) body) prf
+rename f (App func param)     = App (rename f func) (rename f param)
 rename f (TyFunc param body)
   = TyFunc (rename f param) (rename f body)
 
@@ -82,10 +82,8 @@ rename f (TyParam desc) = TyParam (rename f desc)
 rename f (MkParam type) = MkParam (rename f type)
 
 -- Binders
-rename f (Let type value prf body)
-    = Let (rename f type)
-          (rename f value)
-          prf
+rename f (Let value body)
+    = Let (rename f value)
           (rename (weaken f) body)
 
 -- --------------------------------------------------------------------- [ EOF ]

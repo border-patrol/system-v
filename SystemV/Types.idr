@@ -92,6 +92,7 @@ data TyCheck : (type  : MTy (IDX TYPE))
             -> Type
   where
     ChkModule : TyCheck ModuleTyDesc ModuleTy
+    ChkUnit   : TyCheck UnitTy       UnitVal
 
     ChkFunc : TyCheck         paramTy                   paramValue
            -> TyCheck                 returnTy                     returnValue

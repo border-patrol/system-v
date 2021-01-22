@@ -55,26 +55,21 @@ Example000_Ty
 public export
 example000 : SystemV Nil Example000_Ty
 example000 =
-  Func (Func (Func (Func EndModule)))
+  Func (TyParam TyLogic)
+       (Func (TyPort TyLogic IN)
+             (Func (TyPort TyLogic OUT)
+                   (Func (TyPort TyLogic OUT)
+                         EndModule
+                         ChkPort)
+                   ChkPort)
+             ChkPort)
+       ChkParam
 
 ||| This is how we can *bind* it to a name.
 public export
 example001 : SystemV Nil Example000_Ty
 example001 =
-    Let (TyFunc (TyParam TyLogic)
-                (TyFunc (TyPort TyLogic IN)
-                        (TyFunc (TyPort TyLogic OUT)
-                                (TyFunc (TyPort TyLogic OUT)
-                                        TyModule
-                                )
-                        )
-                )
-        )
-        example000
-        (ChkFunc ChkParam
-                 (ChkFunc ChkPort
-                          (ChkFunc ChkPort
-                                   (ChkFunc ChkPort ChkModule))))
+    Let example000
         (Var H)
 
 
@@ -102,20 +97,18 @@ exampleNesting : SystemV Nil
                                     ModuleTy))
 exampleNesting =
   -- module Inner (input wire logic i, output wire logic o);
-  Let (TyFunc (TyPort TyLogic IN)
-              (TyFunc (TyPort TyLogic OUT)
-                      TyModule))
-      (Func (Func EndModule))
-      (ChkFunc ChkPort
-               (ChkFunc ChkPort ChkModule))
+  Let (Func (TyPort TyLogic IN)
+            (Func (TyPort TyLogic OUT)
+                  EndModule
+                  ChkPort)
+            ChkPort)
       -- module Outer (input wire logic i, output wire logic o);
-      (Let (TyFunc (TyPort TyLogic IN)
-              (TyFunc (TyPort TyLogic OUT)
-                      TyModule))
-           -- instantiating a module, unnamed.
-           (Func (Func (App (App (Var (T (T H))) (Var (T H))) (Var H))))
-           (ChkFunc ChkPort
-               (ChkFunc ChkPort ChkModule))
+      (Let (Func (TyPort TyLogic IN)
+                 (Func (TyPort TyLogic OUT)
+                       -- instantiating a module, unnamed.
+                       (App (App (Var (T (T H))) (Var (T H))) (Var H))
+                       ChkPort)
+                 ChkPort)
            (Var (T H)))
 
 ||| A snippet demonstrating:
@@ -133,25 +126,19 @@ export
 exampleHoriz : SystemV Nil ModuleTy
 exampleHoriz =
   -- module Alice (output wire logic o);
-  Let (TyFunc (TyPort TyLogic OUT) TyModule)
-      (Func EndModule)
-      (ChkFunc ChkPort ChkModule)
+  Let (Func (TyPort TyLogic OUT)
+            EndModule
+            ChkPort)
       -- module Bob (input wire logic o);
-      (Let (TyFunc (TyPort TyLogic IN) TyModule)
-           (Func EndModule)
-           (ChkFunc ChkPort ChkModule)
+      (Let (Func (TyPort TyLogic IN)
+                 EndModule
+                 ChkPort)
            -- wire logic chan
-           (Let (TyChan TyLogic)
-                (MkChan TyLogic)
-                (ChkChan)
+           (Let (MkChan TyLogic)
                 -- Alice a(.o(chan))
-                (Let TyModule
-                     (App (Var (T (T H))) (WriteTo (Var H)))
-                     ChkModule
+                (Let (App (Var (T (T H))) (WriteTo (Var H)))
                      -- Bob   b(.i(chan));
-                     (Let TyModule
-                          (App (Var (T (T H))) (ReadFrom (Var (T H))))
-                          ChkModule
+                     (Let (App (Var (T (T H))) (ReadFrom (Var (T H))))
                           -- Body of outer
                           EndModule
                      )
@@ -180,7 +167,10 @@ ExampleRedirectTy =
 export
 exampleRedirect : SystemV Nil ExampleRedirectTy
 exampleRedirect =
-  Func (Func (seq (Connect (Var (T H)) (Var H) FlowOI)
+  Func (TyPort TyLogic OUT)
+       (Func (TyPort TyLogic IN)
+             (seq (Connect (Var (T H)) (Var H) FlowOI)
                   EndModule)
-       )
+             ChkPort)
+       ChkPort
 -- --------------------------------------------------------------------- [ EOF ]

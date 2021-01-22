@@ -10,12 +10,14 @@ import SystemV.Types
 public export
 data SystemV : Context lvls -> MTy level -> Type where
   -- STLC
-
   Var : Elem Universe MTy type ctxt -> SystemV ctxt type
 
-  Func : {paramTy, bodyTy : MTy (IDX VALUE)}
-      -> (term : SystemV (ctxt +=         paramTy) bodyTy)
-              -> SystemV  ctxt    (FuncTy paramTy  bodyTy)
+  Func : {  paramTyDesc     : MTy (IDX TYPE)}
+      -> {  paramTy, bodyTy : MTy (IDX VALUE)}
+      -> (  type : SystemV  ctxt    paramTyDesc)
+      -> (  body : SystemV (ctxt +=             paramTy) bodyTy)
+      -> (  prf  : TyCheck          paramTyDesc paramTy)
+                -> SystemV  ctxt        (FuncTy paramTy  bodyTy)
 
   App : {paramTy, bodyTy : MTy (IDX VALUE)}
      -> (func  : SystemV ctxt (FuncTy paramTy  bodyTy))
@@ -113,19 +115,16 @@ data SystemV : Context lvls -> MTy level -> Type where
                   -> SystemV ctxt (ParamVal type)
 
   -- Binders
-  Let : {  mtypeType  : MTy (IDX TYPE)}
-     -> {  mtypeValue : MTy (IDX VALUE)}
+  Let : {  mtypeValue : MTy (IDX VALUE)}
      -> {  bodyType   : MTy (IDX VALUE)}
-     -> (  type  : SystemV ctxt mtypeType)
      -> (  value : SystemV ctxt mtypeValue)
-     -> (0 prf   : TyCheck mtypeType mtypeValue)
      -> (  body  : SystemV (ctxt += mtypeValue) bodyType)
                 -> SystemV  ctxt                bodyType
 
 public export
-seq : {a,b        : MTy (IDX VALUE)}
-   -> (this     : SystemV  ctxt       a)
-   -> (thenThis : SystemV (ctxt += a) b)
-               -> SystemV  ctxt       b
-seq this thenThis = App (Func thenThis) this
+seq : {b        : MTy (IDX VALUE)}
+   -> (this     : SystemV  ctxt    UnitVal)
+   -> (thenThis : SystemV (ctxt += UnitVal)  b)
+               -> SystemV  ctxt              b
+seq this thenThis = App (Func TyUnit thenThis ChkUnit) this
 -- --------------------------------------------------------------------- [ EOF ]
