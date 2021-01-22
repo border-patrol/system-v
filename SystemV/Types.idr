@@ -45,6 +45,8 @@ data MTy : Universe -> Type where
   LogicTyDesc : MTy (DATA TYPE)
   LogicTy     : MTy (DATA VALUE)
 
+  VectorTyDesc : (n : Nat) -> MTy (DATA TYPE)  -> MTy (DATA TYPE)
+  VectorTy     : (n : Nat) -> MTy (DATA VALUE) -> MTy (DATA VALUE)
 
   -- [ Function types ]
   FuncTy : MTy (IDX level) -> MTy (IDX level) -> MTy (IDX level)
@@ -75,7 +77,10 @@ data TyCheckData : (type  : MTy (DATA TYPE))
                 -> (value : MTy (DATA VALUE))
                 -> Type
   where
-    ChkDataLogic : TyCheckData LogicTyDesc LogicTy
+    ChkDataLogic  : TyCheckData LogicTyDesc LogicTy
+
+    ChkDataVector : TyCheckData                 typeDesc              type
+                 -> TyCheckData (VectorTyDesc s typeDesc) (VectorTy s type)
 
     ChkNewtype   : TyCheckData            innerType             innerValue
                 -> TyCheckData (TypeDefTy innerType) (TypeDefTy innerValue)

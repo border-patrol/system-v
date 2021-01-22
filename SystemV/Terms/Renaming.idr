@@ -40,6 +40,11 @@ rename f MkUnit = MkUnit
 rename f TyLogic = TyLogic
 rename f L = L
 
+-- Vectors
+rename f (TyVect s type) = TyVect s (rename f type)
+rename f V = V
+
+
 -- Modules
 rename f TyModule  = TyModule
 rename f EndModule = EndModule

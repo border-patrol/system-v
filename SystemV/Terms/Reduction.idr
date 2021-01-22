@@ -44,6 +44,10 @@ data Redux : (this : SystemV ctxt type)
                                              (TyFunc param that)
 
 
+    -- Matching Vects
+    SimplifyTyVect : (prf : Redux this that)
+                         -> Redux (TyVect s this) (TyVect s that)
+
     -- Matching newtypes
     SimplifyTypeDefType : (desc : Redux this that)
                                -> Redux (TypeDefType this) (TypeDefType that)

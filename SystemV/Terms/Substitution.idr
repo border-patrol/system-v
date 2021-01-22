@@ -46,6 +46,10 @@ namespace General
   subst f TyLogic = TyLogic
   subst f L = L
 
+  -- Vect
+  subst f (TyVect s type) = TyVect s (subst f type)
+  subst f V = V
+
   -- Modules
   subst f TyModule  = TyModule
   subst f EndModule = EndModule

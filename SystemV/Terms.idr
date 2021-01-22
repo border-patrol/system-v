@@ -36,6 +36,13 @@ data SystemV : Context lvls -> MTy level -> Type where
 
   L : SystemV ctxt LogicTy
 
+  -- Vectors
+  TyVect : (s : Nat)
+        -> SystemV ctxt type
+        -> SystemV ctxt (VectorTyDesc n type)
+
+  V : SystemV ctxt (VectorTy n type)
+
   -- Modules Type & Value Constructor...
   TyModule : SystemV ctxt ModuleTyDesc
 

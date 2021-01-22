@@ -25,6 +25,9 @@ data Value : SystemV ctxt type -> Type where
   TyLogic : Value TyLogic
   Logic   : Value L
 
+  TyVect : Value type -> Value (TyVect s type)
+  Vect   : Value V
+
   TyModule  : Value TyModule
   EndModule : Value EndModule
 

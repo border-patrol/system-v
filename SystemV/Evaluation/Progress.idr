@@ -23,7 +23,6 @@ data Progress : (term : SystemV Nil type)
                       -> Progress this
 
 public export
-covering
 progress : (term : SystemV Nil type)
         -> Progress term
 -- STLC
@@ -54,6 +53,11 @@ progress MkUnit = Done MkUnit
 -- Type Constructors
 progress TyLogic = Done TyLogic
 progress L       = Done Logic
+
+progress (TyVect size type) with (progress type)
+  progress (TyVect size type) | (Done typeValue) = Done (TyVect typeValue)
+  progress (TyVect size type) | (Step step) = Step (SimplifyTyVect step)
+progress V = Done Vect
 
 -- Modules
 progress TyModule  = Done TyModule
