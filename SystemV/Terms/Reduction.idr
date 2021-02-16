@@ -105,17 +105,8 @@ data Redux : (this : SystemV ctxt type)
     ReduceReadFrom : Value typeD
                   -> Redux (ReadFrom (MkChan typeD)) (MkPort typeD IN)
 
-    SimplifyDriveChan : (chan : Redux this that)
-                             -> Redux (Drive this val prf) (Drive that val prf)
-
-    SimplifyDriveVal : {type      : MTy (DATA TYPE)}
-                    -> {chan      : SystemV ctxt (ChanVal type)}
-                    -> {this, that : SystemV ctxt typeVal}
-                    -> {prf       : TyCheckData type typeVal}
-                    -> (chanValue : Value chan)
-                    -> (prfRedux  : Redux this that)
-                                 -> Redux (Drive chan this prf)
-                                          (Drive chan that prf)
+    SimplifyDrive : (chan : Redux this that)
+                         -> Redux (Drive this) (Drive that)
 
     SimplifyCatch : (chan : Redux this that)
                          -> Redux (Catch this) (Catch that)

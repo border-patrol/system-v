@@ -264,12 +264,8 @@ exampleIfThenElseUse =
                                               (ReadFrom (Var (T (T H)))))
                                          (WriteTo (Var (T H))))
                                    (WriteTo (Var H)))
-                               (seq (Drive (Var (T (T (T (T H)))))
-                                     O
-                                     ChkDataLogic)
-                                    (seq (Drive (Var (T (T (T (T H)))))
-                                                I
-                                                ChkDataLogic)
+                               (seq (Drive (Var (T (T (T (T H))))))
+                                    (seq (Drive (Var (T (T (T (T H))))))
                                          (seq (Catch (Var (T (T (T (T H))))))
                                               (seq (Catch (Var (T (T (T (T H))))))
                                                    EndModule

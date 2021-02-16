@@ -100,10 +100,7 @@ data SystemV : Context lvls -> MTy level -> Type where
                   -> SystemV ctxt (PortVal type IN)
 
   Drive : {type    : MTy (DATA TYPE)}
-       -> {typeVal : MTy (DATA VALUE)}
        -> (chan    : SystemV ctxt (ChanVal type))
-       -> (value   : SystemV ctxt typeVal)
-       -> (prf     : TyCheckData type typeVal)
                   -> SystemV ctxt UnitVal
 
   Catch : {type  : MTy (DATA TYPE)}

@@ -43,11 +43,8 @@ data Value : SystemV ctxt type -> Type where
   MkChan : Value type -> Value (MkChan type)
 
   Drive : {chan : SystemV ctxt (ChanVal type)}
-       -> {val  : SystemV ctxt typeVal}
-       -> {prf  : TyCheckData type typeVal}
        -> (c    : Value chan )
-       -> (v    : Value val)
-               -> Value (Drive chan val prf)
+               -> Value (Drive chan)
 
   Catch : Value chan -> Value (Catch chan)
 

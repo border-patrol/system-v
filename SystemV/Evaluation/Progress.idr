@@ -126,16 +126,12 @@ progress (ReadFrom chan) with (progress chan)
   progress (ReadFrom chan) | Step step
     = Step (SimplifyReadFrom step)
 
-progress (Drive chan val prf) with (progress chan)
-  progress (Drive chan val prf) | Done chanVal with (progress val)
-    progress (Drive chan val prf) | Done chanVal | Done valueVal
-      = Done (Drive chanVal valueVal)
+progress (Drive chan) with (progress chan)
+  progress (Drive chan) | Done chanVal
+      = Done (Drive chanVal)
 
-    progress (Drive chan val prf) | Done chanVal | Step step
-      = Step (SimplifyDriveVal chanVal step)
-
-  progress (Drive chan val prf) | Step step
-    = Step (SimplifyDriveChan step)
+  progress (Drive chan) | Step step
+    = Step (SimplifyDrive step)
 
 progress (Catch chan) with (progress chan)
   progress (Catch chan) | Done value

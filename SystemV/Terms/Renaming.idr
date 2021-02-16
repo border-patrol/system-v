@@ -74,8 +74,8 @@ rename f (MkChan type) = MkChan (rename f type)
 rename f (WriteTo  chan) = WriteTo  (rename f chan)
 rename f (ReadFrom chan) = ReadFrom (rename f chan)
 
-rename f (Drive chan val prf)
-  = Drive (rename f chan) (rename f val) prf
+rename f (Drive chan)
+  = Drive (rename f chan)
 
 rename f (Catch chan) = Catch (rename f chan)
 
@@ -95,6 +95,7 @@ rename f (Connect portL portR prf)
 
 --
 rename f (Cast this prf) = Cast (rename f this) prf
+
 -- Params
 rename f (TyParam desc) = TyParam (rename f desc)
 rename f (MkParam type) = MkParam (rename f type)

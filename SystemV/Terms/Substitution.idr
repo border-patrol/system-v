@@ -80,8 +80,7 @@ namespace General
   subst f (WriteTo  chan) = WriteTo  (subst f chan)
   subst f (ReadFrom chan) = ReadFrom (subst f chan)
 
-  subst f (Drive chan val prf)
-    = Drive (subst f chan) (subst f val) prf
+  subst f (Drive chan) = Drive (subst f chan)
 
   subst f (Catch chan) = Catch (subst f chan)
 
