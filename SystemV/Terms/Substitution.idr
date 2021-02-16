@@ -99,6 +99,9 @@ namespace General
   subst f (Connect portL portR prf)
     = Connect (subst f portL) (subst f portR) prf
 
+  subst f (Cast this prf)
+    = Cast (subst f this) prf
+
   -- Params
   subst f (TyParam desc) = TyParam (subst f desc)
   subst f (MkParam type) = MkParam (subst f type)

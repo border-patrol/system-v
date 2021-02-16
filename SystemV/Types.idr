@@ -27,6 +27,12 @@ public export
 data Direction = IN | OUT | INOUT
 
 public export
+data ValidDirCast : (l,r : Direction) -> Type where
+  InsertEndpointIB : ValidDirCast IN  INOUT
+  InsertEndpointOB : ValidDirCast OUT INOUT
+  InsertEndpointXX : ValidDirCast a   a
+
+public export
 data ValidFlow : (l,r : Direction) -> Type where
   FlowOI : ValidFlow OUT   IN
   FlowBI : ValidFlow INOUT IN
@@ -71,6 +77,18 @@ data MTy : Universe -> Type where
   UnitTy  : MTy (IDX TYPE)
   UnitVal : MTy (IDX VALUE)
 
+public export
+data EquivTypes : (typeA, typeB : MTy (DATA TYPE)) -> Type where
+  Same : EquivTypes a a
+
+public export
+data ValidCast : (typeA, typeB : MTy (IDX VALUE))
+              -> Type
+  where
+   CanCast : (castDir : ValidDirCast           dirA               dirB)
+          -> (castTy  : EquivTypes         tyA                tyB)
+                     -> ValidCast (PortVal tyA dirA) (PortVal tyB dirB)
+
 ||| A predicate to type check data types against values
 public export
 data TyCheckData : (type  : MTy (DATA TYPE))
@@ -104,28 +122,6 @@ data TyCheck : (type  : MTy (IDX TYPE))
 
     ChkParam : TyCheck (ParamTy type) (ParamVal type)
 
---||| Valid Connection.
---public export
---data ValidConn : (l : MTy (IDX VALUE))
---              -> (r : MTy (IDX VALUE))
---                   -> Type
---  where
---    ConnPP : ValidFlow l r -> ValidConn (PortVal type l) (PortVal type r)
---
---    ConnPoC : ValidConn (PortVal type OUT)   (ChanVal type)
---    ConnPbC : ValidConn (PortVal type INOUT) (ChanVal type)
---    ConnCPi : ValidConn (ChanVal type)       (PortVal type IN)
---    ConnCPb : ValidConn (ChanVal type)       (PortVal type INOUT)
-
---||| Valid Application
---public export
---data ValidApp : (l : MTy (IDX VALUE))
---             -> (r : MTy (IDX VALUE))
---                  -> Type
---  where
---    AppParam : ValidApp (ParamVal type) (ParamVal type)
---    AppWire  : ValidConn l r -> ValidApp l r
-
 ||| A context is a list of types in different universes.
 public export
 Context : List Universe -> Type
@@ -134,3 +130,6 @@ Context = DList Universe MTy
 public export
 Contains : Context lvls -> MTy kind -> Type
 Contains g ty = Elem Universe MTy ty g
+
+
+-- --------------------------------------------------------------------- [ EOF ]

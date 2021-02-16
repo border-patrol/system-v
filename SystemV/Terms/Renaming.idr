@@ -93,6 +93,8 @@ rename f (Connect portL portR prf)
             (rename f portR)
             prf
 
+--
+rename f (Cast this prf) = Cast (rename f this) prf
 -- Params
 rename f (TyParam desc) = TyParam (rename f desc)
 rename f (MkParam type) = MkParam (rename f type)

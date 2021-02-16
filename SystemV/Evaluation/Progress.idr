@@ -7,6 +7,7 @@ import SystemV.Values
 
 import SystemV.Terms.Renaming
 import SystemV.Terms.Substitution
+import SystemV.Terms.Casting
 import SystemV.Terms.Reduction
 
 %default total
@@ -181,6 +182,12 @@ progress (Connect portL portR prf) with (progress portL)
 
   progress (Connect portL portR prf) | Step step
     = Step (SimplifyConnectLeft step)
+
+progress (Cast this prf) with (progress this)
+  progress (Cast (MkPort thisPort thisDir) prf) | Done (MkPort thisPortV thisDir)
+        = Step (ReduceCast (MkPort thisPortV thisDir) prf)
+  progress (Cast this prf) | Step step
+    = Step (SimplifyCast step)
 
 -- Params
 progress (TyParam type) with (progress type)

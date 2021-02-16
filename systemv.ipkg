@@ -8,6 +8,7 @@ modules = SystemV.Utilities
 
         , SystemV.Terms.Renaming
         , SystemV.Terms.Substitution
+        , SystemV.Terms.Casting
         , SystemV.Terms.Reduction
 
         , SystemV.Evaluation.Progress

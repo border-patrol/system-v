@@ -7,6 +7,7 @@ import SystemV.Values
 
 import SystemV.Terms.Renaming
 import SystemV.Terms.Substitution
+import SystemV.Terms.Casting
 
 %default total
 
@@ -155,6 +156,22 @@ data Redux : (this : SystemV ctxt type)
                         -> (port : Redux this that)
                                 -> Redux (Connect portL this prf')
                                          (Connect portL that prf')
+
+    SimplifyCast : {tyA,tyB    : MTy (DATA TYPE)}
+                -> {dirA,dirB  : Direction}
+                -> {this, that : SystemV ctxt (PortVal tyA dirA)}
+                -> {prf        : ValidCast (PortVal tyA dirA)
+                                           (PortVal tyB dirB)}
+                              -> Redux this that
+                              -> Redux (Cast this prf) (Cast that prf)
+
+    ReduceCast : {tyA,tyB   : MTy (DATA TYPE)}
+              -> {dirA,dirB : Direction}
+              -> {from      : SystemV ctxt tyA}
+              -> (value     : Value (MkPort from dirA))
+              -> (prfValidC : ValidCast (PortVal tyA dirA) (PortVal tyB dirB))
+                           -> Redux (Cast (MkPort from dirA) prfValidC)
+                                    (cast prfValidC (MkPort from dirA) value)
 
 
     -- Params

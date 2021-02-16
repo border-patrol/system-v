@@ -132,6 +132,13 @@ data SystemV : Context lvls -> MTy level -> Type where
          -> (prf   : ValidFlow dirL dirR)
                   -> SystemV ctxt UnitVal
 
+  -- Casts
+  Cast : {tyA,tyB : MTy (DATA TYPE)}
+      -> {dirA,dirB : Direction}
+      -> (portA : SystemV ctxt (PortVal tyA dirA))
+      -> (prf   : ValidCast (PortVal tyA dirA) (PortVal tyB dirB))
+               -> SystemV ctxt (PortVal tyB dirB)
+
   -- Params
   TyParam : {type  : MTy (DATA TYPE)}
          -> (typeD : SystemV ctxt          type)
