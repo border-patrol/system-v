@@ -1,6 +1,40 @@
 package systemv
 
-modules = SystemV.Utilities
+depends = contrib
+
+sourcedir = "src"
+
+modules =
+        -- [ Vendored Utilities ]
+          Toolkit.Decidable.Equality.Indexed
+
+        , Toolkit.Data.Vect.Extra
+
+        , Toolkit.Data.DList
+        , Toolkit.Data.DList.Elem
+        , Toolkit.Data.DList.DeBruijn
+
+        , Toolkit.Data.DVect
+        , Toolkit.Data.DVect.Elem
+
+        , Toolkit.Data.Nat
+
+        , Toolkit.Data.Location
+        , Toolkit.Data.Rig
+
+        , Toolkit.Decidable.Informative
+
+        , Toolkit.Text.Parser.Support
+        , Toolkit.Text.Parser.Location
+        , Toolkit.Text.Parser.Run
+
+        , Toolkit.Text.Lexer.Run
+
+        , Toolkit.System
+
+        -- [ SystemV Itself]
+
+        , SystemV.Utilities
         , SystemV.Types
         , SystemV.Terms
 
@@ -16,4 +50,5 @@ modules = SystemV.Utilities
 
         , SystemV
 
-        , Examples
+        -- [ Examples ]
+        --, Examples
