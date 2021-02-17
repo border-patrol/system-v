@@ -25,13 +25,11 @@ data Value : SystemV ctxt type -> Type where
   MkUnit : Value MkUnit
 
   TyLogic : Value TyLogic
-  I   : Value I
-  O   : Value O
-  X   : Value X
-  Z   : Value Z
 
   TyVect : Value type -> Value (TyVect s type)
-  Vect   : Value V
+
+  TyBool : Value TyBool
+  B      : Value (B b)
 
   TyModule  : Value TyModule
   EndModule : Value EndModule
@@ -48,16 +46,13 @@ data Value : SystemV ctxt type -> Type where
 
   Catch : Value chan -> Value (Catch chan)
 
-  IsOnParam : Value type -> Value (IsOnParam type)
-  IsOnPort  : Value type -> Value (IsOnPort  type)
+  IfThenElseR : Value cond
+             -> Value true
+             -> Value false
+             -> Value (IfThenElseR cond true false)
 
-  IfThenElse : Value cond
-            -> Value true
-            -> Value false
-            -> Value (IfThenElse cond true false)
-
-  TyParam : Value type -> Value (TyParam type)
-  MkParam : Value type -> Value (MkParam type)
+  TyParam : Value TyParam
+  MkParam : Value (MkParam val)
 
   TyPort : Value type -> (dir : Direction) -> Value (TyPort type dir)
   MkPort : Value type -> (dir : Direction) -> Value (MkPort type dir)

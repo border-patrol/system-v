@@ -49,14 +49,11 @@ namespace General
 
   -- Data Types & Values
   subst f TyLogic = TyLogic
-  subst f I = I
-  subst f O = O
-  subst f X = X
-  subst f Z = Z
 
-  -- Vect
   subst f (TyVect s type) = TyVect s (subst f type)
-  subst f V = V
+
+  subst f TyBool = TyBool
+  subst f (B b)  = B b
 
   -- Modules
   subst f TyModule  = TyModule
@@ -81,18 +78,13 @@ namespace General
   subst f (ReadFrom chan) = ReadFrom (subst f chan)
 
   subst f (Drive chan) = Drive (subst f chan)
-
   subst f (Catch chan) = Catch (subst f chan)
 
-  -- Booleans...
-  subst f (IsOnParam param) = IsOnParam (subst f param)
-  subst f (IsOnPort  port)  = IsOnPort  (subst f port)
-
-  subst f (IfThenElse cond true false)
-    = IfThenElse (subst f cond)
-                 (subst f true)
-                 (subst f false)
-
+  -- Runtime wiring
+  subst f (IfThenElseR cond true false)
+    = IfThenElseR (subst f cond)
+                  (subst f true)
+                  (subst f false)
 
   -- Connections
   subst f (Connect portL portR prf)
@@ -102,8 +94,19 @@ namespace General
     = Cast (subst f this) prf
 
   -- Params
-  subst f (TyParam desc) = TyParam (subst f desc)
-  subst f (MkParam type) = MkParam (subst f type)
+  subst f TyParam       = TyParam
+  subst f (MkParam val) = MkParam val
+
+  subst f (ParamOpBool op l r)
+    = ParamOpBool op (subst f l) (subst f r)
+
+  subst f (ParamOpArith op l r)
+    = ParamOpArith op (subst f l) (subst f r)
+
+  subst f (IfThenElseC cond true false)
+    = IfThenElseC (subst f cond)
+                  (subst f true)
+                  (subst f false)
 
   -- Bindings
   subst f (Let value body)

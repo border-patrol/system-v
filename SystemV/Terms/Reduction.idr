@@ -112,26 +112,20 @@ data Redux : (this : SystemV ctxt type)
                          -> Redux (Catch this) (Catch that)
 
     -- Booleans
-    SimplifyIsOnParam : (prf : Redux this that)
-                            -> Redux (IsOnParam this) (IsOnParam that)
+    SimplifyIfThenElseRCond : (prf : Redux this that)
+                                  -> Redux (IfThenElseR this true false)
+                                           (IfThenElseR that true false)
 
-    SimplifyIsOnPort : (prf : Redux this that)
-                           -> Redux (IsOnPort this) (IsOnPort that)
-
-    SimplifyIfThenElseCond : (prf : Redux this that)
-                                 -> Redux (IfThenElse this true false)
-                                          (IfThenElse that true false)
-
-    SimplifyIfThenElseTrue : (condValue : Value cond)
-                          -> (prf       : Redux this that)
-                                       -> Redux (IfThenElse cond this false)
-                                                (IfThenElse cond that false)
-
-    SimplifyIfThenElseFalse : (condValue : Value cond)
-                           -> (condTrue  : Value true)
+    SimplifyIfThenElseRTrue : (condValue : Value cond)
                            -> (prf       : Redux this that)
-                                        -> Redux (IfThenElse cond true this)
-                                                 (IfThenElse cond true that)
+                                        -> Redux (IfThenElseR cond this false)
+                                                 (IfThenElseR cond that false)
+
+    SimplifyIfThenElseRFalse : (condValue : Value cond)
+                            -> (condTrue  : Value true)
+                            -> (prf       : Redux this that)
+                                         -> Redux (IfThenElseR cond true this)
+                                                  (IfThenElseR cond true that)
 
     -- Connections
 
@@ -166,11 +160,39 @@ data Redux : (this : SystemV ctxt type)
 
 
     -- Params
-    SimplifyTyParam : (type : Redux this that)
-                          -> Redux (TyParam this) (TyParam that)
+    SimplifyParamOpBoolLeft : Redux this that
+                           -> Redux (ParamOpBool op this right)
+                                    (ParamOpBool op that right)
 
-    SimplifyMkParam : (type : Redux this that)
-                          -> Redux (MkParam this) (MkParam that)
+    SimplifyParamOpBoolRight : Value left
+                            -> Redux this that
+                            -> Redux (ParamOpBool op left this)
+                                     (ParamOpBool op left that)
+
+    ReduceParamOpBool : Redux (ParamOpBool op (MkParam left) (MkParam right))
+                              (B (op left right))
+
+    SimplifyParamOpArithLeft : Redux this that
+                            -> Redux (ParamOpArith op this right)
+                                     (ParamOpArith op that right)
+
+    SimplifyParamOpArithRight : Value left
+                             -> Redux this that
+                             -> Redux (ParamOpArith op left this)
+                                      (ParamOpArith op left that)
+
+    ReduceParamOpArith : Redux (ParamOpArith op (MkParam left) (MkParam right))
+                               (MkParam (op left right))
+
+    SimplifyIfThenElseCCond : (prf : Redux this that)
+                                  -> Redux (IfThenElseC this true false)
+                                           (IfThenElseC that true false)
+
+    ReduceIfThenElseCTrue : Redux (IfThenElseC (B True) true false)
+                                  true
+
+    ReduceIfThenElseCFalse : Redux (IfThenElseC (B False) true false)
+                                   false
 
     -- Let binding
     SimplifyLetValue : {this, that : SystemV ctxt typeV}

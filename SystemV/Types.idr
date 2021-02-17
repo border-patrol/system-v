@@ -48,6 +48,9 @@ data MTy : Universe -> Type where
   TypeDefTy : MTy (DATA level) -> MTy (DATA level)
 
   -- Primitive Types
+  BoolTyDesc : MTy (DATA TYPE)
+  BoolTy     : MTy (DATA VALUE)
+
   LogicTyDesc : MTy (DATA TYPE)
   LogicTy     : MTy (DATA VALUE)
 
@@ -70,8 +73,8 @@ data MTy : Universe -> Type where
   PortTy  : (type : MTy (DATA TYPE)) -> (dir : Direction) -> MTy (IDX TYPE)
   PortVal : (type : MTy (DATA TYPE)) -> (dir : Direction) -> MTy (IDX VALUE)
 
-  ParamTy  : (type : MTy (DATA TYPE)) -> MTy (IDX TYPE)
-  ParamVal : (type : MTy (DATA TYPE)) -> MTy (IDX VALUE)
+  ParamTy  : MTy (IDX TYPE)
+  ParamVal : MTy (IDX VALUE)
 
   -- [ Misc ]
   UnitTy  : MTy (IDX TYPE)
@@ -95,6 +98,7 @@ data TyCheckData : (type  : MTy (DATA TYPE))
                 -> (value : MTy (DATA VALUE))
                 -> Type
   where
+    ChkDataBool   : TyCheckData BoolTyDesc  BoolTy
     ChkDataLogic  : TyCheckData LogicTyDesc LogicTy
 
     ChkDataVector : TyCheckData                 typeDesc              type
@@ -120,7 +124,7 @@ data TyCheck : (type  : MTy (IDX TYPE))
 
     ChkPort : TyCheck (PortTy type dir) (PortVal type dir)
 
-    ChkParam : TyCheck (ParamTy type) (ParamVal type)
+    ChkParam : TyCheck ParamTy ParamVal
 
 ||| A context is a list of types in different universes.
 public export

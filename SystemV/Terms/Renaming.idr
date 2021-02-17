@@ -36,17 +36,12 @@ rename f (TyFunc param body)
 rename f TyUnit = TyUnit
 rename f MkUnit = MkUnit
 
--- Data Types & Values
+-- Data Types
 rename f TyLogic = TyLogic
-rename f I = I
-rename f O = O
-rename f X = X
-rename f Z = Z
-
--- Vectors
 rename f (TyVect s type) = TyVect s (rename f type)
-rename f V = V
 
+rename f TyBool = TyBool
+rename f (B b)  = B b
 
 -- Modules
 rename f TyModule  = TyModule
@@ -79,13 +74,11 @@ rename f (Drive chan)
 
 rename f (Catch chan) = Catch (rename f chan)
 
--- Booleans
-rename f (IsOnParam param) = IsOnParam (rename f param)
-rename f (IsOnPort  port)  = IsOnPort  (rename f port)
-rename f (IfThenElse cond true false)
-  = IfThenElse (rename f cond)
-               (rename f true)
-               (rename f false)
+-- RunTime wiring
+rename f (IfThenElseR cond true false)
+  = IfThenElseR (rename f cond)
+                (rename f true)
+                (rename f false)
 
 -- Connections
 rename f (Connect portL portR prf)
@@ -93,13 +86,23 @@ rename f (Connect portL portR prf)
             (rename f portR)
             prf
 
---
+-- Casting
 rename f (Cast this prf) = Cast (rename f this) prf
 
 -- Params
-rename f (TyParam desc) = TyParam (rename f desc)
-rename f (MkParam type) = MkParam (rename f type)
+rename f TyParam       = TyParam
+rename f (MkParam val) = MkParam val
 
+rename f (ParamOpBool op l r)
+  = ParamOpBool op (rename f l) (rename f r)
+
+rename f (ParamOpArith op l r)
+  = ParamOpArith op (rename f l) (rename f r)
+
+rename f (IfThenElseC cond true false)
+  = IfThenElseC (rename f cond)
+                (rename f true)
+                (rename f false)
 -- Binders
 rename f (Let value body)
     = Let (rename f value)

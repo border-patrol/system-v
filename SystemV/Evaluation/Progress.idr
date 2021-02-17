@@ -54,15 +54,13 @@ progress MkUnit = Done MkUnit
 
 -- Type Constructors
 progress TyLogic = Done TyLogic
-progress I       = Done I
-progress O       = Done O
-progress X       = Done X
-progress Z       = Done Z
 
 progress (TyVect size type) with (progress type)
   progress (TyVect size type) | (Done typeValue) = Done (TyVect typeValue)
   progress (TyVect size type) | (Step step) = Step (SimplifyTyVect step)
-progress V = Done Vect
+
+progress TyBool = Done TyBool
+progress (B b)  = Done B
 
 -- Modules
 progress TyModule  = Done TyModule
@@ -139,33 +137,21 @@ progress (Catch chan) with (progress chan)
   progress (Catch chan) | Step step
     = Step (SimplifyCatch step)
 
--- Booleans
-progress (IsOnParam param) with (progress param)
-  progress (IsOnParam param) | Done val
-    = Done (IsOnParam val)
-  progress (IsOnParam param) | Step step
-    = Step (SimplifyIsOnParam step)
+-- Runtime wiring decisions
+progress (IfThenElseR cond true false) with (progress cond)
+  progress (IfThenElseR cond true false) | Done condVal with (progress true)
+    progress (IfThenElseR cond true false) | Done condVal | Done trueVal with (progress false)
+      progress (IfThenElseR cond true false) | Done condVal | Done trueVal | Done falseVal
+        = Done (IfThenElseR condVal trueVal falseVal)
 
-progress (IsOnPort port) with (progress port)
-  progress (IsOnPort port) | Done val
-    = Done (IsOnPort val)
-  progress (IsOnPort port) | Step step
-    = Step (SimplifyIsOnPort step)
+      progress (IfThenElseR cond true false) | Done condVal | Done trueVal | Step step
+        = Step (SimplifyIfThenElseRFalse condVal trueVal step)
 
-progress (IfThenElse cond true false) with (progress cond)
-  progress (IfThenElse cond true false) | Done condVal with (progress true)
-    progress (IfThenElse cond true false) | Done condVal | Done trueVal with (progress false)
-      progress (IfThenElse cond true false) | Done condVal | Done trueVal | Done falseVal
-        = Done (IfThenElse condVal trueVal falseVal)
+    progress (IfThenElseR cond true false) | Done condVal | Step step
+      = Step (SimplifyIfThenElseRTrue condVal step)
 
-      progress (IfThenElse cond true false) | Done condVal | Done trueVal | Step step
-        = Step (SimplifyIfThenElseFalse condVal trueVal step)
-
-    progress (IfThenElse cond true false) | Done condVal | Step step
-      = Step (SimplifyIfThenElseTrue condVal step)
-
-  progress (IfThenElse cond true false) | Step step
-    = Step (SimplifyIfThenElseCond step)
+  progress (IfThenElseR cond true false) | Step step
+    = Step (SimplifyIfThenElseRCond step)
 
 -- Connections
 progress (Connect portL portR prf) with (progress portL)
@@ -186,17 +172,41 @@ progress (Cast this prf) with (progress this)
     = Step (SimplifyCast step)
 
 -- Params
-progress (TyParam type) with (progress type)
-  progress (TyParam type) | Done (valueTy)
-    = Done (TyParam valueTy)
-  progress (TyParam type) | (Step step)
-    = Step (SimplifyTyParam step)
+progress TyParam = Done TyParam
+progress (MkParam val) = Done MkParam
 
-progress (MkParam type) with (progress type)
-  progress (MkParam type) | Done (valueTy)
-    = Done (MkParam valueTy)
-  progress (MkParam type) | (Step step)
-    = Step (SimplifyMkParam step)
+progress (ParamOpBool op l r) with (progress l)
+  progress (ParamOpBool op l r) | Done lval with (progress r)
+    progress (ParamOpBool op (MkParam l) (MkParam r)) | Done MkParam | Done MkParam
+      = Step ReduceParamOpBool
+
+    progress (ParamOpBool op l r) | Done lval | Step step
+      = Step (SimplifyParamOpBoolRight lval step)
+
+  progress (ParamOpBool op l r) | Step step
+    = Step (SimplifyParamOpBoolLeft step)
+
+progress (ParamOpArith op l r) with (progress l)
+  progress (ParamOpArith op l r) | Done lval with (progress r)
+    progress (ParamOpArith op (MkParam l) (MkParam r)) | Done MkParam | Done MkParam
+      = Step ReduceParamOpArith
+
+    progress (ParamOpArith op l r) | Done lval | Step step
+      = Step (SimplifyParamOpArithRight lval step)
+
+  progress (ParamOpArith op l r) | Step step
+    = Step (SimplifyParamOpArithLeft step)
+
+
+progress (IfThenElseC cond t f) with (progress cond)
+  progress (IfThenElseC (B True) true false) | Done B
+    = Step ReduceIfThenElseCTrue
+  progress (IfThenElseC (B False) true false) | Done B
+    = Step ReduceIfThenElseCFalse
+
+  progress (IfThenElseC cond true false) | Step step
+    = Step (SimplifyIfThenElseCCond step)
+
 
 -- Binders
 progress (Let value body) with (progress value)
