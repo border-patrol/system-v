@@ -67,6 +67,7 @@ modules =
         , SystemV.DSL.Lexer
         , SystemV.DSL.Parser
         , SystemV.DSL.Build.Context
+        , SystemV.DSL.Build.Result
         , SystemV.DSL.Build.Helpers
         , SystemV.DSL.Build
 

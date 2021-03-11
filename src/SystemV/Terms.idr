@@ -101,11 +101,11 @@ data SystemV : Context lvls -> MTy level -> Type where
                   -> SystemV ctxt (PortVal type IN)
 
   Drive : {type    : MTy (DATA TYPE)}
-       -> (chan    : SystemV ctxt (ChanVal type))
+       -> (chan    : SystemV ctxt (PortVal type OUT))
                   -> SystemV ctxt UnitVal
 
   Catch : {type  : MTy (DATA TYPE)}
-       -> (chan : SystemV ctxt (ChanVal type))
+       -> (chan : SystemV ctxt (PortVal type IN))
                -> SystemV ctxt UnitVal
 
   -- Runtime wiring decisions

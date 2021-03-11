@@ -40,8 +40,7 @@ data Value : SystemV ctxt type -> Type where
   TyChan : Value type -> Value (TyChan type)
   MkChan : Value type -> Value (MkChan type)
 
-  Drive : {chan : SystemV ctxt (ChanVal type)}
-       -> (c    : Value chan )
+  Drive : (c    : Value chan )
                -> Value (Drive chan)
 
   Catch : Value chan -> Value (Catch chan)

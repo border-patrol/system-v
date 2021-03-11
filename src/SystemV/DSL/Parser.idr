@@ -359,7 +359,7 @@ mutual
 
       lastExpr : (es : List MBody ** NonEmpty es) -> AST
       lastExpr (x::xs ** IsNonEmpty)
-        = foldr foldEntry UnitVal xs
+        = foldr foldEntry UnitVal (x::xs)
 
   moduleDefGen : Rule Token String -> Rule Token (FileContext, String, AST)
   moduleDefGen p
@@ -417,9 +417,13 @@ mutual
   moduleDef : Rule Token (FileContext, String, AST)
   moduleDef = moduleDefGen name
 
+data Decl = TDecl (FileContext, String, AST)
+          | MDecl (FileContext, String, AST)
+
 export
-decls : RuleEmpty Token (List (FileContext, String, AST))
-decls = many (moduleDef <|> typeDef <* symbol ";")
+decls : RuleEmpty Token (List Decl)
+decls = many (do {m <- moduleDef; pure (MDecl m)}
+          <|> do {t <- typeDef <* symbol ";"; pure (TDecl t)})
 
 export
 top : Rule Token AST
@@ -435,11 +439,12 @@ design = do ds <- decls
             t <- top
             pure (foldDecls t ds)
   where
-    foldDecl : (FileContext, String, AST) -> AST -> AST
-    foldDecl (fc, n, e) body = Let fc n e body
+    foldDecl : Decl -> AST -> AST
+    foldDecl (TDecl (fc, n, e)) body = TypeDef fc n e body
+    foldDecl (MDecl (fc, n, e)) body = Let fc n e body
 
     foldDecls : AST
-             -> List (FileContext, String, AST)
+             -> List Decl
              -> AST
     foldDecls = foldr foldDecl
 

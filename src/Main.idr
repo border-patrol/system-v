@@ -63,10 +63,10 @@ main = do
       putStrLn "LOG: Parsing Complete "
 
 
-      (Res u type term) <- timeToTryOrDie timing
-                                          "LOG: Typing Complete "
-                                          metaTypeCheck
-                                          ast
+      (MkTerm u type term) <- timeToTryOrDie timing
+                                             "LOG: Typing Complete "
+                                             metaTypeCheck
+                                             ast
       v <- timeToTryOrDie timing
                           "LOG: Evaluating "
                           eval
