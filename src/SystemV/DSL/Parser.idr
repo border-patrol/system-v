@@ -194,7 +194,7 @@ assign
        symbol "="
        l <- ref
        e <- location
-       pure (Connect (newFC st e) l r)
+       pure (Connect (newFC st e) r l)
 
 cast : Rule Token AST
 cast
@@ -290,11 +290,11 @@ mutual
          commit
          c <- (paramOpsB <|> ref)
          keyword "begin"
-         t <- entries
+         t <- entries False
          keyword "end"
          keyword "else"
          keyword "begin"
-         f <- entries
+         f <- entries False
          keyword "end"
          e <- location
          pure (IfThenElse (newFC s e) c t f)
@@ -315,12 +315,20 @@ mutual
   moduleInst
       = do s <- location
            f <- ref
-           ps <- params
+           ps <- optional params
            n <- name
            as <- parens (commaSepBy1' (ref <|> projChan <|> parens cast))
            e <- location
-           pure ((newFC s e), n,  mkApp f ps as)
+           pure ((newFC s e), n, case ps of
+                      Just ps' => mkApp f ps' as
+                      Nothing  => mkApp' f as )
     where
+      mkApp' : AST
+           -> (as : List AST ** NonEmpty as)
+           -> AST
+      mkApp' f (a::as ** IsNonEmpty)
+        = foldl App (App f a) as
+
       mkApp : AST
            -> (ps : List AST ** NonEmpty ps)
            -> (as : List AST ** NonEmpty as)
@@ -343,10 +351,10 @@ mutual
            <|> (do { d <- typeDef;                  pure (TDef     d)})
            <|> (do { c <- (chanDef <|> moduleInst); pure (Bindable c)})
 
-  entries : Rule Token AST
-  entries
+  entries : Bool -> Rule Token AST
+  entries howEnd
       = do es <- some' entry
-           pure (lastExpr es)
+           pure (collapse howEnd es)
     where
 
       foldEntry : MBody -> AST -> AST
@@ -357,9 +365,13 @@ mutual
       foldEntry (TDef (fc, n, e)) body
         = TypeDef fc n e body
 
-      lastExpr : (es : List MBody ** NonEmpty es) -> AST
-      lastExpr (x::xs ** IsNonEmpty)
-        = foldr foldEntry UnitVal (x::xs)
+      lastTerm : Bool -> AST
+      lastTerm True = EndModule
+      lastTerm False = UnitVal
+
+      collapse : Bool -> (es : List MBody ** NonEmpty es) -> AST
+      collapse b (x::xs ** IsNonEmpty)
+        = foldr foldEntry (lastTerm b) (x::xs)
 
   moduleDefGen : Rule Token String -> Rule Token (FileContext, String, AST)
   moduleDefGen p
@@ -401,6 +413,10 @@ mutual
                -> AST
       buildFunc fc body Nil    Nil
         = Func fc "" TyUnit body
+      buildFunc fc body params Nil
+        = foldParams fc body params
+      buildFunc fc body Nil ports
+        = foldPorts fc body ports
       buildFunc fc body params ports
         = foldParams fc (foldPorts fc body ports) params
 
@@ -409,7 +425,7 @@ mutual
                       ps <- option Nil paramDecls
                       xs <- ports
                       symbol ";"
-                      es <- option EndModule entries
+                      es <- option EndModule (entries True)
                       keyword "endmodule"
                       e <- location
                       pure (buildFunc (newFC s e) es ps xs)

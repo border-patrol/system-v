@@ -10,11 +10,11 @@ module MaybeSwap #( parameter how)
                   , output wire logic x
                   , output wire logic y);
   if (eq how 1) begin
-    assign a = x;
-    assign b = y;
+    assign x = a;
+    assign y = b;
   end else begin
-    assign a = y;
-    assign b = x;
+    assign y = a;
+    assign x = b;
   end
 endmodule
 
