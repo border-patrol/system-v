@@ -2,6 +2,9 @@ package systemv
 
 depends = contrib
 
+main = Main
+executable = systemv
+
 sourcedir = "src"
 
 modules =
@@ -35,6 +38,14 @@ modules =
         -- [ SystemV Itself]
 
         , SystemV.Utilities
+
+        , SystemV.Types.Direction
+        , SystemV.Types.Meta
+        , SystemV.Types.Meta.Equality
+        , SystemV.Types.Meta.Equiv
+        , SystemV.Types.Meta.Cast
+        , SystemV.Types.Meta.Check.Data
+        , SystemV.Types.Meta.Check.Types
         , SystemV.Types
         , SystemV.Terms
 
@@ -50,5 +61,14 @@ modules =
 
         , SystemV
 
+        -- [ The DSL ]
+
+        , SystemV.DSL.AST
+        , SystemV.DSL.Lexer
+        , SystemV.DSL.Parser
+        , SystemV.DSL.Build
+
+        -- [ Main ]
+        , Main
         -- [ Examples ]
         --, Examples

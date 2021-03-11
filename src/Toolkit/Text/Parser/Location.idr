@@ -21,7 +21,6 @@ location = do
   tok <- peek
   pure (MkLoc Nothing ((toNat . line) tok) ((toNat . col) tok))
 
-
 namespace WithFileName
   export
   location : String -> RuleEmpty tok Location

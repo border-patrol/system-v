@@ -197,6 +197,11 @@ progress (ParamOpArith op l r) with (progress l)
   progress (ParamOpArith op l r) | Step step
     = Step (SimplifyParamOpArithLeft step)
 
+progress (ParamOpNot p) with (progress p)
+  progress (ParamOpNot (B b)) | Done B
+    = Step ReduceParamOpNot
+  progress (ParamOpNot p) | Step step
+    = Step (SimplifyParamOpNot step)
 
 progress (IfThenElseC cond t f) with (progress cond)
   progress (IfThenElseC (B True) true false) | Done B

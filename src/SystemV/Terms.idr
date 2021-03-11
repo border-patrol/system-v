@@ -2,6 +2,10 @@
 |||
 module SystemV.Terms
 
+import Toolkit.Data.DList
+import Toolkit.Data.DList.Elem
+import Toolkit.Data.DList.DeBruijn
+
 import SystemV.Utilities
 import SystemV.Types
 
@@ -43,12 +47,12 @@ data SystemV : Context lvls -> MTy level -> Type where
    -- Vectors
   TyVect : (s : Nat)
         -> SystemV ctxt type
-        -> SystemV ctxt (VectorTyDesc n type)
+        -> SystemV ctxt (VectorTyDesc s type)
 
   -- Modules Type & Value Constructor...
   TyModule : SystemV ctxt ModuleTyDesc
 
-  EndModule : SystemV ctxt ModuleTy
+  EndModule : SystemV ctxt ModuleVal
 
 
   -- TypeDef Type & Value Constructors, and Introduction
@@ -63,9 +67,9 @@ data SystemV : Context lvls -> MTy level -> Type where
              -> (0 prf   : TyCheckData             typeM typeV)
                         -> SystemV ctxt (TypeDefTy       typeV)
 
-  TypeDef : {lvl      : Level}
+  TypeDef : {level : Universe}
          -> {type     : MTy (DATA TYPE)}
-         -> {bodyType : MTy (DATA lvl)}
+         -> {bodyType : MTy level}
          -> (desc     : SystemV  ctxt    (TypeDefTy type))
          -> (body     : SystemV (ctxt += (TypeDefTy type)) bodyType)
                      -> SystemV ctxt                       bodyType
@@ -107,9 +111,9 @@ data SystemV : Context lvls -> MTy level -> Type where
   -- Runtime wiring decisions
   IfThenElseR : {type     : MTy (DATA TYPE)}
              -> (test     : SystemV ctxt (PortVal type IN))
-             -> (whenIsZ  : SystemV ctxt ModuleTy)
-             -> (whenNotZ : SystemV ctxt ModuleTy)
-                         -> SystemV ctxt ModuleTy
+             -> (whenIsZ  : SystemV ctxt UnitVal)
+             -> (whenNotZ : SystemV ctxt UnitVal)
+                         -> SystemV ctxt UnitVal
 
   -- Connect two ports together.
   Connect : {type : MTy (DATA TYPE)}
@@ -136,6 +140,9 @@ data SystemV : Context lvls -> MTy level -> Type where
              -> (right : SystemV ctxt ParamVal)
                       -> SystemV ctxt BoolTy
 
+  ParamOpNot : (left  : SystemV ctxt BoolTy)
+                     -> SystemV ctxt BoolTy
+
   ParamOpArith : (op    : Nat -> Nat -> Nat)
               -> (left  : SystemV ctxt ParamVal)
               -> (right : SystemV ctxt ParamVal)
@@ -143,9 +150,9 @@ data SystemV : Context lvls -> MTy level -> Type where
 
   -- Compile time wiring decisions
   IfThenElseC : (test      : SystemV ctxt BoolTy)
-             -> (whenTrue  : SystemV ctxt ModuleTy)
-             -> (whenFalse : SystemV ctxt ModuleTy)
-                          -> SystemV ctxt ModuleTy
+             -> (whenTrue  : SystemV ctxt UnitVal)
+             -> (whenFalse : SystemV ctxt UnitVal)
+                          -> SystemV ctxt UnitVal
 
   -- Binders
   Let : {  mtypeValue : MTy (IDX VALUE)}

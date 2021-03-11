@@ -16,7 +16,7 @@ weakens : (f : {level : Universe}
         -> {type  : MTy level}
                  -> Types.Contains (old += type') type
                  -> SystemV (new += type') type)
-weakens f H = Var H
+weakens f (H (Same Refl Refl)) = Var (H (Same Refl Refl))
 weakens f (T rest) = rename T (f rest)
 
 -- general substitute
@@ -103,6 +103,9 @@ namespace General
   subst f (ParamOpArith op l r)
     = ParamOpArith op (subst f l) (subst f r)
 
+  subst f (ParamOpNot p)
+    = ParamOpNot (subst f p)
+
   subst f (IfThenElseC cond true false)
     = IfThenElseC (subst f cond)
                   (subst f true)
@@ -120,7 +123,7 @@ namespace Single
        -> (this   : SystemV ctxt typeB)
        -> (idx    : Contains (ctxt += typeB) typeA)
                  -> SystemV ctxt typeA
-  apply this H = this
+  apply this (H (Same Refl Refl)) = this
   apply this (T rest) = Var rest
 
   public export

@@ -14,11 +14,13 @@ castDir : {dirTo : Direction}
 castDir {dirTo} _ = dirTo
 
 public export
-castTy : (prf : EquivTypes fromTy toTy)
+castTy : {fromTy, toTy : Meta (DATA TYPE)}
+      -> (prf : EquivTypes fromTy toTy)
       -> (tm  : SystemV ctxt fromTy)
       -> (val : Value tm)
              -> SystemV ctxt toTy
-castTy Same tm val = tm
+castTy {fromTy = fromTy} {toTy = fromTy} (Same (Same Refl Refl)) tm val = tm
+--castTy Same tm val = tm
 
 public export
 cast : {fromPort, toPort : MTy (IDX VALUE)}

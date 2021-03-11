@@ -73,6 +73,7 @@ data Redux : (this : SystemV ctxt type)
                                     (TypeDef that body)
 
     ReduceTypeDef : {typeD : MTy (DATA TYPE)}
+                 -> {typeB : MTy level}
                  -> {desc : SystemV ctxt (TypeDefTy typeD)}
                  -> {body : SystemV (ctxt += (TypeDefTy typeD)) typeB}
                  -> (value : Value desc)
@@ -183,6 +184,14 @@ data Redux : (this : SystemV ctxt type)
 
     ReduceParamOpArith : Redux (ParamOpArith op (MkParam left) (MkParam right))
                                (MkParam (op left right))
+
+
+    SimplifyParamOpNot : (prf : Redux this that)
+                             -> Redux (ParamOpNot this)
+                                      (ParamOpNot that)
+
+    ReduceParamOpNot : Redux (ParamOpNot (B b))
+                             (B (not b))
 
     SimplifyIfThenElseCCond : (prf : Redux this that)
                                   -> Redux (IfThenElseC this true false)

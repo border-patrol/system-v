@@ -32,8 +32,8 @@ data DList : (aTy : Type)
   |||
   ||| @elem The element to add
   ||| @rest The list for `elem` to be added to.
-  (::) : {x : aTy}
-      -> (elem : elemTy x)
+  (::) : forall x
+       . (elem : elemTy x)
       -> (rest : DList aTy elemTy xs)
       -> DList aTy elemTy (x::xs)
 

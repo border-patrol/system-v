@@ -12,7 +12,7 @@ weaken : (func : Types.Contains old type
       -> (Contains (old += type') type
        -> Types.Contains (new += type') type)
 
-weaken func H = H
+weaken func (H (Same Refl Refl)) = H (Same Refl Refl)
 weaken func (T rest) = T (func rest)
 
 public export
@@ -98,6 +98,9 @@ rename f (ParamOpBool op l r)
 
 rename f (ParamOpArith op l r)
   = ParamOpArith op (rename f l) (rename f r)
+
+rename f (ParamOpNot p)
+  = ParamOpNot (rename f p)
 
 rename f (IfThenElseC cond true false)
   = IfThenElseC (rename f cond)

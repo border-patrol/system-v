@@ -23,12 +23,8 @@ endmodule
 This is how it looks like in SystemV-Ascii
 
 ```
-let switch : Param Logic
-          -> Port  Logic Input
-          -> Port  Logic Output
-          -> Port  Logic Output
-          -> Module
-     = (fn sel : Param Logic .
+let switch =
+       (fn sel : Param Logic .
            (fn a : Port Logic Input .
                (fn b : Port Logic Input .
                    (fn c : Port Logic Output .

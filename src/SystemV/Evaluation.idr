@@ -71,3 +71,21 @@ run this with (compute forever this)
   run this | (RunEval steps (Normalised {term} x))
     = Just (Element term steps)
   run this | (RunEval steps OOF) = Nothing
+
+public export
+data Error = NoFuel
+
+export
+Show Evaluation.Error where
+  show NoFuel = "NoFuel"
+
+export
+covering
+eval : forall type
+     . (this : SystemV Nil type)
+            -> Either Evaluation.Error (SystemV Nil type)
+eval this with (run this)
+  eval this | Nothing = Left NoFuel
+  eval this | (Just (Element fst snd)) = Right fst
+
+-- --------------------------------------------------------------------- [ EOF ]
