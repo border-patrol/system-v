@@ -16,6 +16,8 @@ import        SystemV.Types
 import        SystemV.Terms
 
 import        SystemV.DSL.AST
+import        SystemV.DSL.Build.Context
+import        SystemV.DSL.Build.Helpers
 import        SystemV.Utilities
 
 %default total
@@ -64,37 +66,7 @@ public export
 Build : Type -> Type
 Build = Either Build.Error
 
-data Name : (u : Universe) -> Type where
-  MkName : (s : Maybe String) -> (lvl : Universe) -> Name lvl
 
-data HasName : (s : String) -> (lvl : Universe) -> (thing : Name lvl) -> Type where
-  YesHasName : (s === x) -> HasName s lvl (MkName (Just x) lvl)
-
-noname : HasName s lvl (MkName Nothing lvl) -> Void
-noname (YesHasName _) impossible
-
-wrongName : (contra : s === x -> Void)
-         -> (prf    : HasName s lvl (MkName (Just x) lvl))
-                   -> Void
-wrongName contra (YesHasName Refl) = contra Refl
-
-hasName : (s : String) -> (lvl : Universe) -> (thing : Name lvl) -> Dec (HasName s lvl thing)
-hasName s lvl (MkName Nothing lvl) = No noname
-hasName s lvl (MkName (Just x) lvl) with (decEq s x)
-  hasName s lvl (MkName (Just x) lvl) | (Yes prf) = Yes (YesHasName prf)
-  hasName s lvl (MkName (Just x) lvl) | (No contra) = No (wrongName contra)
-
-Names : Universes -> Type
-Names = DList Universe Name
-
-data BuildCtxt : (lvls : Universes)
-              -> (ctxt : Context lvls)
-                      -> Type
-  where
-    Ctxt : (lvls : Universes)
-        -> (names : Names lvls)
-        -> (ctxt : Context lvls)
-                -> BuildCtxt lvls ctxt
 
 public export
 data BuildRes : (lvls : Universes)
@@ -107,149 +79,13 @@ data BuildRes : (lvls : Universes)
        -> (term : SystemV ctxt type)
                -> BuildRes lvls ctxt
 
-
-data ValidFuncParam : (level : Universe)
-                   -> (type  : Meta level) -> Type where
-  IsPort  : ValidFuncParam (IDX TYPE) (PortTy x dir)
-  IsParam : ValidFuncParam (IDX TYPE) ParamTy
-  IsUnit  : ValidFuncParam (IDX TYPE) UnitTy
-
-
-isDataType : ValidFuncParam (DATA TYPE) type -> Void
-isDataType IsPort impossible
-isDataType IsParam impossible
-isDataType IsUnit impossible
-
-isDataValue : ValidFuncParam (DATA VALUE) type -> Void
-isDataValue IsPort impossible
-isDataValue IsParam impossible
-isDataValue IsUnit impossible
-
-isIdxValue : ValidFuncParam (IDX VALUE) type -> Void
-isIdxValue IsPort impossible
-isIdxValue IsParam impossible
-isIdxValue IsUnit impossible
-
-isModule  : ValidFuncParam (IDX TYPE) ModuleTyDesc -> Void
-isModule IsPort impossible
-isModule IsParam impossible
-isModule IsUnit impossible
-
-isFunc  : ValidFuncParam (IDX TYPE) (FuncTy x y) -> Void
-isFunc IsPort impossible
-isFunc IsParam impossible
-isFunc IsUnit impossible
-
-isChan  : ValidFuncParam (IDX TYPE) (ChanTy t) -> Void
-isChan IsPort impossible
-isChan IsParam impossible
-isChan IsUnit impossible
-
-validFuncParam : (level : Universe)
-              -> (type  : Meta level)
-              -> Dec (ValidFuncParam level type)
-validFuncParam (IDX TYPE) (FuncTy x y) = No isFunc
-validFuncParam (IDX TYPE) ModuleTyDesc = No isModule
-validFuncParam (IDX TYPE) (ChanTy type) = No isChan
-validFuncParam (IDX TYPE) (PortTy type dir) = Yes IsPort
-validFuncParam (IDX TYPE) ParamTy = Yes IsParam
-validFuncParam (IDX TYPE) UnitTy = Yes IsUnit
-
-validFuncParam (IDX VALUE) type = No isIdxValue
-validFuncParam (DATA VALUE) type = No isDataValue
-validFuncParam (DATA TYPE) type = No isDataType
-
-data ValidFuncParamValue : (level : Universe)
-                        -> (type  : Meta level)
-                        -> (value : Meta (IDX VALUE))
-                                 -> Type where
-   VFPV : ValidFuncParam (IDX TYPE) type -> (value : Meta (IDX VALUE)) -> ValidFuncParamValue (IDX TYPE) type value
-
-isNotValidFPV : (contra : ValidFuncParam level type -> Void)
-             -> (prf    : (value ** ValidFuncParamValue level type value))
-                       -> Void
-isNotValidFPV contra (MkDPair fst (VFPV x fst)) = contra x
-
-validFuncParamValue : (level : Universe)
-                   -> (type  : Meta level)
-                            -> Dec (value ** ValidFuncParamValue level type value)
-validFuncParamValue level type with (validFuncParam level type)
-  validFuncParamValue (IDX TYPE) (PortTy x dir) | (Yes IsPort)
-    = Yes (_ ** VFPV IsPort (PortVal x dir))
-  validFuncParamValue (IDX TYPE) ParamTy | (Yes IsParam)
-    = Yes (_ ** VFPV IsParam ParamVal)
-  validFuncParamValue (IDX TYPE) UnitTy | (Yes IsUnit)
-    = Yes (_ ** VFPV IsUnit UnitVal)
-  validFuncParamValue level type | (No contra)
-    = No (isNotValidFPV contra)
-
-data ValidFuncTy : (level : Universe)
-                -> (type  : Meta level)
-                         -> Type
-  where
-    IsValid  : ValidFuncParamValue (IDX TYPE) type value
-            -> TyCheck type value
-            -> ValidFuncTy (IDX TYPE) type
-    IsValidNot : ValidFuncTy (IDX TYPE) rest
-    IsNotAType : ValidFuncTy level type
-
-isFuncTy : (level : Universe) -> (type : Meta level) -> ValidFuncTy level type
-isFuncTy (IDX TYPE) type with (validFuncParamValue (IDX TYPE) type)
-  isFuncTy (IDX TYPE) type | (Yes (value ** VFPV x value)) with (typeCheck type value)
-    isFuncTy (IDX TYPE) type | (Yes (value ** VFPV x value)) | (Yes prfWhy) = IsValid (VFPV x value) prfWhy
-
-    isFuncTy (IDX TYPE) type | (Yes (value ** VFPV x value)) | (No msgWhyNot prfWhyNot) = IsValidNot -- really an internal error
-  isFuncTy (IDX TYPE) type | (No contra) = IsValidNot
-isFuncTy _ _ = IsNotAType
-
-
-listEmpty : (level ** Elem Universe Name (MkName (Just name) level) Nil) -> Void
-listEmpty (MkDPair _ (H x)) impossible
-listEmpty (MkDPair _ (T later)) impossible
-
-notInLater : (contra : (level ** Elem Universe Name (MkName (Just name) level) xs) -> Void)
-          -> (prf    : (level ** Elem Universe Name (MkName (Just name) level) (MkName Nothing level'::xs)))
-                    -> Void
-notInLater _ (MkDPair _ (H (Same Refl Refl))) impossible
-notInLater contra (MkDPair fst (T later)) = contra (MkDPair fst later)
-
-nameNotInRest : (contraE : HasName name x (MkName (Just y) x) -> Void)
-             -> (contraR : (level : Universe ** Elem Universe Name (MkName (Just name) level) rest) -> Void)
-             -> (prf     : (level : Universe ** Elem Universe Name (MkName (Just name) level) (MkName (Just y) x :: rest)) )
-                        -> Void
-nameNotInRest contraE contraR (MkDPair x (H (Same Refl Refl))) = contraE (YesHasName Refl)
-nameNotInRest contraE contraR (MkDPair fst (T later)) = contraR (MkDPair fst later)
-
-
-isName : (name  : String)
-       -> (names : Names lvls)
-       -> Dec (level ** Elem Universe Name (MkName (Just name) level) names)
-isName name [] = No listEmpty
-isName name ((MkName Nothing x) :: rest) with (isName name rest)
-  isName name ((MkName Nothing x) :: rest) | (Yes (MkDPair fst snd)) = Yes (MkDPair fst (T snd))
-  isName name ((MkName Nothing x) :: rest) | (No contra) = No (Build.notInLater contra)
-isName name ((MkName (Just y) x) :: rest) with (hasName name x (MkName (Just y) x))
-  isName y ((MkName (Just y) x) :: rest) | (Yes (YesHasName Refl)) = Yes (MkDPair x (H (Same Refl Refl)))
-  isName name ((MkName (Just y) x) :: rest) | (No contra) with (isName name rest)
-    isName name ((MkName (Just y) x) :: rest) | (No contra) | (Yes (MkDPair fst snd)) = Yes (MkDPair fst (T snd))
-    isName name ((MkName (Just y) x) :: rest) | (No contra) | (No f) = No (nameNotInRest contra f)
-
-buildProof : {names : Names lvls}
-          -> (prf   : Elem Universe Name (MkName (Just name) level) names)
-          -> (ctxt  : Context lvls)
-          -> (type : Meta level ** Elem Universe Meta type ctxt)
-buildProof (H (Same Refl prfVal)) (elem :: rest) = MkDPair elem (H (Same Refl Refl))
-buildProof (T later) (elem :: rest) with (buildProof later rest)
-  buildProof (T later) (elem :: rest) | (MkDPair fst snd) = MkDPair fst (T snd)
-
-
 build : (env : BuildCtxt lvls ctxt)
      -> (ast : AST)
             -> Build (BuildRes lvls ctxt)
 build env ast with (env)
   build env ast | (Ctxt lvls names ctxt) with (ast)
     build env ast | (Ctxt lvls names ctxt) | (Ref fc name) with (isName name names)
-      build env ast | (Ctxt lvls names ctxt) | (Ref fc name) | (Yes (MkDPair fst snd)) with (buildProof snd ctxt)
+      build env ast | (Ctxt lvls names ctxt) | (Ref fc name) | (Yes (MkDPair fst snd)) with (buildVar snd ctxt)
         build env ast | (Ctxt lvls names ctxt) | (Ref fc name) | (Yes (MkDPair fst snd)) | (MkDPair x y)
           = pure (Res _ _ (Var y))
       build env ast | (Ctxt lvls names ctxt) | (Ref fc name) | (No contra)
