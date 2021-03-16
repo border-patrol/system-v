@@ -133,6 +133,18 @@ array = do
 type_ : Rule Token AST
 type_ = array <|> logic <|> ref
 
+slice : Rule Token AST
+slice
+  = do s <- location
+       symbol "("
+       keyword "slice"
+       r <- ref
+       alpha <- natLit
+       omega <- natLit
+       symbol ")"
+       e <- location
+       pure (Slice (newFC s e) r alpha omega)
+
 chanDef : Rule Token (FileContext, String, AST)
 chanDef
   = do st <- location
@@ -192,7 +204,7 @@ assign
        commit
        r <- ref
        symbol "="
-       l <- ref
+       l <- (ref <|> slice)
        e <- location
        pure (Connect (newFC st e) r l)
 
@@ -200,7 +212,7 @@ cast : Rule Token AST
 cast
   = do st <- location
        keyword "cast"
-       p <- ref
+       p <- (ref <|> slice)
        t <- type_
        d <- direction
        e <- location
@@ -259,8 +271,6 @@ paramOpsB =   paramOpBool "lt"  (<)
 paramOpsA : Rule Token AST
 paramOpsA =  paramOpArith "add" (+)
          <|> paramOpArith "sub" (minus)
---         <|> paramOpArith "div" Nat.(/)
---         <|> paramOpArith "mul" (*)
 
 proj : Rule Token AST
     -> String
@@ -277,10 +287,10 @@ proj p s ctor
        pure (ctor (newFC st e) n)
 
 writeTo : Rule Token AST
-writeTo = (proj ref "writeTo" WriteTo)
+writeTo = (proj (ref <|> slice) "writeTo" WriteTo)
 
 readFrom : Rule Token AST
-readFrom = (proj ref "readFrom" ReadFrom)
+readFrom = (proj (ref <|> slice) "readFrom" ReadFrom)
 
 mutual
   cond : Rule Token AST
@@ -317,7 +327,7 @@ mutual
            f <- ref
            ps <- optional params
            n <- name
-           as <- parens (commaSepBy1' (ref <|> projChan <|> parens cast))
+           as <- parens (commaSepBy1' (ref <|> projChan <|> parens cast <|> slice))
            e <- location
            pure ((newFC s e), n, case ps of
                       Just ps' => mkApp f ps' as

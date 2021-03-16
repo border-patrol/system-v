@@ -17,6 +17,7 @@ import public SystemV.Types.Meta
 import public SystemV.Types.Meta.Equality
 import public SystemV.Types.Meta.Equiv
 import public SystemV.Types.Meta.Cast
+import public SystemV.Types.Meta.Sliceable
 
 import public SystemV.Types.Meta.Check.Data
 import public SystemV.Types.Meta.Check.Types

@@ -89,6 +89,9 @@ rename f (Connect portL portR prf)
 -- Casting
 rename f (Cast this prf) = Cast (rename f this) prf
 
+-- Slicing
+rename f (Slice this a o prf) = Slice (rename f this) a o prf
+
 -- Params
 rename f TyParam       = TyParam
 rename f (MkParam val) = MkParam val

@@ -93,6 +93,10 @@ namespace General
   subst f (Cast this prf)
     = Cast (subst f this) prf
 
+  -- slicing
+  subst f (Slice this a o prf)
+    = Slice (subst f this) a o prf
+
   -- Params
   subst f TyParam       = TyParam
   subst f (MkParam val) = MkParam val

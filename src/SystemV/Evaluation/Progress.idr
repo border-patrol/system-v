@@ -56,7 +56,7 @@ progress MkUnit = Done MkUnit
 progress TyLogic = Done TyLogic
 
 progress (TyVect size type) with (progress type)
-  progress (TyVect size type) | (Done typeValue) = Done (TyVect typeValue)
+  progress (TyVect size type) | (Done typeValue) = Done (TyVect size typeValue)
   progress (TyVect size type) | (Step step) = Step (SimplifyTyVect step)
 
 progress TyBool = Done TyBool
@@ -170,6 +170,14 @@ progress (Cast this prf) with (progress this)
         = Step (ReduceCast (MkPort thisPortV thisDir) prf)
   progress (Cast this prf) | Step step
     = Step (SimplifyCast step)
+
+progress (Slice this a o prf) with (progress this)
+  progress (Slice (MkPort type' dir) a o prf) | (Done (MkPort x dir)) with (prf)
+    progress (Slice (MkPort (TyVect s etype) dir) a o prf) | (Done (MkPort (TyVect s etypeV) dir)) | (YesCanSlice ArraysAre prfB)
+      = Step (ReduceSlice (MkPort (TyVect (minus o a) etypeV) dir) (YesCanSlice ArraysAre prfB))
+
+  progress (Slice this a o prf) | (Step step)
+    = Step (SimplifySlice step)
 
 -- Params
 progress TyParam = Done TyParam

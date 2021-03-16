@@ -26,7 +26,7 @@ data Value : SystemV ctxt type -> Type where
 
   TyLogic : Value TyLogic
 
-  TyVect : Value type -> Value (TyVect s type)
+  TyVect : (s : Nat) -> {type : SystemV ctxt typeD} -> Value type -> Value (TyVect s type)
 
   TyBool : Value TyBool
   B      : Value (B b)

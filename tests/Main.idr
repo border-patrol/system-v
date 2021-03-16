@@ -14,6 +14,7 @@ import Golden
 tests : List String
 tests = [ "000-hello-world"
         , "001-scrub"
+        , "002-split"
         ]
 
 covering

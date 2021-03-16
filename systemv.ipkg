@@ -44,6 +44,7 @@ modules =
         , SystemV.Types.Meta.Equality
         , SystemV.Types.Meta.Equiv
         , SystemV.Types.Meta.Cast
+        , SystemV.Types.Meta.Sliceable
         , SystemV.Types.Meta.Check.Data
         , SystemV.Types.Meta.Check.Types
         , SystemV.Types

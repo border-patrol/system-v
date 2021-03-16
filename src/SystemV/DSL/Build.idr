@@ -42,6 +42,7 @@ data Error = Err FileContext Build.Error
            | ChansAreNotPorts
            | NotAValidCondTest
            | NotAName String
+           | CannotSlice
 
 export
 Show Build.Error where
@@ -62,6 +63,7 @@ Show Build.Error where
   show NoHigherOrderStuff = "NoHigherOrderStuff"
   show ChansAreNotPorts   = "ChansAreNotPorts"
   show NotAValidCondTest  = "NotAValidCondTest"
+  show CannotSlice        = "CannotSlice"
   show (NotAName a)       = unwords ["NotAName", show a]
 
 Build : Type -> Type
@@ -72,13 +74,18 @@ build : (env : BuildCtxt lvls ctxt)
      -> (ast : AST)
             -> Build (BuildRes lvls ctxt)
 build env ast with (env)
+
   build env ast | (Ctxt lvls names ctxt) with (ast)
+
+-- [ References ]
     build env ast | (Ctxt lvls names ctxt) | (Ref fc name) with (isName name names)
       build env ast | (Ctxt lvls names ctxt) | (Ref fc name) | (Yes (MkDPair fst snd)) with (buildVar snd ctxt)
         build env ast | (Ctxt lvls names ctxt) | (Ref fc name) | (Yes (MkDPair fst snd)) | (MkDPair x y)
           = pure (Res _ _ (Var y))
       build env ast | (Ctxt lvls names ctxt) | (Ref fc name) | (No contra)
         = Left (Err fc (NotAName name))
+
+-- [ Function Definition ]
 
     build env ast | (Ctxt lvls names ctxt) | (Func fc name type body) with (build (Ctxt lvls names ctxt) type)
       build env ast | (Ctxt lvls names ctxt) | (Func fc name type body) | (Left err)
@@ -95,6 +102,8 @@ build env ast with (env)
           = Left NoHigherOrderStuff
         build env ast | (Ctxt lvls names ctxt) | (Func fc name type body) | (Right (Res u meta term)) | IsNotAType
           = Left (Err fc NotAType)
+
+-- [ Function Application ]
 
     build env ast | (Ctxt lvls names ctxt) | (App func param) with (build (Ctxt lvls names ctxt) func)
       build env ast | (Ctxt lvls names ctxt) | (App func param) | (Left err)
@@ -113,6 +122,8 @@ build env ast with (env)
       build env ast | (Ctxt lvls names ctxt) | (App func param) | (Right (Res _ _ _))
         = Left NotAFunc
 
+-- [ Data Types ]
+
     build env ast | (Ctxt lvls names ctxt) | (TyLogic fc)
       = pure (Res _ _ TyLogic)
 
@@ -124,6 +135,7 @@ build env ast with (env)
       build env ast | (Ctxt lvls names ctxt) | (TyVect fc s type) | (Right (Res _ _ _))
         = Left (Err fc NotADataType)
 
+-- [ TypeDef Creation]
 
     build env ast | (Ctxt lvls names ctxt) | (TypeDef fc name type body) with (build (Ctxt lvls names ctxt) type)
       build env ast | (Ctxt lvls names ctxt) | (TypeDef fc name type body) | (Left err)
@@ -144,6 +156,8 @@ build env ast with (env)
       build env ast | (Ctxt lvls names ctxt) | (TyPort fc type dir) | (Right (Res _ _ _))
         = Left (Err fc NotADataType)
 
+-- [ MkChan ]
+
     build env ast | (Ctxt lvls names ctxt) | (MkChan fc type) with (build (Ctxt lvls names ctxt) type)
       build env ast | (Ctxt lvls names ctxt) | (MkChan fc type) | (Left err)
         = Left err
@@ -151,6 +165,8 @@ build env ast with (env)
         = pure (Res _ _ (MkChan term))
       build env ast | (Ctxt lvls names ctxt) | (MkChan fc type) | (Right (Res _ _ _))
         = Left (Err fc NotADataType)
+
+-- [ WriteTo ]
 
     build env ast | (Ctxt lvls names ctxt) | (WriteTo fc chan) with (build (Ctxt lvls names ctxt) chan)
       build env ast | (Ctxt lvls names ctxt) | (WriteTo fc chan) | (Left err)
@@ -160,6 +176,8 @@ build env ast with (env)
       build env ast | (Ctxt lvls names ctxt) | (WriteTo fc chan) | (Right (Res _ _ _))
         = Left (Err fc NotAChan)
 
+-- [ ReadFrom ]
+
     build env ast | (Ctxt lvls names ctxt) | (ReadFrom fc chan) with (build (Ctxt lvls names ctxt) chan)
       build env ast | (Ctxt lvls names ctxt) | (ReadFrom fc chan) | (Left err)
         = Left err
@@ -167,6 +185,8 @@ build env ast with (env)
         = pure (Res _ _ (ReadFrom term))
       build env ast | (Ctxt lvls names ctxt) | (ReadFrom fc chan) | (Right (Res _ _ _))
         = Left (Err fc NotAChan)
+
+-- [ Drive ]
 
     build env ast | (Ctxt lvls names ctxt) | (Drive fc chan) with (build (Ctxt lvls names ctxt) chan)
       build env ast | (Ctxt lvls names ctxt) | (Drive fc chan) | (Left err)
@@ -176,6 +196,8 @@ build env ast with (env)
       build env ast | (Ctxt lvls names ctxt) | (Drive fc chan) | (Right (Res _ _ _))
         = Left (Err fc NotAPort)
 
+-- [ Catch ]
+
     build env ast | (Ctxt lvls names ctxt) | (Catch fc chan) with (build (Ctxt lvls names ctxt) chan)
       build env ast | (Ctxt lvls names ctxt) | (Catch fc chan) | (Left err)
         = Left err
@@ -184,6 +206,7 @@ build env ast with (env)
       build env ast | (Ctxt lvls names ctxt) | (Catch fc chan) | (Right (Res _ _ _))
         = Left (Err fc NotAPort)
 
+-- [ Conditionals ]
 
     build env ast | (Ctxt lvls names ctxt) | (IfThenElse fc test true false) with (build (Ctxt lvls names ctxt) test)
       build env ast | (Ctxt lvls names ctxt) | (IfThenElse fc test true false) | (Left err)
@@ -218,6 +241,8 @@ build env ast with (env)
         = Left (Err fc NotAValidCondTest)
 
 
+-- [ Connections Vertical ]
+
     build env ast | (Ctxt lvls names ctxt) | (Connect fc portL portR) with (build (Ctxt lvls names ctxt) portL)
       build env ast | (Ctxt lvls names ctxt) | (Connect fc portL portR) | (Left err)
         = Left err
@@ -238,6 +263,7 @@ build env ast with (env)
       build env ast | (Ctxt lvls names ctxt) | (Connect fc portL portR) | (Right (Res _ _ _))
         = Left (Err fc NotAPort)
 
+-- [ Casting ]
 
     build env ast | (Ctxt lvls names ctxt) | (Cast fc port type dir) with (build (Ctxt lvls names ctxt) port)
       build env ast | (Ctxt lvls names ctxt) | (Cast fc port type dir) | (Left err)
@@ -256,8 +282,11 @@ build env ast with (env)
         = Left (Err fc NotAPort)
 
 
+-- [ Parameters ]
+
     build env ast | (Ctxt lvls names ctxt) | TyParam
       = pure (Res _ _ TyParam)
+
     build env ast | (Ctxt lvls names ctxt) | (MkParam fc val)
       = pure (Res _ _ (MkParam val))
 
@@ -282,6 +311,22 @@ build env ast with (env)
               | _ => Left (Err fc MkError)
            pure (Res _ _ (ParamOpArith op l r))
 
+-- [ Operations on Data ]
+
+    build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) with (build (Ctxt lvls names ctxt) p)
+      build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Left err)
+        = Left err
+      build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res (IDX VALUE) (PortVal type dir) term)) with (canSlice type a o )
+        build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res (IDX VALUE) (PortVal type dir) term)) | (Yes (MkDPair fst snd)) with (snd)
+          build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res (IDX VALUE) (PortVal (VectorTyDesc s type) dir) term)) | (Yes (MkDPair (VectorTyDesc (minus _ _) type) snd)) | (YesCanSlice ArraysAre prfB)
+            = pure (Res _ _ (Slice term a o (YesCanSlice ArraysAre prfB)))
+        build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res (IDX VALUE) (PortVal type dir) term)) | (No msgWhyNot prfWhyNot)
+          = Left (Err fc CannotSlice)
+
+      build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res _ _ _))
+        = Left (Err fc CannotSlice)
+
+-- [ Let Bindings ]
 
     build env ast | (Ctxt lvls names ctxt) | (Let fc name value body) with (build (Ctxt lvls names ctxt) value)
       build env ast | (Ctxt lvls names ctxt) | (Let fc name value body) | (Left err)
@@ -296,6 +341,8 @@ build env ast with (env)
       build env ast | (Ctxt lvls names ctxt) | (Let fc name value body) | (Right (Res _ type value'))
         = Left (Err fc CannotBindNonIdx)
 
+-- [ Sequencing ]
+
     build env ast | (Ctxt lvls names ctxt) | (Seq x y) with (build (Ctxt lvls names ctxt) x)
       build env ast | (Ctxt lvls names ctxt) | (Seq x y) | (Left err)
         = Left err
@@ -309,12 +356,17 @@ build env ast with (env)
       build env ast | (Ctxt lvls names ctxt) | (Seq x y) | (Right (Res u _ x'))
         = Left (LeftSeqNotUnit)
 
+-- [ Misc ]
+
     build env ast | (Ctxt lvls names ctxt) | EndModule
       = pure (Res _ _ EndModule)
     build env ast | (Ctxt lvls names ctxt) | UnitVal
       = pure (Res _ _ MkUnit)
     build env ast | (Ctxt lvls names ctxt) | TyUnit
       = pure (Res _ _ TyUnit)
+
+-- [ End of Build ]
+
 
 public export
 data Term : Type where

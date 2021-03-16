@@ -122,7 +122,7 @@ data AST : Type where
   ||| Driving channels
   |||
   ||| ```
-  ||| drive chan;
+  ||| (drive (writeTo chan));
   ||| ```
   Drive : (fc   : FileContext)
        -> (chan : AST)
@@ -131,10 +131,21 @@ data AST : Type where
   ||| Catching channels
   |||
   ||| ```
-  ||| catch chan;
+  ||| (catch (readFrom chan));
+  ||| (catch port);
   ||| ```
   Catch : (fc   : FileContext)
        -> (chan : AST)
+               -> AST
+
+  ||| Slicing channels
+  |||
+  ||| ```
+  ||| catch chan;
+  ||| ```
+  Slice : (fc   : FileContext)
+       -> (port : AST)
+       -> (s,e  : Nat)
                -> AST
 
   ||| Wiring decisions
