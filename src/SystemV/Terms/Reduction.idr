@@ -213,6 +213,34 @@ data Redux : (this : SystemV ctxt type)
     ReduceIfThenElseCFalse : Redux (IfThenElseC (B False) true false)
                                    false
 
+    -- Gates
+    SimplifyNotOutput : Redux this that
+                     -> Redux (Not this i) (Not that i)
+
+    SimplifyNotInput : {o : SystemV ctxt (PortVal type OUT)}
+                    -> Value o
+                    -> Redux this that
+                    -> Redux (Not o this) (Not o that)
+
+    SimplifyGateOutput : Redux this that
+                      -> Redux (Gate type this ia ib)
+                               (Gate type that ia ib)
+
+    SimplifyGateInputA : {out : SystemV ctxt (PortVal type OUT)}
+                      -> Value out
+                      -> Redux this that
+                      -> Redux (Gate kind out this ib)
+                               (Gate kind out that ib)
+
+    SimplifyGateInputB : {out : SystemV ctxt (PortVal type OUT)}
+                      -> {ia  : SystemV ctxt (PortVal type IN)}
+                      -> Value out
+                      -> Value ia
+                      -> Redux this that
+                      -> Redux (Gate kind out ia this)
+                               (Gate kind out ia that)
+
+
     -- Let binding
     SimplifyLetValue : {this, that : SystemV ctxt typeV}
                     -> {body : SystemV (ctxt += typeV) typeB}

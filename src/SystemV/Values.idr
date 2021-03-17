@@ -56,6 +56,19 @@ data Value : SystemV ctxt type -> Type where
   TyPort : Value type -> (dir : Direction) -> Value (TyPort type dir)
   MkPort : Value type -> (dir : Direction) -> Value (MkPort type dir)
 
+  Not : {out : SystemV ctxt (PortVal type OUT)}
+     -> {i   : SystemV ctxt (PortVal type IN)}
+            -> Value out
+            -> Value i
+            -> Value (Not out i)
+
+  Gate : {out   : SystemV ctxt (PortVal type OUT)}
+      -> {ia,ib : SystemV ctxt (PortVal type IN)}
+               -> Value out
+               -> Value ia
+               -> Value ib
+               -> Value (Gate kind out ia ib)
+
   Connect : {portL : SystemV ctxt (PortVal type dirL)}
          -> {portR : SystemV ctxt (PortVal type dirR)}
          -> Value portL

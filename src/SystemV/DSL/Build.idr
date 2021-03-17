@@ -44,6 +44,7 @@ data Error = Err FileContext Build.Error
            | NotAValidCondTest
            | NotAName String
            | CannotSlice
+           | InvalidGate
 
 export
 Show Build.Error where
@@ -65,6 +66,7 @@ Show Build.Error where
   show ChansAreNotPorts   = "ChansAreNotPorts"
   show NotAValidCondTest  = "NotAValidCondTest"
   show CannotSlice        = "CannotSlice"
+  show InvalidGate        = "InvalidGate"
   show (NotAName a)       = unwords ["NotAName", show a]
 
 Build : Type -> Type
@@ -373,6 +375,57 @@ build env ast with (env)
       = pure (Res _ _ MkUnit)
     build env ast | (Ctxt lvls names ctxt) | TyUnit
       = pure (Res _ _ TyUnit)
+
+-- [ Gates ]
+    build env ast | (Ctxt lvls names ctxt) | (NotGate fc o i) with (build (Ctxt lvls names ctxt) o)
+      build env ast | (Ctxt lvls names ctxt) | (NotGate fc o i) | (Left err)
+        = Left err
+      build env ast | (Ctxt lvls names ctxt) | (NotGate fc o i) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) with (build (Ctxt lvls names ctxt) i)
+        build env ast | (Ctxt lvls names ctxt) | (NotGate fc o i) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Left err)
+          = Left err
+        build env ast | (Ctxt lvls names ctxt) | (NotGate fc o i) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeI IN) termI)) with (decEqTypesDataTypes typeO typeI)
+          build env ast | (Ctxt lvls names ctxt) | (NotGate fc o i) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeI IN) termI)) | (Yes prfWhy) with (prfWhy)
+            build env ast | (Ctxt lvls names ctxt) | (NotGate fc o i) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeO IN) termI)) | (Yes prfWhy) | (Same Refl Refl)
+              = pure (Res _ _ (Not termO termI))
+
+          build env ast | (Ctxt lvls names ctxt) | (NotGate fc o i) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeI IN) termI)) | (No msgWhyNot prfWhyNot)
+            = Left (Err fc TypeMismatch)
+
+        build env ast | (Ctxt lvls names ctxt) | (NotGate fc o i) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res _ _ _))
+          = Left (Err fc InvalidGate)
+
+      build env ast | (Ctxt lvls names ctxt) | (NotGate fc o i) | (Right (Res _ _ _))
+        = Left (Err fc InvalidGate)
+
+    build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) with (build (Ctxt lvls names ctxt) o)
+      build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Left err)
+        = Left err
+      build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) with (build (Ctxt lvls names ctxt) ia)
+        build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Left err)
+          = Left err
+        build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIA)) with (build (Ctxt lvls names ctxt) ib)
+          build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIA)) | (Left err)
+            = Left err
+          build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIA)) | (Right (Res (IDX VALUE) (PortVal typeIB IN) termIB)) with (decEqTypesDataTypes typeO typeIA)
+            build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIA)) | (Right (Res (IDX VALUE) (PortVal typeIB IN) termIB)) | (Yes prfWhy) with (prfWhy)
+              build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeIA OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIA)) | (Right (Res (IDX VALUE) (PortVal typeIB IN) termIB)) | (Yes prfWhy) | (Same Refl Refl) with (decEqTypesDataTypes typeIA typeIB)
+                build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeIA OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIA)) | (Right (Res (IDX VALUE) (PortVal typeIB IN) termIB)) | (Yes prfWhy) | (Same Refl Refl) | (Yes x) with (x)
+                  build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeIA OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIA)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIB)) | (Yes prfWhy) | (Same Refl Refl) | (Yes x) | (Same Refl Refl)
+                    = pure (Res _ _ (Gate k termO termIA termIB))
+                build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeIA OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIA)) | (Right (Res (IDX VALUE) (PortVal typeIB IN) termIB)) | (Yes prfWhy) | (Same Refl Refl) | (No msgWhyNot prfWhyNot)
+                  = Left (Err fc TypeMismatch)
+
+            build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIA)) | (Right (Res (IDX VALUE) (PortVal typeIB IN) termIB)) | (No msgWhyNot prfWhyNot)
+              = Left (Err fc TypeMismatch)
+
+          build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res (IDX VALUE) (PortVal typeIA IN) termIA)) | (Right (Res _ _ _))
+            = Left (Err fc InvalidGate)
+
+        build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res (IDX VALUE) (PortVal typeO OUT) termO)) | (Right (Res _ _ _))
+          = Left (Err fc InvalidGate)
+
+      build env ast | (Ctxt lvls names ctxt) | (Gate fc k o ia ib) | (Right (Res _ _ _))
+        = Left (Err fc InvalidGate)
 
 -- [ End of Build ]
 

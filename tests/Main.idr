@@ -15,6 +15,7 @@ tests : List String
 tests = [ "000-hello-world"
         , "001-scrub"
         , "002-split"
+        , "003-gates"
         ]
 
 covering

@@ -148,6 +148,7 @@ data SystemV : Context lvls -> MTy level -> Type where
               -> (right : SystemV ctxt ParamVal)
                        -> SystemV ctxt ParamVal
 
+
   -- Operations on Data.
   Slice : {s           : Whole}
        -> {type        : Meta (DATA TYPE)}
@@ -156,6 +157,18 @@ data SystemV : Context lvls -> MTy level -> Type where
        -> (omega : Whole)
        -> (prf         : CanSlice (DATA TYPE) (VectorTyDesc s type) alpha omega out)
                       -> SystemV ctxt (PortVal out dir)
+
+  -- Gates
+  Not : {type : Meta (DATA TYPE)}
+     -> (portO : SystemV ctxt (PortVal type OUT))
+     -> (portI : SystemV ctxt (PortVal type IN))
+              -> SystemV ctxt UnitVal
+
+  Gate : {type : Meta (DATA TYPE)}
+      -> (kind          : GateKind)
+      -> (portO         : SystemV ctxt (PortVal type OUT))
+      -> (portIA,portIB : SystemV ctxt (PortVal type IN))
+                       -> SystemV ctxt UnitVal
 
   -- Compile time wiring decisions
   IfThenElseC : (test      : SystemV ctxt BoolTy)

@@ -286,3 +286,6 @@ data AST : Type where
   EndModule : AST
   UnitVal : AST
   TyUnit : AST
+
+  NotGate : FileContext -> AST -> AST -> AST
+  Gate : FileContext -> GateKind -> AST -> AST -> AST -> AST

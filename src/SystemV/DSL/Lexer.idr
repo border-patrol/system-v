@@ -22,6 +22,7 @@ keywords = [ "input", "output", "inout"
            , "Top"
            , "and", "not", "or", "eq", "lt", "gt"
            , "add", "mul", "sub", "div"
+           , "xor", "nor", "nand", "nxor"
            ]
 
 public export

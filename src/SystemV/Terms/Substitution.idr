@@ -97,6 +97,17 @@ namespace General
   subst f (Slice this a o prf)
     = Slice (subst f this) a o prf
 
+  -- Gates
+  subst f (Not portO portI)
+    = Not (subst f portO)
+          (subst f portI)
+
+  subst f (Gate kind portO portIA portIB)
+    = Gate kind (subst f portO)
+                (subst f portIA)
+                (subst f portIB)
+
+
   -- Params
   subst f TyParam       = TyParam
   subst f (MkParam val) = MkParam val

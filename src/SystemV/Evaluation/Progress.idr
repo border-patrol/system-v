@@ -220,6 +220,32 @@ progress (IfThenElseC cond t f) with (progress cond)
   progress (IfThenElseC cond true false) | Step step
     = Step (SimplifyIfThenElseCCond step)
 
+-- Gates
+progress (Not out input) with (progress out)
+  progress (Not out input) | (Done outV) with (progress input)
+    progress (Not out input) | (Done outV) | Done inputV
+      = Done (Not outV inputV)
+    progress (Not out input) | (Done outV) | Step step
+      = Step (SimplifyNotInput outV step)
+
+  progress (Not out input) | (Step step)
+    = Step (SimplifyNotOutput step)
+
+progress (Gate type out ia ib) with (progress out)
+  progress (Gate type out ia ib) | Done outV with (progress ia)
+    progress (Gate type out ia ib) | Done outV | Done iaV with (progress ib)
+      progress (Gate type out ia ib) | Done outV | Done iaV | Done ibV
+        = Done (Gate outV iaV ibV)
+
+      progress (Gate type out ia ib) | Done outV | Done iaV | Step step
+        = Step (SimplifyGateInputB outV iaV step)
+
+    progress (Gate type out ia ib) | Done outV | Step step
+      = Step (SimplifyGateInputA outV step)
+
+  progress (Gate type out ia ib) | Step step
+    = Step (SimplifyGateOutput step)
+
 
 -- Binders
 progress (Let value body) with (progress value)

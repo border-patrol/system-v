@@ -1,5 +1,7 @@
 module SystemV.Terms.Renaming
 
+import Data.Vect
+
 import SystemV.Utilities
 import SystemV.Types
 import SystemV.Terms
@@ -91,6 +93,16 @@ rename f (Cast this prf) = Cast (rename f this) prf
 
 -- Slicing
 rename f (Slice this a o prf) = Slice (rename f this) a o prf
+
+-- Gates
+rename f (Not portO portI)
+  = Not (rename f portO)
+        (rename f portI)
+
+rename f (Gate kind portO portIA portIB)
+  = Gate kind (rename f portO)
+              (rename f portIA)
+              (rename f portIB)
 
 -- Params
 rename f TyParam       = TyParam

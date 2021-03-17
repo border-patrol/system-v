@@ -13,6 +13,7 @@ import public Toolkit.Decidable.Equality.Indexed
 import SystemV.Utilities
 
 import public SystemV.Types.Direction
+import public SystemV.Types.Gate
 import public SystemV.Types.Meta
 import public SystemV.Types.Meta.Equality
 import public SystemV.Types.Meta.Equiv
@@ -37,6 +38,5 @@ Context = DList Universe Meta
 public export
 Contains : Context lvls -> MTy kind -> Type
 Contains g ty = Elem Universe Meta ty g
-
 
 -- --------------------------------------------------------------------- [ EOF ]

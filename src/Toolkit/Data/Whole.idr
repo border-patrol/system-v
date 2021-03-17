@@ -114,5 +114,14 @@ namespace IsLteNatWhole
     isLTE n (W k prf) | (Yes x) = Yes (IsLTE x)
     isLTE n (W k prf) | (No contra) = No (isLTENot contra)
 
+namespace Div
+
+  export
+  total
+  div : (n : Nat)
+     -> (w : Whole)
+          -> Nat
+  div n (W (S x) ItIsSucc) = divNatNZ n (S x) SIsNotZ
+
 
 -- --------------------------------------------------------------------- [ EOF ]

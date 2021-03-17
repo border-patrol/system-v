@@ -1,6 +1,7 @@
 module SystemV.DSL.Parser
 
 import        Data.Vect
+import        Data.Nat
 import        Data.List
 import        Data.List.Views
 import        Data.Strings
@@ -15,7 +16,9 @@ import public Toolkit.Text.Parser.Support
 import        Toolkit.Text.Parser.Location
 import public Toolkit.Text.Parser.Run
 
-import        SystemV.Types
+import        SystemV.Types.Direction
+import        SystemV.Types.Gate
+
 import        SystemV.DSL.AST
 
 
@@ -271,6 +274,7 @@ paramOpsB =   paramOpBool "lt"  (<)
 paramOpsA : Rule Token AST
 paramOpsA =  paramOpArith "add" (+)
          <|> paramOpArith "sub" (minus)
+         <|> paramOpArith "mul" (*)
 
 proj : Rule Token AST
     -> String
@@ -291,6 +295,7 @@ writeTo = (proj (ref <|> slice) "writeTo" WriteTo)
 
 readFrom : Rule Token AST
 readFrom = (proj (ref <|> slice) "readFrom" ReadFrom)
+
 
 mutual
   cond : Rule Token AST
@@ -318,8 +323,46 @@ mutual
   driveCatch = (proj (writeTo)  "drive"    Drive)
            <|> (proj (readFrom) "catch"    Catch)
 
+  gateNot : Rule Token AST
+  gateNot = do s <- location
+               keyword "not"
+               symbol "("
+               commit
+               o <- ref <|> slice <|> projChan
+               symbol ","
+               i <- ref <|> slice <|> projChan
+               symbol ")"
+               e <- location
+               pure (NotGate (newFC s e) o i)
+
+  gate : (kword : String)
+      -> (kind  : GateKind)
+               -> Rule Token AST
+  gate k ki
+    = do s <- location
+         keyword k
+         symbol "("
+         commit
+         o <- ref <|> slice <|> projChan
+         symbol ","
+         ia <- ref <|> slice <|> projChan
+         symbol ","
+         ib <- ref <|> slice <|> projChan
+         symbol ")"
+         e <- location
+         pure (Gate (newFC s e) ki o ia ib)
+
+  gates : Rule Token AST
+  gates = gateNot
+      <|> gate "nand" NAND
+      <|> gate "and"  AND
+      <|> gate "nor"  NIOR
+      <|> gate "or"   IOR
+      <|> gate "nxor" XNOR
+      <|> gate "xor"  XOR
+
   expr : Rule Token AST
-  expr = driveCatch <|> assign
+  expr = driveCatch <|> assign <|> gates
 
   moduleInst : Rule Token (FileContext, String, AST)
   moduleInst

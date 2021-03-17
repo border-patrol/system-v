@@ -42,6 +42,8 @@ modules =
         , SystemV.Utilities
 
         , SystemV.Types.Direction
+        , SystemV.Types.Gate
+
         , SystemV.Types.Meta
         , SystemV.Types.Meta.Equality
         , SystemV.Types.Meta.Equiv
@@ -76,5 +78,3 @@ modules =
 
         -- [ Main ]
         , Main
-        -- [ Examples ]
-        --, Examples
