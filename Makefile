@@ -12,12 +12,8 @@ clean:
 	make -C tests clean
 
 
-export SYSTEMV_TEST_JUST
-export SYSTEMV_TEST_INTERACTIVE
-export SYSTEMV_BIN=../../build/exec/unnamed
-
-test:
+test: systemv
 	make -C tests testbin
-	make -C tests test
+	make -C tests test SYSTEMV_BIN=../../build/exec/systemv SYSTEMV_TEST_U=$(SYSTEMV_TEST_U) SYSTEMV_TEST_O=$(SYSTEMV_TEST_O)
 
 .PHONY: clobber clean test systemv

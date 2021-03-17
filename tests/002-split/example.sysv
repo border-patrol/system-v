@@ -3,9 +3,16 @@ module Split ( input  wire logic[32] i
              , output wire logic[16] b
              );
 
- assign b = (slice i 16 32);
- assign a = (slice i 0  16);
+ assign b = (slice i 15 31);
+ assign a = (slice i 0  15);
 
+endmodule
+
+module Temp ( input  wire logic[32] i
+            , output wire logic[32] a
+             );
+
+ assign a = (slice i 0 31);
 
 endmodule
 

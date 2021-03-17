@@ -1,7 +1,9 @@
 module SystemV.Types.Meta
 
+import Data.Nat
 import Decidable.Equality
 
+import public Toolkit.Data.Whole
 import Toolkit.Decidable.Equality.Indexed
 
 import SystemV.Utilities
@@ -80,8 +82,8 @@ data Meta : Universe -> Type where
   LogicTyDesc : Meta (DATA TYPE)
   LogicTy     : Meta (DATA VALUE)
 
-  VectorTyDesc : (n : Nat) -> Meta (DATA TYPE)  -> Meta (DATA TYPE)
-  VectorTy     : (n : Nat) -> Meta (DATA VALUE) -> Meta (DATA VALUE)
+  VectorTyDesc : (n : Whole) -> Meta (DATA TYPE)  -> Meta (DATA TYPE)
+  VectorTy     : (n : Whole) -> Meta (DATA VALUE) -> Meta (DATA VALUE)
 
   -- [ Function types ]
   FuncTy : Meta (IDX level) -> Meta (IDX level) -> Meta (IDX level)

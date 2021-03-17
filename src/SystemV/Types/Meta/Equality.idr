@@ -1,9 +1,11 @@
 module SystemV.Types.Meta.Equality
 
+import Data.Nat
 import Decidable.Equality
 
 import Toolkit.Decidable.Informative
 import Toolkit.Decidable.Equality.Indexed
+import Toolkit.Data.Whole
 
 import SystemV.Utilities
 import SystemV.Types.Direction
@@ -85,10 +87,15 @@ namespace DataTypeTypes
       decEqTypesDataTypes a b | (VectorTyDesc n x) | LogicTyDesc =  No (TypeMismatch a b) (negEqSym logicTypeNotAVect)
       decEqTypesDataTypes a b | (VectorTyDesc n x) | (VectorTyDesc k y) with (decEq n k)
         decEqTypesDataTypes a b | (VectorTyDesc k x) | (VectorTyDesc k y) | (Yes Refl) with (decEqTypesDataTypes x y)
-          decEqTypesDataTypes a b | (VectorTyDesc k x) | (VectorTyDesc k y) | (Yes Refl) | (Yes prf) with (prf)
-            decEqTypesDataTypes a b | (VectorTyDesc k y) | (VectorTyDesc k y) | (Yes Refl) | (Yes prf) | (Same Refl Refl) = Yes (Same Refl Refl)
-          decEqTypesDataTypes a b | (VectorTyDesc k x) | (VectorTyDesc k y) | (Yes Refl) | (No msg contra) =  No msg (vectTypeDiffType contra)
-        decEqTypesDataTypes a b | (VectorTyDesc n x) | (VectorTyDesc k y) | (No contra) =  No (TypeMismatch a b) (vectTypeDiffSize contra)
+          decEqTypesDataTypes a b | (VectorTyDesc k x) | (VectorTyDesc k y) | (Yes Refl) | (Yes prfWhy) with (prfWhy)
+            decEqTypesDataTypes a b | (VectorTyDesc k y) | (VectorTyDesc k y) | (Yes Refl) | (Yes prfWhy) | (Same Refl Refl)
+              = Yes (Same Refl Refl)
+
+          decEqTypesDataTypes a b | (VectorTyDesc k x) | (VectorTyDesc k y) | (Yes Refl) | (No msgWhyNot prfWhyNot)
+            = No msgWhyNot (vectTypeDiffType prfWhyNot)
+
+        decEqTypesDataTypes a b | (VectorTyDesc n x) | (VectorTyDesc k y) | (No contra)
+          = No (TypeMismatch a b) (vectTypeDiffSize contra)
 
 namespace DataTypeValues
   typeDefTyValueNotEqual : (contra : Equals Universe Meta x y -> Void)
@@ -507,3 +514,6 @@ decEqTypes a b {aidx} {bidx} with (byIndex a b)
       = decEqTypeTypes a b
   decEqTypes a b {aidx = aidx} {bidx = bidx} | (IdxDiff a b contra)
     = No (KindMismatch aidx bidx) (indexAreSame contra)
+
+
+-- --------------------------------------------------------------------- [ EOF ]

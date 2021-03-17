@@ -25,6 +25,8 @@ modules =
         , Toolkit.Data.Location
         , Toolkit.Data.Rig
 
+        , Toolkit.Data.Whole
+
         , Toolkit.Decidable.Informative
 
         , Toolkit.Text.Parser.Support

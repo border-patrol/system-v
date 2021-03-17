@@ -115,6 +115,11 @@ normalize str =
       then pack $ filter (\ch => ch /= '/' && ch /= '\\') (unpack str)
       else str
 
+public export
+[test] Show (Clock type) where
+  show (MkClock {type} seconds nanoseconds) =
+    show type ++ ", " ++ show seconds ++ "s " ++ show nanoseconds ++ "ns"
+
 ||| Run the specified Golden test with the supplied options.
 |||
 ||| See the module documentation for more information.
@@ -164,12 +169,12 @@ runTest opts currdir testPath
                       pure ()
 
         printTiming : Bool -> Clock type -> String -> IO ()
-        printTiming True  clock msg = putStrLn (unwords [msg, show clock])
+        printTiming True  clock msg = putStrLn (unwords [msg, ",", show @{test} clock])
         printTiming False _     msg = putStrLn msg
 
         runTest' : IO Bool
         runTest'
-            = do putStr $ testPath ++ ": "
+            = do putStr $ testPath ++ ", "
                  start <- clockTime Thread
                  system $ "sh ./run " ++ idris2 opts ++ " | tr -d '\\r' > output"
                  end <- clockTime Thread

@@ -174,7 +174,7 @@ progress (Cast this prf) with (progress this)
 progress (Slice this a o prf) with (progress this)
   progress (Slice (MkPort type' dir) a o prf) | (Done (MkPort x dir)) with (prf)
     progress (Slice (MkPort (TyVect s etype) dir) a o prf) | (Done (MkPort (TyVect s etypeV) dir)) | (YesCanSlice ArraysAre prfB)
-      = Step (ReduceSlice (MkPort (TyVect (minus o a) etypeV) dir) (YesCanSlice ArraysAre prfB))
+      = Step (ReduceSlice (MkPort (TyVect (sizeFromBound a o prfB) etypeV) dir) (YesCanSlice ArraysAre prfB))
 
   progress (Slice this a o prf) | (Step step)
     = Step (SimplifySlice step)

@@ -45,7 +45,7 @@ data SystemV : Context lvls -> MTy level -> Type where
   B : Bool -> SystemV ctxt BoolTy
 
    -- Vectors
-  TyVect : (s : Nat)
+  TyVect : (s : Whole)
         -> SystemV ctxt type
         -> SystemV ctxt (VectorTyDesc s type)
 
@@ -149,11 +149,13 @@ data SystemV : Context lvls -> MTy level -> Type where
                        -> SystemV ctxt ParamVal
 
   -- Operations on Data.
-  Slice : {s           : Nat}
+  Slice : {s           : Whole}
+       -> {type        : Meta (DATA TYPE)}
        -> (port        : SystemV ctxt (PortVal (VectorTyDesc s type) dir))
-       -> (alpha,omega : Nat)
-       -> (prf         : CanSlice (DATA TYPE) (VectorTyDesc s type) alpha omega (VectorTyDesc (minus omega alpha) type))
-                      -> SystemV ctxt (PortVal (VectorTyDesc (minus omega alpha) type) dir)
+       -> (alpha : Nat)
+       -> (omega : Whole)
+       -> (prf         : CanSlice (DATA TYPE) (VectorTyDesc s type) alpha omega out)
+                      -> SystemV ctxt (PortVal out dir)
 
   -- Compile time wiring decisions
   IfThenElseC : (test      : SystemV ctxt BoolTy)

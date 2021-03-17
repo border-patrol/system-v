@@ -3,6 +3,7 @@ module SystemV.DSL.Build
 import        Decidable.Equality
 
 import        Data.Vect
+import        Data.Nat
 import        Data.List
 import        Data.List.Views
 import        Data.Strings
@@ -130,8 +131,12 @@ build env ast with (env)
     build env ast | (Ctxt lvls names ctxt) | (TyVect fc s type) with (build (Ctxt lvls names ctxt) type)
       build env ast | (Ctxt lvls names ctxt) | (TyVect fc s type) | (Left err)
         = Left err
-      build env ast | (Ctxt lvls names ctxt) | (TyVect fc s type) | (Right (Res (DATA TYPE) typeData termData))
-        = pure (Res _ _ (TyVect s termData))
+
+      build env ast | (Ctxt lvls names ctxt) | (TyVect fc s type) | (Right (Res (DATA TYPE) typeData termData)) with (isItSucc s)
+        build env ast | (Ctxt lvls names ctxt) | (TyVect fc (S n) type) | (Right (Res (DATA TYPE) typeData termData)) | (Yes ItIsSucc)
+          = pure (Res _ _ (TyVect (W (S n) ItIsSucc) termData))
+        build env ast | (Ctxt lvls names ctxt) | (TyVect fc s type) | (Right (Res (DATA TYPE) typeData termData)) | (No contra)
+          = Left (Err fc NotADataType)
       build env ast | (Ctxt lvls names ctxt) | (TyVect fc s type) | (Right (Res _ _ _))
         = Left (Err fc NotADataType)
 
@@ -316,11 +321,15 @@ build env ast with (env)
     build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) with (build (Ctxt lvls names ctxt) p)
       build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Left err)
         = Left err
-      build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res (IDX VALUE) (PortVal type dir) term)) with (canSlice type a o )
-        build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res (IDX VALUE) (PortVal type dir) term)) | (Yes (MkDPair fst snd)) with (snd)
-          build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res (IDX VALUE) (PortVal (VectorTyDesc s type) dir) term)) | (Yes (MkDPair (VectorTyDesc (minus _ _) type) snd)) | (YesCanSlice ArraysAre prfB)
-            = pure (Res _ _ (Slice term a o (YesCanSlice ArraysAre prfB)))
-        build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res (IDX VALUE) (PortVal type dir) term)) | (No msgWhyNot prfWhyNot)
+      build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res (IDX VALUE) (PortVal type dir) term)) with (isItSucc o)
+        build env ast | (Ctxt lvls names ctxt) | (Slice fc p a (S x)) | (Right (Res (IDX VALUE) (PortVal type dir) term)) | Yes ItIsSucc with (canSlice type a (W (S x) ItIsSucc))
+          build env ast | (Ctxt lvls names ctxt) | (Slice fc p a (S x)) | (Right (Res (IDX VALUE) (PortVal type dir) term)) | Yes ItIsSucc | (Yes (MkDPair fst snd)) with (snd)
+            build env ast | (Ctxt lvls names ctxt) | (Slice fc p a (S x)) | (Right (Res (IDX VALUE) (PortVal (VectorTyDesc s type) dir) term)) | Yes ItIsSucc | (Yes (MkDPair (VectorTyDesc (sizeFromBound _ (W (S _) ItIsSucc) prfB) type) snd)) | (YesCanSlice prfS prfB)
+            = pure (Res _ _ (Slice term a (W (S x) ItIsSucc) (YesCanSlice prfS prfB)))
+          build env ast | (Ctxt lvls names ctxt) | (Slice fc p a (S x)) | (Right (Res (IDX VALUE) (PortVal type dir) term)) | Yes ItIsSucc | (No msgWhyNot prfWhyNot)
+            = Left (Err fc CannotSlice)
+
+        build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res (IDX VALUE) (PortVal type dir) term)) | No prf
           = Left (Err fc CannotSlice)
 
       build env ast | (Ctxt lvls names ctxt) | (Slice fc p a o) | (Right (Res _ _ _))

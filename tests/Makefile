@@ -1,12 +1,10 @@
 .PHONY: testbin test clean clobber
 
-export SYSTEMV_TEST_JUST
-export SYSTEMV_TEST_INTERACTIVE
-export SYSTEMV_BIN=../../build/exec/systemv
+SYSTEMV_TEST_U ?= --interactive
 
 
 test:
-	./build/exec/runtests $(SYSTEMV_BIN) --timing $(SYSTEMV_TEST_INTERACTIVE) --only $(SYSTEMV_TEST_JUST)
+	./build/exec/runtests $(SYSTEMV_BIN) --timing $(SYSTEMV_TEST_U) --only $(SYSTEMV_TEST_O)
 
 testbin:
 	idris2 --build tests.ipkg

@@ -7,6 +7,8 @@ import Decidable.Equality
 import Toolkit.Decidable.Informative
 import Toolkit.Decidable.Equality.Indexed
 
+import Toolkit.Data.Whole
+
 import SystemV.Utilities
 import SystemV.Types.Direction
 import SystemV.Types.Meta
@@ -70,43 +72,52 @@ sliceable type {level} with (level)
 
 namespace Bound
 
-  public export
-  data Error = InvalidType (Meta u)
-             | BadRange Nat Nat
-             | BadBound (Nat,Nat) Nat
-             | BadTypeDef Bound.Error
 
   public export
   data ValidBound : (type : Meta (DATA TYPE))
-                 -> (alpha,omega : Nat)
+                 -> (alpha : Nat)
+                 -> (omega : Whole)
                  -> Type
     where
-      ArrayBound : (prfB : LT alpha omega)
-                -> (prfL : LTE omega s)
+      ArrayBound : (prfU : LTE Z     alpha)             -- 0     <= alpha
+                -> (prfB : LTE   (S  alpha) omega)      -- alpha <  omega]
+                -> (prfL : LT               omega  s)   -- omega <  s
                         -> ValidBound (VectorTyDesc s type) alpha omega
 
   notBoundableB : ValidBound (BoolTyDesc)  a o -> Void
-  notBoundableB (ArrayBound prfB prfL) impossible
+  notBoundableB (ArrayBound prfU prfB prfL) impossible
 
   notBoundableL : ValidBound (LogicTyDesc) a o -> Void
-  notBoundableL (ArrayBound prfB prfL) impossible
+  notBoundableL (ArrayBound prfU prfB prfL) impossible
 
   notBoundableT : ValidBound (TypeDefTy type) a o -> Void
-  notBoundableT (ArrayBound prfB prfL) impossible
+  notBoundableT (ArrayBound prfU prfB prfL) impossible
 
-  badBound : (LT a o -> Void)
+  badAlpha : (contra : LTE Z alpha -> Void)
+          -> ValidBound (VectorTyDesc n type) alpha omega
+          -> Void
+  badAlpha contra (ArrayBound prfU prfB prfL) = contra prfU
+
+  badBound : (LTE (S a) o -> Void)
           -> ValidBound (VectorTyDesc n type) a o
           -> Void
-  badBound f (ArrayBound prfB prfL) = f prfB
+  badBound f (ArrayBound prfU prfB prfL) = f prfB
 
-  badRange : (LTE o n -> Void)
+  badRange : (LT o n -> Void)
           -> ValidBound (VectorTyDesc n type) a o
           -> Void
-  badRange f (ArrayBound prfB prfL) = f prfL
+  badRange f (ArrayBound prfU prfB prfL) = f prfL
+
+  public export
+  data Error = InvalidType (Meta u)
+             | BadRange Nat Whole
+             | BadBound (Nat,Whole) Whole
+             | IndexStartsZero Nat
 
   export
   validBound : (type : Meta (DATA TYPE))
-            -> (a,o  : Nat)
+            -> (a    : Nat)
+            -> (o    : Whole)
                     -> DecInfo Bound.Error (ValidBound type a o)
   validBound type a o with (type)
     validBound type a o | BoolTyDesc
@@ -115,26 +126,44 @@ namespace Bound
       = No (InvalidType type) notBoundableL
     validBound type a o | (TypeDefTy x)
       = No (InvalidType type) notBoundableT
+    validBound type a o | (VectorTyDesc n x) with (isLTE Z a)
+      validBound type a o | (VectorTyDesc n x) | (Yes prfU) with (isLTE (S a) o)
+        validBound type a o | (VectorTyDesc n x) | (Yes prfU) | (Yes prfR) with (isLT o n)
+          validBound type a o | (VectorTyDesc n x) | (Yes prfU) | (Yes prfR) | (Yes prfL)
+            = Yes (ArrayBound prfU prfR prfL)
+          validBound type a o | (VectorTyDesc n x) | (Yes prfU) | (Yes prfR) | (No contra)
+            = No (BadBound (a,o) n) (badRange contra)
 
-    validBound type a o | (VectorTyDesc n x) with (isLTE (S a) o)
-      validBound type a o | (VectorTyDesc n x) | (Yes prf) with (isLTE o n)
-        validBound type a o | (VectorTyDesc n x) | (Yes prf) | (Yes y)
-          = Yes (ArrayBound prf y)
-
-        validBound type a o | (VectorTyDesc n x) | (Yes prf) | (No contra)
-        = No (BadBound (a,o) n) (badRange contra)
+        validBound type a o | (VectorTyDesc n x) | (Yes prfU) | (No contra)
+          = No (BadRange a o) (badBound contra)
 
       validBound type a o | (VectorTyDesc n x) | (No contra)
-        = No (BadRange a o) (badBound contra)
+        = No (IndexStartsZero a) (badAlpha contra)
 
 namespace Slicing
 
   public export
-  data CanSlice : (level       : Universe)
-               -> (input       : Meta level)
-               -> (alpha,omega : Nat)
-               -> (out         : Meta level)
-                              -> Type
+  minus : (omega : Whole)
+       -> (alpha : Nat)
+       -> (prf   : LTE (S alpha) omega)
+       -> Whole
+  minus (W (S omega) ItIsSucc) 0 prf = W (S (S omega)) ItIsSucc
+  minus (W (S right) ItIsSucc) (S k) (IsLTE (LTESucc x)) = W (S (minus right (S k))) ItIsSucc
+
+  public export
+  sizeFromBound : (alpha : Nat)
+               -> (omega : Whole)
+               -> (prf : ValidBound (VectorTyDesc s type) alpha omega)
+               -> Whole
+  sizeFromBound alpha omega (ArrayBound prfU prfB prfL) = minus omega alpha prfB
+
+  public export
+  data CanSlice : (level : Universe)
+               -> (input : Meta level)
+               -> (alpha : Nat)
+               -> (omega : Whole)
+               -> (out   : Meta level)
+                        -> Type
     where
       YesCanSlice : (prfS : Sliceable (DATA TYPE)
                                       (VectorTyDesc s type))
@@ -143,13 +172,15 @@ namespace Slicing
                                      (VectorTyDesc s type)
                                      alpha
                                      omega
-                                     (VectorTyDesc (minus omega alpha) type)
+                                     (VectorTyDesc (sizeFromBound alpha omega prfB) type)
+
 
 
   invalidSlice : (contra : Sliceable level type -> Void)
               -> (out    : Meta level ** CanSlice level type alpha omega out)
                         -> Void
-  invalidSlice contra (MkDPair (VectorTyDesc (minus omega alpha) type) (YesCanSlice prfS prfB)) = contra prfS
+  invalidSlice contra (MkDPair (VectorTyDesc (sizeFromBound alpha omega prfB) type) (YesCanSlice prfS prfB)) = contra prfS
+
 
   isType : (out : Meta (IDX _) ** CanSlice (IDX _) type alpha omega out) -> Void
   isType (MkDPair _ (YesCanSlice prfS prfB)) impossible
@@ -160,7 +191,8 @@ namespace Slicing
   invalidBound : (contra : ValidBound type alpha omega -> Void)
               -> (out    : Meta (DATA TYPE) ** CanSlice (DATA TYPE) type alpha omega out)
                         -> Void
-  invalidBound contra (MkDPair (VectorTyDesc (minus omega alpha) type) (YesCanSlice prfS prfB)) = contra prfB
+  invalidBound contra (MkDPair (VectorTyDesc (sizeFromBound alpha omega prfB) type) (YesCanSlice prfS prfB)) = contra prfB
+
 
 
   public export
@@ -169,11 +201,12 @@ namespace Slicing
              | InvalidSlice (Sliceable.Error)
 
   export
-  canSlice : {level       : Universe}
-          -> (type        : Meta level)
-          -> (alpha,omega : Nat)
-                         -> DecInfo Slicing.Error
-                                    (out ** CanSlice level type alpha omega out)
+  canSlice : {level : Universe}
+          -> (type  : Meta level)
+          -> (alpha : Nat)
+          -> (omega : Whole)
+                   -> DecInfo Slicing.Error
+                              (out ** CanSlice level type alpha omega out)
   canSlice type alpha omega {level = (IDX _)}
     = No (InvalidType type) isType
 
@@ -183,7 +216,7 @@ namespace Slicing
   canSlice type alpha omega {level = (DATA TYPE)} with (sliceable type)
     canSlice (VectorTyDesc n innertype) alpha omega {level = (DATA TYPE)} | (Yes ArraysAre) with (validBound (VectorTyDesc n innertype) alpha omega)
       canSlice (VectorTyDesc n innertype) alpha omega {level = (DATA TYPE)} | (Yes ArraysAre) | (Yes prfWhy)
-        = Yes (MkDPair (VectorTyDesc (minus omega alpha) innertype) (YesCanSlice ArraysAre prfWhy))
+          = Yes (VectorTyDesc (sizeFromBound alpha omega prfWhy) innertype ** YesCanSlice ArraysAre prfWhy)
 
       canSlice (VectorTyDesc n innertype) alpha omega {level = (DATA TYPE)} | (Yes ArraysAre) | (No msgWhyNot prfWhyNot)
         = No (InvalidBound msgWhyNot) (invalidBound prfWhyNot)

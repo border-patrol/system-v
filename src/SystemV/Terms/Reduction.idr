@@ -165,10 +165,10 @@ data Redux : (this : SystemV ctxt type)
                  -> Redux (Slice this a o prf) (Slice that a o prf)
 
     ReduceSlice : {typeV : SystemV ctxt type}
-               -> (value : Value (MkPort (TyVect (minus o a) typeV) dir))
-               -> (prf   : CanSlice (DATA TYPE) (VectorTyDesc s type) a o (VectorTyDesc (minus o a) type))
+               -> (value : Value (MkPort (TyVect sout typeV) dir))
+               -> (prf   : CanSlice (DATA TYPE) (VectorTyDesc s type) a o (VectorTyDesc sout type))
                         -> Redux (Slice (MkPort (TyVect s typeV) dir) a o prf)
-                                 (MkPort (TyVect (minus o a) typeV) dir)
+                                 (MkPort (TyVect sout typeV) dir)
 
     -- Params
     SimplifyParamOpBoolLeft : Redux this that
