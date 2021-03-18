@@ -1,14 +1,14 @@
-module SystemV.Evaluation.Progress
+module SystemV.Arithmetic.Evaluation.Progress
 
 import SystemV.Utilities
 import SystemV.Types
-import SystemV.Terms
-import SystemV.Values
 
-import SystemV.Terms.Renaming
-import SystemV.Terms.Substitution
-import SystemV.Terms.Casting
-import SystemV.Terms.Reduction
+import SystemV.Arithmetic.Terms
+import SystemV.Arithmetic.Values
+import SystemV.Arithmetic.Terms.Renaming
+import SystemV.Arithmetic.Terms.Substitution
+import SystemV.Arithmetic.Terms.Casting
+import SystemV.Arithmetic.Terms.Reduction
 
 %default total
 
@@ -193,6 +193,17 @@ progress (ParamOpBool op l r) with (progress l)
 
   progress (ParamOpBool op l r) | Step step
     = Step (SimplifyParamOpBoolLeft step)
+
+progress (ParamOpArith op l r) with (progress l)
+  progress (ParamOpArith op l r) | Done lval with (progress r)
+    progress (ParamOpArith op (MkParam l) (MkParam r)) | Done MkParam | Done MkParam
+      = Step ReduceParamOpArith
+
+    progress (ParamOpArith op l r) | Done lval | Step step
+      = Step (SimplifyParamOpArithRight lval step)
+
+  progress (ParamOpArith op l r) | Step step
+    = Step (SimplifyParamOpArithLeft step)
 
 progress (ParamOpNot p) with (progress p)
   progress (ParamOpNot (B b)) | Done B

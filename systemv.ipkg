@@ -37,9 +37,10 @@ modules =
 
         , Toolkit.System
 
-        -- [ SystemV Itself]
-
+        -- [ Things Common to All System V ]
         , SystemV.Utilities
+
+        -- [ SystemV Plain]
 
         , SystemV.Types.Direction
         , SystemV.Types.Gate
@@ -66,8 +67,6 @@ modules =
 
         , SystemV
 
-        -- [ The DSL ]
-
         , SystemV.DSL.AST
         , SystemV.DSL.Lexer
         , SystemV.DSL.Parser
@@ -75,6 +74,34 @@ modules =
         , SystemV.DSL.Build.Result
         , SystemV.DSL.Build.Helpers
         , SystemV.DSL.Build
+
+        , SystemV.DSL
+
+        -- [ SystemV with Arithmetic ]
+
+        , SystemV.Arithmetic.Terms.Renaming
+        , SystemV.Arithmetic.Terms.Substitution
+        , SystemV.Arithmetic.Terms.Casting
+        , SystemV.Arithmetic.Terms.Reduction
+        , SystemV.Arithmetic.Terms
+
+        , SystemV.Arithmetic.Values
+
+        , SystemV.Arithmetic.Evaluation.Progress
+        , SystemV.Arithmetic.Evaluation
+
+        , SystemV.Arithmetic
+
+        , SystemV.Arithmetic.DSL.AST
+        , SystemV.Arithmetic.DSL.Lexer
+        , SystemV.Arithmetic.DSL.Parser
+        , SystemV.Arithmetic.DSL.Build.Context
+        , SystemV.Arithmetic.DSL.Build.Result
+        , SystemV.Arithmetic.DSL.Build.Helpers
+        , SystemV.Arithmetic.DSL.Build
+
+        , SystemV.Arithmetic.DSL
+
 
         -- [ Main ]
         , Main

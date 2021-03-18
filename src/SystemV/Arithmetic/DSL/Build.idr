@@ -1,4 +1,4 @@
-module SystemV.DSL.Build
+module SystemV.Arithmetic.DSL.Build
 
 import        Decidable.Equality
 
@@ -13,14 +13,15 @@ import public Toolkit.Data.Location
 import public Toolkit.Data.DList
 import public Toolkit.Data.DList.Elem
 
-import        SystemV.Types
-import        SystemV.Terms
-
-import        SystemV.DSL.AST
-import        SystemV.DSL.Build.Context
-import        SystemV.DSL.Build.Result
-import        SystemV.DSL.Build.Helpers
 import        SystemV.Utilities
+import        SystemV.Types
+
+import        SystemV.Arithmetic.Terms
+import        SystemV.Arithmetic.DSL.AST
+import        SystemV.Arithmetic.DSL.Build.Context
+import        SystemV.Arithmetic.DSL.Build.Result
+import        SystemV.Arithmetic.DSL.Build.Helpers
+
 
 %default total
 
@@ -310,6 +311,13 @@ build env ast with (env)
           = do (Res (DATA VALUE) BoolTy t) <- build (Ctxt lvls names ctxt) op
                    | _ => Left (Err fc MkError)
                pure (Res _ _ (ParamOpNot t))
+
+    build env ast | (Ctxt lvls names ctxt) | (ParamOpArith fc op left right)
+      = do (Res (IDX VALUE) ParamVal l) <- build (Ctxt lvls names ctxt) left
+              | _ => Left (Err fc MkError)
+           (Res (IDX VALUE) ParamVal r) <- build (Ctxt lvls names ctxt) right
+              | _ => Left (Err fc MkError)
+           pure (Res _ _ (ParamOpArith op l r))
 
 -- [ Operations on Data ]
 

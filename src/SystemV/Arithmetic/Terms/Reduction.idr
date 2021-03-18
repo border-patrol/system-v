@@ -1,13 +1,14 @@
-module SystemV.Terms.Reduction
+module SystemV.Arithmetic.Terms.Reduction
 
 import SystemV.Utilities
 import SystemV.Types
-import SystemV.Terms
-import SystemV.Values
 
-import SystemV.Terms.Renaming
-import SystemV.Terms.Substitution
-import SystemV.Terms.Casting
+import SystemV.Arithmetic.Values
+import SystemV.Arithmetic.Terms
+
+import SystemV.Arithmetic.Terms.Renaming
+import SystemV.Arithmetic.Terms.Substitution
+import SystemV.Arithmetic.Terms.Casting
 
 %default total
 
@@ -181,6 +182,18 @@ data Redux : (this : SystemV ctxt type)
 
     ReduceParamOpBool : Redux (ParamOpBool op (MkParam left) (MkParam right))
                               (B (op left right))
+
+    SimplifyParamOpArithLeft : Redux this that
+                            -> Redux (ParamOpArith op this right)
+                                     (ParamOpArith op that right)
+
+    SimplifyParamOpArithRight : Value left
+                             -> Redux this that
+                             -> Redux (ParamOpArith op left this)
+                                      (ParamOpArith op left that)
+
+    ReduceParamOpArith : Redux (ParamOpArith op (MkParam left) (MkParam right))
+                               (MkParam (op left right))
 
 
     SimplifyParamOpNot : (prf : Redux this that)

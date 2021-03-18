@@ -1,9 +1,11 @@
-module SystemV.Terms.Substitution
+module SystemV.Arithmetic.Terms.Substitution
 
 import SystemV.Utilities
+
 import SystemV.Types
-import SystemV.Terms
-import SystemV.Terms.Renaming
+
+import SystemV.Arithmetic.Terms
+import SystemV.Arithmetic.Terms.Renaming
 
 %default total
 
@@ -114,6 +116,9 @@ namespace General
 
   subst f (ParamOpBool op l r)
     = ParamOpBool op (subst f l) (subst f r)
+
+  subst f (ParamOpArith op l r)
+    = ParamOpArith op (subst f l) (subst f r)
 
   subst f (ParamOpNot p)
     = ParamOpNot (subst f p)

@@ -1,10 +1,11 @@
-module SystemV.Terms.Renaming
+module SystemV.Arithmetic.Terms.Renaming
 
 import Data.Vect
 
 import SystemV.Utilities
 import SystemV.Types
-import SystemV.Terms
+
+import SystemV.Arithmetic.Terms
 
 %default total
 
@@ -110,6 +111,9 @@ rename f (MkParam val) = MkParam val
 
 rename f (ParamOpBool op l r)
   = ParamOpBool op (rename f l) (rename f r)
+
+rename f (ParamOpArith op l r)
+  = ParamOpArith op (rename f l) (rename f r)
 
 rename f (ParamOpNot p)
   = ParamOpNot (rename f p)

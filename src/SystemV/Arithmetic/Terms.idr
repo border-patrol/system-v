@@ -1,6 +1,6 @@
 ||| Terms in SystemV.
 |||
-module SystemV.Terms
+module SystemV.Arithmetic.Terms
 
 import Toolkit.Data.DList
 import Toolkit.Data.DList.Elem
@@ -142,6 +142,12 @@ data SystemV : Context lvls -> MTy level -> Type where
 
   ParamOpNot : (left  : SystemV ctxt BoolTy)
                      -> SystemV ctxt BoolTy
+
+  ParamOpArith : (op    : Nat -> Nat -> Nat)
+              -> (left  : SystemV ctxt ParamVal)
+              -> (right : SystemV ctxt ParamVal)
+                       -> SystemV ctxt ParamVal
+
 
   -- Operations on Data.
   Slice : {s           : Whole}

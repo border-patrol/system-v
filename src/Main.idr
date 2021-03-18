@@ -6,17 +6,8 @@ import System.Clock
 
 import Toolkit.System
 
-import SystemV.DSL.AST
-import SystemV.DSL.Lexer
-import SystemV.DSL.Parser
-import SystemV.DSL.Build
-
-import SystemV.Types
-
-import SystemV.Terms
-import SystemV.Values
-import SystemV.Evaluation
-
+import SystemV
+import SystemV.DSL
 
 processArgs : List String -> IO $ Maybe (Bool, String)
 processArgs (x::"--timing"::z::xs) = pure $ Just (True, z)

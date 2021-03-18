@@ -1,4 +1,4 @@
-module SystemV.DSL.Parser
+module SystemV.Arithmetic.DSL.Parser
 
 import        Data.Vect
 import        Data.Nat
@@ -19,7 +19,7 @@ import public Toolkit.Text.Parser.Run
 import        SystemV.Types.Direction
 import        SystemV.Types.Gate
 
-import        SystemV.DSL.AST
+import        SystemV.Arithmetic.DSL.AST
 
 
 import public SystemV.DSL.Lexer
@@ -251,6 +251,13 @@ paramOpBool s op
        e <- location
        pure (ParamOpBool (newFC st e) op (fst lr) (snd lr))
 
+paramOpArith : String -> (Nat -> Nat -> Nat) -> Rule Token AST
+paramOpArith s op
+  = do st <- location
+       lr <- paramOp s
+       e <- location
+       pure (ParamOpArith (newFC st e) op (fst lr) (snd lr))
+
 paramOpNot :  Rule Token AST
 paramOpNot
     = do st <- location
@@ -263,6 +270,11 @@ paramOpsB =   paramOpBool "lt"  (<)
           <|> paramOpBool "gt"  (>)
           <|> paramOpBool "eq"  (==)
           <|> paramOpNot
+
+paramOpsA : Rule Token AST
+paramOpsA =  paramOpArith "add" (+)
+         <|> paramOpArith "sub" (minus)
+         <|> paramOpArith "mul" (*)
 
 proj : Rule Token AST
     -> String

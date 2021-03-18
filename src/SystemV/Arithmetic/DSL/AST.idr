@@ -1,4 +1,4 @@
-module SystemV.DSL.AST
+module SystemV.Arithmetic.DSL.AST
 
 import Toolkit.Data.Location
 
@@ -228,6 +228,19 @@ data AST : Type where
             -> (op : AST)
                   -> AST
 
+  ||| Parameter arithmetic
+  |||
+  ||| ```
+  ||| (add x y) ::= ParamOpArith (+) x y
+  ||| (sub x y) ...
+  ||| (mul x y)
+  ||| (div x y)
+  ||| ```
+  ParamOpArith : (fc    : FileContext)
+              -> (op    : Nat -> Nat -> Nat)
+              -> (left  : AST)
+              -> (right : AST)
+                       -> AST
 
   ||| Binders
   |||
