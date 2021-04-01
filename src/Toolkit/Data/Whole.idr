@@ -114,14 +114,17 @@ namespace IsLteNatWhole
     isLTE n (W k prf) | (Yes x) = Yes (IsLTE x)
     isLTE n (W k prf) | (No contra) = No (isLTENot contra)
 
-namespace Div
+public export
+data IsWhole : Nat -> Whole -> Type where
+  YesIsWhole : IsWhole (S n) (W (S n) ItIsSucc)
 
-  export
-  total
-  div : (n : Nat)
-     -> (w : Whole)
-          -> Nat
-  div n (W (S x) ItIsSucc) = divNatNZ n (S x) SIsNotZ
+isZero : (w ** IsWhole 0 w) -> Void
+isZero (MkDPair _ YesIsWhole) impossible
+
+export
+isWhole : (n : Nat) -> Dec (w ** IsWhole n w)
+isWhole 0 = No isZero
+isWhole (S k) = Yes (MkDPair (W (S k) ItIsSucc) YesIsWhole)
 
 
 -- --------------------------------------------------------------------- [ EOF ]
