@@ -145,7 +145,7 @@ data AST : Type where
   ||| ```
   Slice : (fc   : FileContext)
        -> (port : AST)
-       -> (s,e  : Nat)
+       -> (s,e  : AST)
                -> AST
 
   ||| Wiring decisions
@@ -240,3 +240,149 @@ data AST : Type where
 
   NotGate : FileContext -> AST -> AST -> AST
   Gate : FileContext -> GateKind -> AST -> AST -> AST -> AST
+
+  Index : FileContext -> AST -> AST -> AST
+  Size  : FileContext -> AST -> AST
+  MkNat : Nat -> AST
+  TyNat : Nat -> AST
+
+public export
+setFileName : (fname : String)
+           -> (ast   : AST)
+                    -> AST
+setFileName fname (Ref x y)
+  = Ref (setSource fname x) y
+
+setFileName fname (Func fc name type body)
+  = Func (setSource fname fc)
+         name
+         (setFileName fname type)
+         (setFileName fname body)
+
+setFileName fname (App func param)
+  = App (setFileName fname func)
+        (setFileName fname param)
+
+setFileName fname (TyLogic fc)
+  = TyLogic (setSource fname fc)
+
+setFileName fname (TyVect fc s type)
+  = TyVect (setSource fname fc)
+           s
+           (setFileName fname type)
+
+setFileName fname (TypeDef fc name type body)
+  = TypeDef (setSource fname fc)
+            name
+            (setFileName fname type)
+            (setFileName fname body)
+
+setFileName fname (TyPort fc type dir)
+  = TyPort (setSource fname fc)
+           (setFileName fname type)
+           dir
+
+setFileName fname (MkChan fc type)
+  = MkChan (setSource fname fc)
+           (setFileName fname type)
+
+setFileName fname (WriteTo fc chan)
+  = WriteTo (setSource fname fc)
+            (setFileName fname chan)
+
+setFileName fname (ReadFrom fc chan)
+  = ReadFrom (setSource fname fc)
+             (setFileName fname chan)
+
+setFileName fname (Drive fc chan)
+  = Drive (setSource fname fc)
+          (setFileName fname chan)
+
+setFileName fname (Catch fc chan)
+  = Catch (setSource fname fc)
+          (setFileName fname chan)
+
+setFileName fname (Slice fc port s e)
+  = Slice (setSource fname fc)
+          (setFileName fname port)
+          (setFileName fname s)
+          (setFileName fname e)
+
+setFileName fname (IfThenElse fc test true false)
+  = IfThenElse (setSource fname fc)
+               (setFileName fname test)
+               (setFileName fname true)
+               (setFileName fname false)
+
+setFileName fname (Connect fc portL portR)
+  = Connect (setSource fname fc)
+            (setFileName fname portL)
+            (setFileName fname portR)
+
+setFileName fname (Cast fc port type dir)
+  = Cast (setSource fname fc)
+         (setFileName fname port)
+         (setFileName fname type)
+         dir
+
+setFileName fname (Let fc name value body)
+  = Let (setSource fname fc)
+        name
+        (setFileName fname value)
+        (setFileName fname body)
+
+setFileName fname (Seq x y)
+  = Seq (setFileName fname x)
+        (setFileName fname y)
+
+setFileName fname EndModule
+  = EndModule
+
+setFileName fname UnitVal
+  = UnitVal
+setFileName fname TyUnit
+  = TyUnit
+
+setFileName fname (NotGate fc out input)
+  = NotGate (setSource fname fc)
+            (setFileName fname out)
+            (setFileName fname input)
+
+setFileName fname (Gate fc kind out inA inB)
+  = Gate (setSource fname fc)
+         kind
+         (setFileName fname out)
+         (setFileName fname inA)
+         (setFileName fname inB)
+
+setFileName fname (MkNat n)
+  = MkNat n
+
+setFileName fname (TyNat n)
+  = TyNat n
+
+setFileName fname (Index fc i p)
+  = Index (setSource fname fc)
+          (setFileName fname i)
+          (setFileName fname p)
+setFileName fname (Size fc port)
+  = Size (setSource fname fc)
+         (setFileName fname port)
+
+public export
+deriveFor : FileContext
+         -> String
+         -> Nat
+         -> AST
+         -> AST
+deriveFor fc name i body = doFlatten i
+  where
+    buildApp : Nat -> AST
+    buildApp x = App (Func fc name (TyNat x) body) (MkNat x)
+
+    doFlatten : Nat -> AST
+    doFlatten Z     = buildApp Z
+    doFlatten (S k) = doFlatten k `Seq` (buildApp (S k))
+
+
+-- [ EOF ]

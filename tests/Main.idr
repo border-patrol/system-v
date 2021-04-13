@@ -13,6 +13,7 @@ tests =
   , "001-scrub"
   , "002-split"
   , "003-gates"
+  , "004-for"
   ]
 
 covering

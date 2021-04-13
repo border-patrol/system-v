@@ -12,9 +12,7 @@ import SystemV.Terms.Renaming
 import SystemV.Terms.Substitution
 
 import SystemV.Evaluation.Values
-
 import SystemV.Evaluation.Reduction
-
 import SystemV.Evaluation.Progress
 
 %default total

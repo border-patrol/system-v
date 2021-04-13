@@ -44,6 +44,10 @@ termBuilder : (ctxt : Context lvls types)
 termBuilder (Ctxt lvls names types) TyUnit
   = pure (Res _ _ TyUnit)
 
+-- ### Nat
+termBuilder (Ctxt lvls names types) (TyNat n)
+  = pure (Res _ _ (TyNat n))
+
 -- ### Logic
 termBuilder (Ctxt lvls names types) (TyLogic fc)
   = pure (Res _ _ TyLogic)
@@ -144,13 +148,16 @@ termBuilder ctxt (App func param) with (termBuilder ctxt func)
   termBuilder ctxt (App func param) | (Right (Res u type _))
     = Left (WrongType NotAFunc type)
 
--- ## Modules \& Units
+-- ## Modules \& Units \& Nats
 
 termBuilder (Ctxt lvls names types) EndModule
   = pure (Res _ _ EndModule)
 
 termBuilder (Ctxt lvls names types) UnitVal
   = pure (Res _ _ MkUnit)
+
+termBuilder (Ctxt lvls names types) (MkNat n)
+  = pure (Res _ _ (MkNat n))
 
 -- ## Channels
 
@@ -248,12 +255,23 @@ termBuilder ctxt (Cast fc port type dir) with (termBuilder ctxt port)
 termBuilder ctxt (Slice fc port s e) with (termBuilder ctxt port)
   termBuilder ctxt (Slice fc port s e) | (Left err)
     = Left (Err fc err)
-  termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) with (validBound s e size)
-    termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (Yes prfWhy)
-      = pure (Res _ _ (Slice term (MkNat s) (MkNat e) prfWhy))
+  termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) with (termBuilder ctxt s)
+    termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (Left err)
+      = Left (Err fc err)
+    termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (Right (Res (IDX TERM) (NatTy alpha) termA)) with (termBuilder ctxt e)
+      termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (Right (Res (IDX TERM) (NatTy alpha) termA)) | (Left err)
+        = Left (Err fc err)
+      termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (Right (Res (IDX TERM) (NatTy alpha) termA)) | (Right (Res (IDX TERM) (NatTy omega) termO)) with (validBound alpha omega size)
+        termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (Right (Res (IDX TERM) (NatTy alpha) termA)) | (Right (Res (IDX TERM) (NatTy omega) termO)) | (Yes prfWhy)
+          = pure (Res _ _ (Slice term termA termO prfWhy))
+        termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (Right (Res (IDX TERM) (NatTy alpha) termA)) | (Right (Res (IDX TERM) (NatTy omega) termO)) | (No msgWhyNot prfWhyNot)
+          = Left (Err fc (InvalidBound msgWhyNot))
 
-    termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (No msgWhyNot prfWhyNot)
-      = Left (Err fc (InvalidBound msgWhyNot))
+      termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (Right (Res (IDX TERM) (NatTy alpha) termA)) | (Right (Res u tyB y))
+        = Left (Err fc (WrongType NotANat tyB))
+
+    termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (Right (Res u tyA _))
+      = Left (Err fc (WrongType NotANat tyA))
 
   termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy type dir) term))
     = Left (Err fc (WrongType NotAVect (PortTy type dir)))
@@ -420,7 +438,42 @@ termBuilder ctxt (Seq left right) with (termBuilder ctxt left)
   termBuilder ctxt (Seq left right) | (Right (Res u type _))
     = Left (WrongType NotAUnit type)
 
--- ## Derived tbd
+-- ## Indicies
+
+termBuilder ctxt (Index fc i port) with (termBuilder ctxt i)
+  termBuilder ctxt (Index fc i port) | (Left err)
+    = Left (Err fc err)
+  termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (NatTy n) termN)) with (termBuilder ctxt port)
+    termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (NatTy n) termN)) | (Left err)
+      = Left (Err fc err)
+
+    termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (NatTy n) termN)) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size ty) dir) portTerm)) with (isLTE (S n) size)
+      termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (NatTy n) termN)) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size ty) dir) portTerm)) | (Yes prf)
+        = pure (Res _ _ (Index termN portTerm prf))
+      termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (NatTy n) termN)) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size ty) dir) portTerm)) | (No contra) = Left (Err fc (IndexOutOfBounds n size))
+
+      --
+
+    termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (NatTy n) termN)) | (Right (Res (IDX TERM) (PortTy ty dir) portTerm))
+      = Left (Err fc (WrongType NotAVect (PortTy ty dir)))
+
+    termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (NatTy n) termN)) | (Right (Res u type x))
+      = Left (Err fc (WrongType NotAPort type))
+  termBuilder ctxt (Index fc i port) | (Right (Res u type term))
+    = Left (Err fc (WrongType NotANat type))
+
+-- ## Size
+
+termBuilder ctxt (Size fc port) with (termBuilder ctxt port)
+  termBuilder ctxt (Size fc port) | Left err
+    = Left (Err fc err)
+  termBuilder ctxt (Size fc port) | Right (Res (IDX TERM) (PortTy (VectorTyDesc (W (S s) ItIsSucc) ty) dir) x)
+    = pure (Res _ _ (Size x))
+
+  termBuilder ctxt (Size fc port) | Right (Res (IDX TERM) (PortTy ty dir) x)
+     = Left (Err fc (WrongType NotAVect (PortTy ty dir)))
+  termBuilder ctxt (Size fc port) | Right (Res u type x)
+    = Left (Err fc (WrongType NotAPort type))
 
 -- [ End of Build ]
 

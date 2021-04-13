@@ -10,6 +10,8 @@ import SystemV.Terms.Substitution
 import SystemV.Evaluation.Values
 import SystemV.Evaluation.Casting
 import SystemV.Evaluation.Slicing
+import SystemV.Evaluation.Sizing
+import SystemV.Evaluation.Indexing
 
 %default total
 
@@ -206,8 +208,40 @@ data Redux : (this : SystemV ctxt type)
                           (Seq left (Slice port alpha omega prf))
 
     ReduceSlice : (val : Value port)
-               -> Redux (Slice port (MkNat a) (MkNat o) prf)
-                        (slice a o prf port val)
+                      -> Redux (Slice port (MkNat a) (MkNat o) prf)
+                               (slice a o prf port val)
+
+    -- ### Indexing
+    SimplifyIndexI : Redux this that
+                  -> Redux (Index this port prf)
+                           (Index that port prf)
+
+    RewriteIndexI : Redux (Index (Seq left n) port prf)
+                          (Seq left (Index n port prf))
+
+    SimplifyIndexPort : Redux this that
+                     -> Redux (Index (MkNat n) this prf)
+                              (Index (MkNat n) that prf)
+
+    RewriteIndexPort : Redux (Index (MkNat n) (Seq left port) prf)
+                             (Seq left (Index (MkNat n) port prf))
+
+    ReduceIndex : (val : Value port)
+                      -> Redux (Index (MkNat n) port prf)
+                               (index n port prf val)
+
+    -- ### Size
+    SimplifySize : Redux this that
+                -> Redux (Size this)
+                         (Size that)
+
+    RewriteSize : Redux (Size (Seq left port))
+                        (Seq left (Size port))
+
+    ReduceSize : (val : Value port)
+                     -> Redux (Size port)
+                              (size port val)
+
     -- ### Gates
 
     -- #### Not

@@ -154,6 +154,23 @@ data SystemV : Context lvls -> TYPE level -> Type where
        -> (prf   : ValidBound a o s)
                 -> SystemV ctxt (PortTy (VectorTyDesc (minus s o a prf) type) dir)
 
+  Index : {i : Nat}
+       -> {s : Whole}
+       -> {type  : TYPE (DATA TYPE)}
+       -> {dir   : Direction}
+
+       -> (idx  : SystemV ctxt (NatTy i))
+       -> (port : SystemV ctxt (PortTy (VectorTyDesc s type) dir))
+       -> (prf  : LTE (S i) s)
+               -> SystemV ctxt (PortTy type dir)
+
+  Size : {n : Nat}
+      -> {type  : TYPE (DATA TYPE)}
+      -> {dir   : Direction}
+
+      -> (port : SystemV ctxt (PortTy (VectorTyDesc (W (S n) ItIsSucc) type) dir))
+              -> SystemV ctxt (NatTy (S n))
+
   -- Gates
   Not : {type : TYPE (DATA TYPE)}
      -> (portO : SystemV ctxt (PortTy type OUT))

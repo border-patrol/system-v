@@ -74,6 +74,8 @@ modules =
 
         , SystemV.Evaluation.Casting
         , SystemV.Evaluation.Slicing
+        , SystemV.Evaluation.Indexing
+        , SystemV.Evaluation.Sizing
         , SystemV.Evaluation.Reduction
 
         , SystemV.Evaluation.Progress

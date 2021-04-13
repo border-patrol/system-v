@@ -35,12 +35,14 @@ namespace Build
                | NotATerm
                | NotAType
                | NotAFunc
+               | NotANat
 
   public export
   data Error = Err FileContext Build.Error
              | NotAName String
              | TypeMismatch (TYPE a) (TYPE b)
              | VectorSizeZero
+             | IndexOutOfBounds Nat Whole
              | WrongType Context (TYPE a)
              | InvalidCast Cast.Error (TYPE (IDX TERM)) (TYPE (IDX TERM))
              | InvalidBound Sliceable.Error
@@ -225,6 +227,14 @@ Show Build.Error where
                     , "\t" ++ show from
                     , "To:"
                     , "\t" ++ show to
+                    ])
+
+  show (IndexOutOfBounds n w)
+    = trim (unlines [ "Index Out of Bounds:"
+                    , "Reason:"
+                    , "\t" ++ show n
+                    , "is not smaller than:"
+                    , "\t" ++ show w
                     ])
 
   show (InvalidBound err)

@@ -122,6 +122,14 @@ namespace General
             (subst f omega)
             prf
 
+  subst f (Index n port prf)
+    = Index (subst f n)
+            (subst f port)
+            prf
+
+  subst f (Size port)
+    = Size (subst f port)
+
   subst f (Not portO portI)
     = Not (subst f portO)
           (subst f portI)

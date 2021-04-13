@@ -119,6 +119,14 @@ rename f (Slice port alpha omega prf)
           (rename f omega)
           prf
 
+rename f (Index n port prf)
+  = Index (rename f n)
+          (rename f port)
+          prf
+
+rename f (Size port)
+  = Size (rename f port)
+
 rename f (Not portO portI)
   = Not (rename f portO)
         (rename f portI)

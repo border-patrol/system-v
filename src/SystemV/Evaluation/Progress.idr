@@ -11,6 +11,10 @@ import SystemV.Terms.Substitution
 import SystemV.Evaluation.Values
 import SystemV.Evaluation.Casting
 import SystemV.Evaluation.Slicing
+import SystemV.Evaluation.Indexing
+import SystemV.Evaluation.Sizing
+
+
 import SystemV.Evaluation.Reduction
 
 %default total
@@ -240,6 +244,38 @@ progress (Slice port alpha omega prf) with (progress port)
 
   progress (Slice port alpha omega prf) | (Step step)
     = Step (SimplifySlicePort step)
+
+-- #### Indexing
+progress (Index n port prf) with (progress n)
+  progress (Index (MkNat i) port prf) | (Done MkNat) with (progress port)
+    progress (Index (MkNat i) (MkPort ty dir) prf) | (Done MkNat) | (Done (MkPort tyV dir))
+      = Step (ReduceIndex (MkPort tyV dir))
+
+    progress (Index (MkNat i) (Seq left right) prf) | (Done MkNat) | (Done (Seq x y))
+      = Step RewriteIndexPort
+
+
+    progress (Index (MkNat i) port prf) | (Done MkNat) | (Step step)
+      = Step (SimplifyIndexPort step)
+
+  progress (Index (Seq left right) port prf) | (Done (Seq x y))
+    = Step RewriteIndexI
+
+
+  progress (Index n port prf) | (Step step)
+    = Step (SimplifyIndexI step)
+
+-- ### Sizing
+
+progress (Size port) with (progress port)
+  progress (Size (MkPort ty dir)) | (Done (MkPort tyV dir))
+    = Step (ReduceSize (MkPort tyV dir))
+
+  progress (Size (Seq left right)) | (Done (Seq x y))
+    = Step RewriteSize
+
+  progress (Size port) | (Step step)
+    = Step (SimplifySize step)
 
 -- ### Gates
 

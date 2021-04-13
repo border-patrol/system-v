@@ -136,17 +136,82 @@ array = do
 type_ : Rule Token AST
 type_ = array <|> logic <|> ref
 
-slice : Rule Token AST
-slice
-  = do s <- location
+proj : Rule Token AST
+    -> String
+    -> (FileContext -> AST -> AST)
+    -> Rule Token AST
+proj p s ctor
+  = do st <- location
        symbol "("
-       keyword "slice"
-       r <- ref
-       alpha <- natLit
-       omega <- natLit
+       keyword s
+       commit
+       n <- p
        symbol ")"
        e <- location
-       pure (Slice (newFC s e) r alpha omega)
+       pure (ctor (newFC st e) n)
+
+writeTo : Rule Token AST
+writeTo = (proj ref "writeTo" WriteTo)
+
+readFrom : Rule Token AST
+readFrom = (proj ref "readFrom" ReadFrom)
+
+projChan : Rule Token AST
+projChan = readFrom
+       <|> writeTo
+
+driveCatch : Rule Token AST
+driveCatch = (proj (writeTo)  "drive"    Drive)
+         <|> (proj (readFrom) "catch"    Catch)
+
+mutual
+  index : Rule Token AST
+  index
+    = do s <- location
+         symbol "("
+         keyword "index"
+         n <- refNat
+         p <- (ref <|> projChan <|> slidx)
+         symbol ")"
+         e <- location
+         pure (Index (newFC s e) n p)
+
+  slice : Rule Token AST
+  slice
+    = do s <- location
+         symbol "("
+         keyword "slice"
+         r <- (ref <|> projChan <|> slidx)
+         alpha <- refNat
+         omega <- refNat
+         symbol ")"
+         e <- location
+         pure (Slice (newFC s e) r alpha omega)
+
+  slidx : Rule Token AST
+  slidx = slice <|> index
+
+  size : Rule Token AST
+  size
+    = do s <- location
+         symbol "("
+         keyword "size"
+         n <- refNat
+         p <- (ref <|> projChan <|> slidx)
+         symbol ")"
+         e <- location
+         pure (Index (newFC s e) n p)
+
+  refNat : Rule Token AST
+  refNat
+      = ref <|> size <|> lit
+    where
+      lit : Rule Token AST
+      lit
+        = do n <- natLit
+             pure (MkNat n)
+portP : Rule Token AST
+portP = ref <|> slidx <|> projChan
 
 chanDef : Rule Token (FileContext, String, AST)
 chanDef
@@ -193,44 +258,39 @@ assign
   = do st <- location
        keyword "assign"
        commit
-       r <- ref
+       r <- (ref <|> slidx)
        symbol "="
-       l <- (ref <|> slice)
+       l <- (ref <|> slidx)
        e <- location
        pure (Connect (newFC st e) r l)
+
 
 cast : Rule Token AST
 cast
   = do st <- location
        keyword "cast"
-       p <- (ref <|> slice)
+       p <- (ref <|> slidx)
        t <- type_
        d <- direction
        e <- location
        pure (Cast (newFC st e) p t d)
 
-proj : Rule Token AST
-    -> String
-    -> (FileContext -> AST -> AST)
-    -> Rule Token AST
-proj p s ctor
-  = do st <- location
-       symbol "("
-       keyword s
-       commit
-       n <- p
-       symbol ")"
-       e <- location
-       pure (ctor (newFC st e) n)
-
-writeTo : Rule Token AST
-writeTo = (proj (ref <|> slice) "writeTo" WriteTo)
-
-readFrom : Rule Token AST
-readFrom = (proj (ref <|> slice) "readFrom" ReadFrom)
-
-
 mutual
+  for : Rule Token AST
+  for
+    = do s <- location
+         keyword "for"
+         symbol "("
+         i <- name
+         symbol "="
+         n <- natLit
+         symbol ")"
+         keyword "begin"
+         body <- entries False
+         keyword "end"
+         e <- location
+         pure (deriveFor (newFC s e) i n body)
+
   cond : Rule Token AST
   cond
     = do s <- location
@@ -247,23 +307,14 @@ mutual
          e <- location
          pure (IfThenElse (newFC s e) c t f)
 
-
-  projChan : Rule Token AST
-  projChan = readFrom
-         <|> writeTo
-
-  driveCatch : Rule Token AST
-  driveCatch = (proj (writeTo)  "drive"    Drive)
-           <|> (proj (readFrom) "catch"    Catch)
-
   gateNot : Rule Token AST
   gateNot = do s <- location
                keyword "not"
                symbol "("
                commit
-               o <- ref <|> slice <|> projChan
+               o <- portP
                symbol ","
-               i <- ref <|> slice <|> projChan
+               i <- portP
                symbol ")"
                e <- location
                pure (NotGate (newFC s e) o i)
@@ -276,11 +327,11 @@ mutual
          keyword k
          symbol "("
          commit
-         o <- ref <|> slice <|> projChan
+         o <- portP
          symbol ","
-         ia <- ref <|> slice <|> projChan
+         ia <- portP
          symbol ","
-         ib <- ref <|> slice <|> projChan
+         ib <- portP
          symbol ")"
          e <- location
          pure (Gate (newFC s e) ki o ia ib)
@@ -297,12 +348,15 @@ mutual
   expr : Rule Token AST
   expr = driveCatch <|> assign <|> gates
 
+  appArg : Rule Token AST
+  appArg = ref <|> projChan <|> parens cast <|> slidx
+
   moduleInst : Rule Token (FileContext, String, AST)
   moduleInst
       = do s <- location
            f <- ref
            n <- name
-           as <- parens (commaSepBy1' (ref <|> projChan <|> parens cast <|> slice))
+           as <- parens (commaSepBy1' appArg)
            e <- location
            pure ((newFC s e), n, mkApp f as)
     where
@@ -320,6 +374,7 @@ mutual
   entry : Rule Token MBody
   entry = (entry' <* symbol ";")
       <|> (do {c <- cond; pure (Expr c)})
+      <|> (do {f <- for;  pure (Expr f)})
       <|> (do {m <- moduleDef; pure (Bindable m)})
     where
       entry' : Rule Token MBody
@@ -442,7 +497,9 @@ parseSystemVFile
 export
 parseSystemVDesignFile : (fname : String)
                     -> IO (Either (Run.ParseError Token) AST)
-parseSystemVDesignFile
-  = parseFile SystemVLexer design
+parseSystemVDesignFile fname
+  = case !(parseFile SystemVLexer design fname) of
+      Left err  => pure (Left err)
+      Right ast => pure (Right (setFileName fname ast))
 
 -- [ EOF ]
