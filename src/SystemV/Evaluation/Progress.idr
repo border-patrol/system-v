@@ -3,12 +3,15 @@ module SystemV.Evaluation.Progress
 import SystemV.Utilities
 import SystemV.Types
 import SystemV.Terms
-import SystemV.Values
+
 
 import SystemV.Terms.Renaming
 import SystemV.Terms.Substitution
-import SystemV.Terms.Casting
-import SystemV.Terms.Reduction
+
+import SystemV.Evaluation.Values
+import SystemV.Evaluation.Casting
+import SystemV.Evaluation.Slicing
+import SystemV.Evaluation.Reduction
 
 %default total
 
@@ -16,232 +19,300 @@ public export
 data Progress : (term : SystemV Nil type)
                      -> Type
   where
-    Done : forall mty . {term : SystemV Nil mty}
-                      -> Value term
-                      -> Progress term
+    Done : forall mty . {term  : SystemV Nil mty}
+                     -> (value : Value term)
+                              -> Progress term
+
     Step : {this, that : SystemV Nil type}
-        -> (prf        : Redux this that)
+        -> (step       : Redux this that)
                       -> Progress this
 
 public export
 progress : (term : SystemV Nil type)
         -> Progress term
--- STLC
-progress {type} (Var _) impossible
-progress (Func theType body prf) = Done Func
 
-progress (App func var) with (progress func)
-  progress (App func var) | (Done prfF) with (progress var)
-    progress (App (Func theType b prfTyCheck) var) | (Done prfF) | (Done prfV)
-      = Step (ReduceFunc prfV {body=b})
-    progress (App func var) | (Done prfF) | (Step prfV)
-      = Step (SimplifyFuncAppVar prfF prfV)
-  progress (App func var) | (Step prfF)
-    = Step (SimplifyFuncAppFunc prfF)
+-- [ Types ]
+progress (TyFunc paramTy returnTy prf) with (progress paramTy)
 
-progress (TyFunc param return) with (progress param)
-  progress (TyFunc param return) | (Done valueP) with (progress return)
-    progress (TyFunc param return) | (Done valueP) | (Done valueR)
-      = Done (TyFunc valueP valueR)
-    progress (TyFunc param return) | (Done valueP) | (Step prfR)
-      = Step (SimplifyTyFuncBody valueP prfR)
-  progress (TyFunc param return) | (Step prfP)
-    = Step (SimplifyTyFuncParam prfP)
+  progress (TyFunc (Seq left right) returnTy prf) | (Done (Seq x y))
+    = Step RewriteTyFuncParam
 
--- Unit
-progress TyUnit = Done TyUnit
-progress MkUnit = Done MkUnit
+  progress (TyFunc paramTy returnTy prf) | (Done pvalue) with (progress returnTy)
+    progress (TyFunc paramTy (Seq left right) prf) | (Done pvalue) | (Done (Seq x y))
+      = Step RewriteTyFuncReturn
 
--- Type Constructors
-progress TyLogic = Done TyLogic
+    progress (TyFunc paramTy returnTy prf) | (Done pvalue) | (Done rvalue)
+      = Done (TyFunc pvalue rvalue)
 
-progress (TyVect size type) with (progress type)
-  progress (TyVect size type) | (Done typeValue) = Done (TyVect size typeValue)
-  progress (TyVect size type) | (Step step) = Step (SimplifyTyVect step)
+    progress (TyFunc paramTy returnTy prf) | (Done pvalue) | (Step step)
+      = Step (SimplifyTyFuncReturn step)
 
-progress TyBool = Done TyBool
-progress (B b)  = Done B
+  progress (TyFunc paramTy returnTy prf) | (Step step)
+    = Step (SimplifyTyFuncParam step)
 
--- Modules
-progress TyModule  = Done TyModule
-progress EndModule = Done EndModule
+progress TyUnit
+  = Done TyUnit
 
--- TypeDef Type & Value Constructors, and Matching.
-progress (TypeDefType type) with (progress type)
-  progress (TypeDefType type) | (Done valueT) = Done (TypeDefType valueT)
-  progress (TypeDefType type) | (Step prfT) = Step (SimplifyTypeDefType prfT)
+progress (TyNat n)
+  = Done TyNat
 
-progress (TypeDefCTor type value prf) with (progress type)
-  progress (TypeDefCTor type value prf) | (Done valueT) with (progress value)
-    progress (TypeDefCTor type value prf) | (Done valueT) | (Done valueV)
-      = Done (TypeDefCTor valueV)
-    progress (TypeDefCTor type value prf) | (Done valueT) | (Step prfV)
-      = Step (SimplifyTypeDefCTorValue valueT prfV)
-  progress (TypeDefCTor type value prf) | (Step prfT)
-      = Step (SimplifyTypeDefCTorType prfT)
+progress TyModule
+  = Done TyModule
 
-progress (TypeDef desc body) with (progress desc)
-  progress (TypeDef desc body) | (Done valueD)
-    = Step (ReduceTypeDef valueD)
-  progress (TypeDef desc body) | (Step prfD)
-   = Step (SimplifyTypeDef prfD)
-
--- Ports
-progress (TyPort type dir) with (progress type)
-  progress (TyPort type dir) | Done (valueTy)
-    = Done (TyPort valueTy dir)
-  progress (TyPort type dir) | (Step step)
-    = Step (SimplifyTyPort step)
-
-progress (MkPort type dir) with (progress type)
-  progress (MkPort type dir) | Done (valueTy)
-    = Done (MkPort valueTy dir)
-  progress (MkPort type dir) | (Step step)
-    = Step (SimplifyMkPort step)
-
--- Channels
-progress (TyChan type) with (progress type)
-  progress (TyChan type) | Done (valueTy)
-    = Done (TyChan valueTy)
-  progress (TyChan type) | (Step step)
+progress (TyChan typeD) with (progress typeD)
+  progress (TyChan typeD) | (Done value)
+    = Done (TyChan value)
+  progress (TyChan typeD) | (Step step)
     = Step (SimplifyTyChan step)
 
-progress (MkChan type) with (progress type)
-  progress (MkChan type) | Done (valueTy)
-    = Done (MkChan valueTy)
-  progress (MkChan type) | (Step step)
+progress (TyPort typeD dir) with (progress typeD)
+  progress (TyPort typeD dir) | (Done value)
+    = Done (TyPort value dir)
+  progress (TyPort typeD dir) | (Step step)
+    = Step (SimplifyTyPort step)
+
+progress (TyTypeDef typeE) with (progress typeE)
+  progress (TyTypeDef typeE) | (Done value)
+    = Done (TyTypeDef value)
+
+  progress (TyTypeDef typeE) | (Step step)
+    = Step (SimplifyTyTypeDef step)
+
+progress TyLogic
+  = Done TyLogic
+
+progress (TyVect s typeE) with (progress typeE)
+  progress (TyVect s typeE) | (Done value)
+    = Done (TyVect s value)
+
+  progress (TyVect s typeE) | (Step step)
+    = Step (SimplifyTyVect step)
+
+-- [ Terms ]
+
+-- ### STLC
+progress (Var _) impossible
+
+progress (Func x body prf vld) = Done Func
+
+progress (App func param) with (progress func)
+  progress (App (Func ty body prf vld) param) | (Done Func) with (progress param)
+
+    progress (App (Func ty body prf vld) param) | (Done Func) | (Done value)
+      = Step (ReduceFunc value {body=body})
+
+    progress (App (Func ty body prf vld) param) | (Done Func) | (Step step)
+      = Step (SimplifyFuncAppVar Func step)
+
+  progress (App (Seq left right) param) | (Done (Seq x y))
+    = Step RewriteFuncAppFunc
+
+  progress (App func param) | (Step step)
+    = Step (SimplifyFuncAppFunc step)
+
+-- ### Modules, Ports, & Unit
+
+progress MkUnit
+  = Done MkUnit
+
+
+progress EndModule
+  = Done EndModule
+
+progress (MkPort typeD dir) with (progress typeD)
+  progress (MkPort typeD dir) | (Done value)
+    = Done (MkPort value dir)
+
+  progress (MkPort typeD dir) | (Step step)
+    = Step (SimplifyMkPort step)
+
+-- ### Channels
+
+progress (MkChan typeD) with (progress typeD)
+  progress (MkChan typeD) | (Done value)
+    = Done (MkChan value)
+
+  progress (MkChan typeD) | (Step step)
     = Step (SimplifyMkChan step)
 
 progress (WriteTo chan) with (progress chan)
-  progress (WriteTo (MkChan typeD)) | Done (MkChan typeV)
-    = Step (ReduceWriteTo typeV)
-  progress (WriteTo chan) | Step step
-    = Step (SimplifyWriteTo step)
+  progress (WriteTo (MkChan port)) | (Done (MkChan portVal))
+    = Step ReduceWriteTo
+  progress (WriteTo (Seq left right)) | (Done (Seq x y))
+    = Step RewriteWriteTo
+  progress (WriteTo chan) | (Step step)
+   = Step (SimplifyWriteTo step)
 
 progress (ReadFrom chan) with (progress chan)
-  progress (ReadFrom (MkChan typeD)) | Done (MkChan typeV)
-    = Step (ReduceReadFrom typeV)
-  progress (ReadFrom chan) | Step step
-    = Step (SimplifyReadFrom step)
+  progress (ReadFrom (MkChan port)) | (Done (MkChan portVal))
+    = Step ReduceReadFrom
+  progress (ReadFrom (Seq left right)) | (Done (Seq x y))
+    = Step RewriteReadFrom
+  progress (ReadFrom chan) | (Step step)
+   = Step (SimplifyReadFrom step)
 
 progress (Drive chan) with (progress chan)
-  progress (Drive chan) | Done chanVal
-      = Done (Drive chanVal)
-
-  progress (Drive chan) | Step step
-    = Step (SimplifyDrive step)
+  progress (Drive (MkPort ty OUT)) | (Done (MkPort tyV OUT))
+    = Done (Drive (MkPort tyV OUT))
+  progress (Drive (Seq left right)) | (Done (Seq x y))
+    = Step RewriteDrive
+  progress (Drive chan) | (Step step)
+   = Step (SimplifyDrive step)
 
 progress (Catch chan) with (progress chan)
-  progress (Catch chan) | Done value
-    = Done (Catch value)
-  progress (Catch chan) | Step step
-    = Step (SimplifyCatch step)
+  progress (Catch (MkPort ty IN)) | (Done (MkPort tyV IN))
+    = Done (Catch (MkPort tyV IN))
+  progress (Catch (Seq left right)) | (Done (Seq x y))
+    = Step RewriteCatch
 
--- Runtime wiring decisions
-progress (IfThenElseR cond true false) with (progress cond)
-  progress (IfThenElseR cond true false) | Done condVal with (progress true)
-    progress (IfThenElseR cond true false) | Done condVal | Done trueVal with (progress false)
-      progress (IfThenElseR cond true false) | Done condVal | Done trueVal | Done falseVal
-        = Done (IfThenElseR condVal trueVal falseVal)
+  progress (Catch chan) | (Step step)
+   = Step (SimplifyCatch step)
 
-      progress (IfThenElseR cond true false) | Done condVal | Done trueVal | Step step
-        = Step (SimplifyIfThenElseRFalse condVal trueVal step)
+-- ### Decisions & Connections
+progress (IfThenElseR test whenIsZ whenNotZ) with (progress test)
+  progress (IfThenElseR (MkPort ty IN) whenIsZ whenNotZ) | (Done (MkPort tyV IN)) with (progress whenIsZ)
+    progress (IfThenElseR (MkPort ty IN) whenIsZ whenNotZ) | (Done (MkPort tyV IN)) | (Done true) with (progress whenNotZ)
+      progress (IfThenElseR (MkPort ty IN) whenIsZ whenNotZ) | (Done (MkPort tyV IN)) | (Done true) | (Done false)
+        = Done (IfThenElseR (MkPort tyV IN) true false)
 
-    progress (IfThenElseR cond true false) | Done condVal | Step step
-      = Step (SimplifyIfThenElseRTrue condVal step)
+      progress (IfThenElseR (MkPort ty IN) whenIsZ whenNotZ) | (Done (MkPort tyV IN)) | (Done true) | (Step step)
+        = Step (SimplifyCondFalse step)
 
-  progress (IfThenElseR cond true false) | Step step
-    = Step (SimplifyIfThenElseRCond step)
+    progress (IfThenElseR (MkPort ty IN) whenIsZ whenNotZ) | (Done (MkPort tyV IN)) | (Step step)
+      = Step (SimplifyCondTrue step)
 
--- Connections
+  progress (IfThenElseR (Seq left right) whenIsZ whenNotZ) | (Done (Seq x y))
+    = Step RewriteCondTest
+
+  progress (IfThenElseR test whenIsZ whenNotZ) | (Step step)
+    = Step (SimplifyCondTest step)
+
+-- #### Connections
 progress (Connect portL portR prf) with (progress portL)
-  progress (Connect portL portR prf) | Done portLV with (progress portR)
-    progress (Connect portL portR prf) | Done portLV | Done portRV
-      = Done (Connect portLV portRV)
+  progress (Connect (MkPort tyL dirL) portR prf) | (Done (MkPort x dirL)) with (progress portR)
+    progress (Connect (MkPort tyL dirL) (MkPort tyR dirR) prf) | (Done (MkPort x dirL)) | (Done (MkPort y dirR))
+      = Done (Connect (MkPort x dirL) (MkPort y dirR))
 
-    progress (Connect portL portR prf) | Done portLV | Step step
-      = Step (SimplifyConnectRight portLV step)
+    progress (Connect (MkPort tyL dirL) (Seq left right) prf) | (Done (MkPort x dirL)) | (Done (Seq y z))
+      = Step RewriteConnectRight
 
-  progress (Connect portL portR prf) | Step step
+    progress (Connect (MkPort tyL dirL) portR prf) | (Done (MkPort x dirL)) | (Step step)
+      = Step (SimplifyConnectRight step)
+
+  progress (Connect (Seq left right) portR prf) | (Done (Seq x y))
+    = Step RewriteConnectLeft
+
+  progress (Connect portL portR prf) | (Step step)
     = Step (SimplifyConnectLeft step)
 
-progress (Cast this prf) with (progress this)
-  progress (Cast (MkPort thisPort thisDir) prf) | Done (MkPort thisPortV thisDir)
-        = Step (ReduceCast (MkPort thisPortV thisDir) prf)
-  progress (Cast this prf) | Step step
+-- ### Casting & Slicing
+progress (Cast portA prf) with (progress portA)
+  progress (Cast (MkPort ty dirA) prf) | (Done (MkPort x dirA))
+    = Step (ReduceCast (MkPort x dirA))
+  progress (Cast (Seq left right) prf) | (Done (Seq x y))
+    = Step RewriteCast
+
+  progress (Cast portA prf) | (Step step)
     = Step (SimplifyCast step)
 
-progress (Slice this a o prf) with (progress this)
-  progress (Slice (MkPort type' dir) a o prf) | (Done (MkPort x dir)) with (prf)
-    progress (Slice (MkPort (TyVect s etype) dir) a o prf) | (Done (MkPort (TyVect s etypeV) dir)) | (YesCanSlice ArraysAre prfB)
-      = Step (ReduceSlice (MkPort (TyVect (sizeFromBound a o prfB) etypeV) dir) (YesCanSlice ArraysAre prfB))
+-- #### Slicing
 
-  progress (Slice this a o prf) | (Step step)
-    = Step (SimplifySlice step)
+progress (Slice port alpha omega prf) with (progress port)
+  progress (Slice (MkPort tyP dir) alpha omega prf) | (Done (MkPort x dir)) with (progress alpha)
+    progress (Slice (MkPort tyP dir) (MkNat a) omega prf) | (Done (MkPort x dir)) | (Done MkNat) with (progress omega)
+      progress (Slice (MkPort tyP dir) (MkNat a) (MkNat o) prf) | (Done (MkPort x dir)) | (Done MkNat) | (Done MkNat)
+        = Step (ReduceSlice (MkPort x dir))
 
--- Params
-progress TyParam = Done TyParam
-progress (MkParam val) = Done MkParam
+      progress (Slice (MkPort tyP dir) (MkNat a) (Seq left right) prf) | (Done (MkPort x dir)) | (Done MkNat) | (Done (Seq y z))
+        = Step RewriteSliceO
 
-progress (ParamOpBool op l r) with (progress l)
-  progress (ParamOpBool op l r) | Done lval with (progress r)
-    progress (ParamOpBool op (MkParam l) (MkParam r)) | Done MkParam | Done MkParam
-      = Step ReduceParamOpBool
+      progress (Slice (MkPort tyP dir) (MkNat a) omega prf) | (Done (MkPort x dir)) | (Done MkNat) | (Step step)
+        = Step (SimplifySliceO step)
 
-    progress (ParamOpBool op l r) | Done lval | Step step
-      = Step (SimplifyParamOpBoolRight lval step)
+    progress (Slice (MkPort tyP dir) (Seq left right) omega prf) | (Done (MkPort x dir)) | (Done (Seq y z))
+      = Step RewriteSliceA
 
-  progress (ParamOpBool op l r) | Step step
-    = Step (SimplifyParamOpBoolLeft step)
+    progress (Slice (MkPort tyP dir) alpha omega prf) | (Done (MkPort x dir)) | (Step step)
+      = Step (SimplifySliceA step)
 
-progress (ParamOpNot p) with (progress p)
-  progress (ParamOpNot (B b)) | Done B
-    = Step ReduceParamOpNot
-  progress (ParamOpNot p) | Step step
-    = Step (SimplifyParamOpNot step)
+  progress (Slice (Seq left right) alpha omega prf) | (Done (Seq x y))
+    = Step RewriteSlicePort
 
-progress (IfThenElseC cond t f) with (progress cond)
-  progress (IfThenElseC (B True) true false) | Done B
-    = Step ReduceIfThenElseCTrue
-  progress (IfThenElseC (B False) true false) | Done B
-    = Step ReduceIfThenElseCFalse
+  progress (Slice port alpha omega prf) | (Step step)
+    = Step (SimplifySlicePort step)
 
-  progress (IfThenElseC cond true false) | Step step
-    = Step (SimplifyIfThenElseCCond step)
+-- ### Gates
 
--- Gates
-progress (Not out input) with (progress out)
-  progress (Not out input) | (Done outV) with (progress input)
-    progress (Not out input) | (Done outV) | Done inputV
-      = Done (Not outV inputV)
-    progress (Not out input) | (Done outV) | Step step
-      = Step (SimplifyNotInput outV step)
+-- #### Not
+progress (Not portO portI) with (progress portO)
+  progress (Not (MkPort ty OUT) portI) | (Done (MkPort tyValO OUT)) with (progress portI)
 
-  progress (Not out input) | (Step step)
-    = Step (SimplifyNotOutput step)
+    progress (Not (MkPort tyO OUT) (MkPort tyI IN)) | (Done (MkPort tyValO OUT)) | (Done (MkPort tyVa IN))
+      = Done (Not (MkPort tyValO OUT) (MkPort tyVa IN ))
 
-progress (Gate type out ia ib) with (progress out)
-  progress (Gate type out ia ib) | Done outV with (progress ia)
-    progress (Gate type out ia ib) | Done outV | Done iaV with (progress ib)
-      progress (Gate type out ia ib) | Done outV | Done iaV | Done ibV
-        = Done (Gate outV iaV ibV)
+    progress (Not (MkPort tyO OUT) (Seq left right)) | (Done (MkPort tyValO OUT)) | (Done (Seq x y))
+      = Step RewriteNotInSeq
 
-      progress (Gate type out ia ib) | Done outV | Done iaV | Step step
-        = Step (SimplifyGateInputB outV iaV step)
+    progress (Not (MkPort tyO OUT) portI) | (Done (MkPort tyValO OUT)) | (Step step)
+      = Step (SimplifyNotIn step)
 
-    progress (Gate type out ia ib) | Done outV | Step step
-      = Step (SimplifyGateInputA outV step)
+  progress (Not (Seq left right) portI) | (Done (Seq x y))
+    = Step RewriteNotOutSeq
 
-  progress (Gate type out ia ib) | Step step
-    = Step (SimplifyGateOutput step)
+  progress (Not portO portI) | (Step step)
+    = Step (SimplifyNotOut step)
 
+-- #### Binary
 
--- Binders
+progress (Gate kind portO portIA portIB) with (progress portO)
+  progress (Gate kind (MkPort ty OUT) portIA portIB) | (Done (MkPort tyV OUT)) with (progress portIA)
+    progress (Gate kind (MkPort ty OUT) (MkPort tyIA IN) portIB) | (Done (MkPort tyV OUT)) | (Done (MkPort tyVIA IN)) with (progress portIB)
+      progress (Gate kind (MkPort ty OUT) (MkPort tyIA IN) (MkPort tyIB IN)) | (Done (MkPort tyV OUT)) | (Done (MkPort tyVIA IN)) | (Done (MkPort tyVIB IN))
+        = Done (Gate (MkPort tyV OUT) (MkPort tyVIA IN) (MkPort tyVIB IN))
+
+      progress (Gate kind (MkPort ty OUT) (MkPort tyIA IN) (Seq left right)) | (Done (MkPort tyV OUT)) | (Done (MkPort tyVIA IN)) | (Done (Seq x y))
+        = Step RewriteBinInB
+
+      progress (Gate kind (MkPort ty OUT) (MkPort tyIA IN) portIB) | (Done (MkPort tyV OUT)) | (Done (MkPort tyVIA IN)) | (Step step)
+        = Step (SimplifyBinInB step)
+
+    progress (Gate kind (MkPort ty OUT) (Seq left right) portIB) | (Done (MkPort tyV OUT)) | (Done (Seq x y))
+      = Step RewriteBinInA
+
+    progress (Gate kind (MkPort ty OUT) portIA portIB) | (Done (MkPort tyV OUT)) | (Step step)
+      = Step (SimplifyBinInA step)
+
+  progress (Gate kind (Seq left right) portIA portIB) | (Done (Seq x y))
+    = Step RewriteBinOut
+
+  progress (Gate kind portO portIA portIB) | (Step step)
+    = Step (SimplifyBinOut step)
+
+-- ### Binders
 progress (Let value body) with (progress value)
-  progress (Let value body) | Done this
-    = Step (ReduceLetBody this)
+  progress (Let value body) | (Done val)
+    = Step (ReduceLetBody val)
 
-  progress (Let value body) | Step step
+  progress (Let value body) | (Step step)
     = Step (SimplifyLetValue step)
 
--- --------------------------------------------------------------------- [ EOF ]
+-- ### Sequencing
+progress (Seq left right) with (progress left)
+
+  progress (Seq (Seq x y) right) | (Done (Seq xVal yVal))
+    = Step RewriteSeq
+
+  progress (Seq left right) | (Done leftVal) with (progress right)
+    progress (Seq left right) | (Done leftVal) | (Done rightVal)
+      = Done (Seq leftVal rightVal)
+
+    progress (Seq left right) | (Done leftVal) | (Step step)
+      = Step (SimplifySeqRight leftVal step)
+
+  progress (Seq left right) | (Step step)
+    = Step (SimplifySeqLeft step)
+
+progress (MkNat n)
+  = Done MkNat
+
+-- [ EOF ]

@@ -1,3 +1,6 @@
+||| Structures to describe port direction.
+|||
+|||
 module SystemV.Types.Direction
 
 import public Decidable.Equality
@@ -9,38 +12,40 @@ import public Toolkit.Decidable.Informative
 public export
 data Direction = IN | OUT | INOUT
 
-namespace Equality
-  ioNotEqual : (IN === OUT) -> Void
-  ioNotEqual Refl impossible
 
-  ibNotEqual : (IN === INOUT) -> Void
-  ibNotEqual Refl impossible
+ioNotEqual : (IN === OUT) -> Void
+ioNotEqual Refl impossible
 
-  obNotEqual : (OUT === INOUT) -> Void
-  obNotEqual Refl impossible
+ibNotEqual : (IN === INOUT) -> Void
+ibNotEqual Refl impossible
 
-  export
-  decEq : (l,r : Direction)
-              -> Dec (l === r)
-  decEq IN IN = Yes Refl
-  decEq OUT OUT = Yes Refl
-  decEq INOUT INOUT = Yes Refl
+obNotEqual : (OUT === INOUT) -> Void
+obNotEqual Refl impossible
 
-  decEq IN OUT = No ioNotEqual
-  decEq OUT IN = No (negEqSym ioNotEqual)
+export
+decEq : (l,r : Direction)
+            -> Dec (l === r)
+decEq IN IN = Yes Refl
+decEq OUT OUT = Yes Refl
+decEq INOUT INOUT = Yes Refl
 
-  decEq IN INOUT = No ibNotEqual
-  decEq INOUT IN = No (negEqSym ibNotEqual)
+decEq IN OUT = No ioNotEqual
+decEq OUT IN = No (negEqSym ioNotEqual)
 
-  decEq OUT INOUT = No obNotEqual
-  decEq INOUT OUT = No (negEqSym obNotEqual)
+decEq IN INOUT = No ibNotEqual
+decEq INOUT IN = No (negEqSym ibNotEqual)
 
-  export
-  DecEq Direction where
-    decEq = Direction.Equality.decEq
+decEq OUT INOUT = No obNotEqual
+decEq INOUT OUT = No (negEqSym obNotEqual)
+
+||| Standard decidable equality.
+export
+DecEq Direction where
+  decEq = Direction.decEq
 
 namespace Flow
 
+  ||| A Valid Flow is one that goes 'left' to 'right' between an output and input port.
   public export
   data ValidFlow : (l,r : Direction) -> Type where
     FlowOI : ValidFlow OUT   IN
@@ -48,8 +53,8 @@ namespace Flow
     FlowOB : ValidFlow OUT   INOUT
     FlowBB : ValidFlow INOUT INOUT
 
-
-  data FlowError = CannotFlow Direction Direction
+  public export
+  data Error = CannotFlow Direction Direction
 
   boNoFlow : ValidFlow INOUT OUT -> Void
   boNoFlow FlowOI impossible
@@ -81,9 +86,10 @@ namespace Flow
   ibNoFlow FlowOB impossible
   ibNoFlow FlowBB impossible
 
+  ||| Do these two directions represent a valid flow.
   export
   validFlow : (l,r : Direction)
-                  -> DecInfo FlowError (ValidFlow l r)
+                  -> DecInfo Flow.Error (ValidFlow l r)
   validFlow OUT IN = Yes FlowOI
   validFlow OUT INOUT = Yes FlowOB
   validFlow INOUT IN = Yes FlowBI
@@ -95,3 +101,6 @@ namespace Flow
   validFlow IN IN = No (CannotFlow IN IN) iiNoFlow
   validFlow IN OUT = No (CannotFlow IN OUT) ioNoFlow
   validFlow IN INOUT = No (CannotFlow IN INOUT) ibNoFlow
+
+
+-- [ EOF ]

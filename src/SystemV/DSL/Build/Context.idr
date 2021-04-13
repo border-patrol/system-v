@@ -12,11 +12,14 @@ import public Toolkit.Data.Location
 import public Toolkit.Data.DList
 import public Toolkit.Data.DList.Elem
 
+import        SystemV.Utilities
+
 import        SystemV.Types
 import        SystemV.Terms
 
 import        SystemV.DSL.AST
-import        SystemV.Utilities
+
+
 
 %default total
 
@@ -81,23 +84,23 @@ namespace Name
       isName name ((MkName (Just y) x) :: rest) | (No contra) | (No f) = No (nameNotInRest contra f)
 
 export
-buildVar : {names : Names lvls}
-        -> (prf   : Elem Universe Name (MkName (Just name) level) names)
-        -> (ctxt  : Context lvls)
-        -> (type : Meta level ** Elem Universe Meta type ctxt)
-buildVar (H (Same Refl prfVal)) (elem :: rest) = MkDPair elem (H (Same Refl Refl))
-buildVar (T later) (elem :: rest) with (buildVar later rest)
-  buildVar (T later) (elem :: rest) | (MkDPair fst snd) = MkDPair fst (T snd)
+mkVar : {names : Names lvls}
+     -> (prf   : Elem Universe Name (MkName (Just name) level) names)
+     -> (ctxt  : Context lvls)
+     -> (type : TYPE level ** Elem Universe TYPE type ctxt)
+mkVar (H (Same Refl prfVal)) (elem :: rest) = MkDPair elem (H (Same Refl Refl))
+mkVar (T later) (elem :: rest) with (mkVar later rest)
+  mkVar (T later) (elem :: rest) | (MkDPair fst snd) = MkDPair fst (T snd)
 
 public export
-data BuildCtxt : (lvls : Universes)
-              -> (ctxt : Context lvls)
+data Context : (lvls : Universes)
+            -> (ctxt : Types.Context lvls)
                       -> Type
   where
-    Ctxt : (lvls : Universes)
+    Ctxt : (lvls  : Universes)
         -> (names : Names lvls)
-        -> (ctxt : Context lvls)
-                -> BuildCtxt lvls ctxt
+        -> (ctxt  : Types.Context lvls)
+                 -> Context lvls ctxt
 
 
 -- --------------------------------------------------------------------- [ EOF ]

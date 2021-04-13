@@ -62,7 +62,7 @@ data AST : Type where
   ||| TypeDefs are just specalised let bidnings
   |||
   ||| ```
-  ||| typedef <type def> <name>; <body> ::= TypeDef <type def> <body>
+  ||| typedef <type> <name>; <body> ::= Let (TyTypeDef <type>) <body>
   ||| ```
   |||
   TypeDef : (fc   : FileContext)
@@ -192,42 +192,6 @@ data AST : Type where
       -> (type : AST)
       -> (dir  : Direction)
               -> AST
-
-  TyParam : AST
-  ||| Parameter creation.
-  |||
-  ||| We will not ask users to bind parameters directly, they won't be
-  ||| in the DSL, but we will use sugar to go from the following
-  ||| snippet of a module instantiation to collect the parameters
-  ||| *and* apply them.
-  |||
-  ||| ```
-  ||| #(<value>,...) ::= MkParan <value>,...
-  ||| ```
-  |||
-  MkParam : (fc  : FileContext)
-         -> (val : Nat)
-                -> AST
-
-  ||| Boolean Operations on Parameters
-  |||
-  ||| For example:
-  |||
-  ||| ```
-  ||| (== x y) ::= ParamOpBool (==) x y
-  ||| (&& x y) ..
-  ||| (|| x y)
-  ||| ```
-  ParamOpBool : (fc    : FileContext)
-             -> (op    : Nat -> Nat -> Bool)
-             -> (left  : AST)
-             -> (right : AST)
-                      -> AST
-
-  ParamOpNot : (fc : FileContext)
-            -> (op : AST)
-                  -> AST
-
 
   ||| Binders
   |||

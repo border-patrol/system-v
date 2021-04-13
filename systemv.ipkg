@@ -15,6 +15,8 @@ modules =
 
         , Toolkit.Data.DList
         , Toolkit.Data.DList.Elem
+
+        , Toolkit.Data.List.DeBruijn
         , Toolkit.Data.DList.DeBruijn
 
         , Toolkit.Data.DVect
@@ -37,71 +39,60 @@ modules =
 
         , Toolkit.System
 
-        -- [ Things Common to All System V ]
+        -- [ Things Common to All ]
         , SystemV.Utilities
 
-        -- [ SystemV Plain]
+        -- [ SystemV 'Core' ]
 
         , SystemV.Types.Direction
         , SystemV.Types.Gate
 
-        , SystemV.Types.Meta
-        , SystemV.Types.Meta.Equality
-        , SystemV.Types.Meta.Equiv
-        , SystemV.Types.Meta.Cast
-        , SystemV.Types.Meta.Sliceable
-        , SystemV.Types.Meta.Check.Data
-        , SystemV.Types.Meta.Check.Types
+        , SystemV.Types.TYPE
+
+        , SystemV.Types.TYPE.Equality.Error
+        , SystemV.Types.TYPE.Equality.DataTypes
+        , SystemV.Types.TYPE.Equality.DataTerms
+
+        , SystemV.Types.TYPE.Equality
+        , SystemV.Types.TYPE.Equiv
+        , SystemV.Types.TYPE.Cast
+        , SystemV.Types.TYPE.Sliceable
+        , SystemV.Types.TYPE.Function
+        , SystemV.Types.TYPE.Function.Argument
+        , SystemV.Types.TYPE.Function.Return
+        , SystemV.Types.TYPE.Function.Synthesis
+        , SystemV.Types.TYPE.Check.Data
+        , SystemV.Types.TYPE.Check.Types
         , SystemV.Types
         , SystemV.Terms
 
-        , SystemV.Values
-
         , SystemV.Terms.Renaming
         , SystemV.Terms.Substitution
-        , SystemV.Terms.Casting
-        , SystemV.Terms.Reduction
+
+
+        , SystemV.Evaluation.Values
+
+        , SystemV.Evaluation.Casting
+        , SystemV.Evaluation.Slicing
+        , SystemV.Evaluation.Reduction
 
         , SystemV.Evaluation.Progress
         , SystemV.Evaluation
 
         , SystemV
 
+        -- [ SystemV 'Core' DSL ]
+
         , SystemV.DSL.AST
         , SystemV.DSL.Lexer
         , SystemV.DSL.Parser
         , SystemV.DSL.Build.Context
         , SystemV.DSL.Build.Result
-        , SystemV.DSL.Build.Helpers
+        , SystemV.DSL.Build.Error
+
         , SystemV.DSL.Build
 
         , SystemV.DSL
-
-        -- [ SystemV with Arithmetic ]
-
-        , SystemV.Arithmetic.Terms.Renaming
-        , SystemV.Arithmetic.Terms.Substitution
-        , SystemV.Arithmetic.Terms.Casting
-        , SystemV.Arithmetic.Terms.Reduction
-        , SystemV.Arithmetic.Terms
-
-        , SystemV.Arithmetic.Values
-
-        , SystemV.Arithmetic.Evaluation.Progress
-        , SystemV.Arithmetic.Evaluation
-
-        , SystemV.Arithmetic
-
-        , SystemV.Arithmetic.DSL.AST
-        , SystemV.Arithmetic.DSL.Lexer
-        , SystemV.Arithmetic.DSL.Parser
-        , SystemV.Arithmetic.DSL.Build.Context
-        , SystemV.Arithmetic.DSL.Build.Result
-        , SystemV.Arithmetic.DSL.Build.Helpers
-        , SystemV.Arithmetic.DSL.Build
-
-        , SystemV.Arithmetic.DSL
-
 
         -- [ Main ]
         , Main

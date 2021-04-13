@@ -2,6 +2,8 @@
 |||
 module SystemV.Terms
 
+import Data.Nat
+
 import Toolkit.Data.DList
 import Toolkit.Data.DList.Elem
 import Toolkit.Data.DList.DeBruijn
@@ -12,175 +14,188 @@ import SystemV.Types
 %default total
 
 public export
-data SystemV : Context lvls -> MTy level -> Type where
+data SystemV : Context lvls -> TYPE level -> Type where
+  -- [ Types ]
+
   -- STLC
-  Var : Elem Universe MTy type ctxt -> SystemV ctxt type
+  TyFunc : {paramTYPE, returnTYPE : TYPE (IDX TYPE)}
 
-  Func : {  paramTyDesc     : MTy (IDX TYPE)}
-      -> {  paramTy, bodyTy : MTy (IDX VALUE)}
-      -> (  type : SystemV  ctxt    paramTyDesc)
-      -> (  body : SystemV (ctxt +=             paramTy) bodyTy)
-      -> (  prf  : TyCheck          paramTyDesc paramTy)
-                -> SystemV  ctxt        (FuncTy paramTy  bodyTy)
+        -> (paramTy  : SystemV ctxt         paramTYPE)
+        -> (returnTy : SystemV ctxt                   returnTYPE)
+        -> (vld      : Function.ValidType (IDX TYPE) (FuncTy paramTYPE returnTYPE))
+                    -> SystemV ctxt (FuncTy paramTYPE returnTYPE)
 
-  App : {paramTy, bodyTy : MTy (IDX VALUE)}
+  -- Unit
+  TyUnit : SystemV ctxt UnitTyDesc
+  TyNat  : (n : Nat)
+             -> SystemV ctxt (NatTyDesc n)
+
+  -- Hardware Specific Constructs
+  TyModule : SystemV ctxt ModuleTyDesc
+
+  TyChan : {type  : TYPE (DATA TYPE)}
+        -> (typeD : SystemV ctxt type)
+                 -> SystemV ctxt (ChanTyDesc type)
+
+  TyPort : {type : TYPE (DATA TYPE)}
+        -> (desc : SystemV ctxt         type)
+        -> (dir  : Direction)
+                -> SystemV ctxt (PortTyDesc type dir)
+
+  -- Data types
+  TyTypeDef : {type : TYPE (DATA TYPE)}
+           -> (desc : SystemV ctxt type)
+                   -> SystemV ctxt (TypeDefTy type)
+
+  TyLogic : SystemV ctxt LogicTyDesc
+
+  TyVect : (s : Whole)
+        -> (typeE : SystemV ctxt type)
+        -> SystemV ctxt (VectorTyDesc s type)
+
+  -- [ Terms ]
+
+  -- STLC
+  Var : {type : _}
+     -> (idx : Elem Universe TYPE type ctxt)
+            -> SystemV ctxt type
+
+  Func : {paramTyDesc     : TYPE (IDX TYPE)}
+      -> {paramTy, bodyTy : TYPE (IDX TERM)}
+
+      -> (type : SystemV  ctxt    paramTyDesc)
+      -> (body : SystemV (ctxt +=             paramTy) bodyTy)
+
+      -> (prf  : TyCheck          paramTyDesc paramTy)
+      -> (vld  : Function.ValidTerm (IDX TERM) (FuncTy paramTy bodyTy))
+
+              -> SystemV  ctxt        (FuncTy paramTy  bodyTy)
+
+  App : {paramTy, bodyTy : TYPE (IDX TERM)}
+
      -> (func  : SystemV ctxt (FuncTy paramTy  bodyTy))
      -> (value : SystemV ctxt         paramTy)
               -> SystemV ctxt                   bodyTy
 
-  TyFunc : {paramMTy, returnMTy : MTy (IDX TYPE)}
-        -> (paramTy  : SystemV ctxt paramMTy)
-        -> (returnTy : SystemV ctxt returnMTy)
-                    -> SystemV ctxt (FuncTy paramMTy returnMTy)
+  -- Unit
 
-  -- Unityty
-  TyUnit : SystemV ctxt UnitTy
-  MkUnit : SystemV ctxt UnitVal
+  MkUnit : SystemV ctxt UnitTy
 
-  -- Logic Type Constructors
-  TyLogic : SystemV ctxt LogicTyDesc
+  -- Hardware specific
 
-  -- Booleans
-  TyBool : SystemV ctxt BoolTyDesc
-  B : Bool -> SystemV ctxt BoolTy
+  EndModule : SystemV ctxt ModuleTy
 
-   -- Vectors
-  TyVect : (s : Whole)
-        -> SystemV ctxt type
-        -> SystemV ctxt (VectorTyDesc s type)
+  MkPort : {type  : TYPE (DATA TYPE)}
 
-  -- Modules Type & Value Constructor...
-  TyModule : SystemV ctxt ModuleTyDesc
-
-  EndModule : SystemV ctxt ModuleVal
-
-
-  -- TypeDef Type & Value Constructors, and Introduction
-  TypeDefType : {type : MTy (DATA TYPE)}
-             -> (desc : SystemV ctxt type)
-                     -> SystemV ctxt (TypeDefTy type)
-
-  TypeDefCTor : {  typeM : MTy (DATA TYPE)}
-             -> {  typeV : MTy (DATA VALUE)}
-             -> (  type  : SystemV ctxt (TypeDefTy typeM))
-             -> (  value : SystemV ctxt                  typeV)
-             -> (0 prf   : TyCheckData             typeM typeV)
-                        -> SystemV ctxt (TypeDefTy       typeV)
-
-  TypeDef : {level : Universe}
-         -> {type     : MTy (DATA TYPE)}
-         -> {bodyType : MTy level}
-         -> (desc     : SystemV  ctxt    (TypeDefTy type))
-         -> (body     : SystemV (ctxt += (TypeDefTy type)) bodyType)
-                     -> SystemV ctxt                       bodyType
-
-  -- Ports
-  TyPort : {type : MTy (DATA TYPE)}
-        -> (desc : SystemV ctxt         type)
-        -> (dir  : Direction)
-                -> SystemV ctxt (PortTy type dir)
-
-  MkPort : {type  : MTy (DATA TYPE)}
         -> (typeD : SystemV ctxt type)
-        -> (dir   : Direction)
-                 -> SystemV ctxt (PortVal type dir)
 
-  -- Channels
-  TyChan : {type  : MTy (DATA TYPE)}
+        -> (dir   : Direction)
+                 -> SystemV ctxt (PortTy type dir)
+
+  MkChan : {type  : TYPE (DATA TYPE)}
+
         -> (typeD : SystemV ctxt type)
                  -> SystemV ctxt (ChanTy type)
 
-  MkChan : {type  : MTy (DATA TYPE)}
-        -> (typeD : SystemV ctxt type)
-                 -> SystemV ctxt (ChanVal type)
+  WriteTo : (chan : SystemV ctxt (ChanTy type))
+                 -> SystemV ctxt (PortTy type OUT)
 
-  WriteTo : (chan : SystemV ctxt (ChanVal type))
-                 -> SystemV ctxt (PortVal type OUT)
+  ReadFrom : (chan : SystemV ctxt (ChanTy type))
+                  -> SystemV ctxt (PortTy type IN)
 
-  ReadFrom : (chan : SystemV ctxt (ChanVal type))
-                  -> SystemV ctxt (PortVal type IN)
+  Drive : {type    : TYPE (DATA TYPE)}
 
-  Drive : {type    : MTy (DATA TYPE)}
-       -> (chan    : SystemV ctxt (PortVal type OUT))
-                  -> SystemV ctxt UnitVal
+       -> (chan    : SystemV ctxt (PortTy type OUT))
+                  -> SystemV ctxt UnitTy
 
-  Catch : {type  : MTy (DATA TYPE)}
-       -> (chan : SystemV ctxt (PortVal type IN))
-               -> SystemV ctxt UnitVal
+  Catch : {type  : TYPE (DATA TYPE)}
+
+       -> (chan : SystemV ctxt (PortTy type IN))
+               -> SystemV ctxt UnitTy
 
   -- Runtime wiring decisions
-  IfThenElseR : {type     : MTy (DATA TYPE)}
-             -> (test     : SystemV ctxt (PortVal type IN))
-             -> (whenIsZ  : SystemV ctxt UnitVal)
-             -> (whenNotZ : SystemV ctxt UnitVal)
-                         -> SystemV ctxt UnitVal
+  IfThenElseR : {type     : TYPE (DATA TYPE)}
+
+             -> (test     : SystemV ctxt (PortTy type IN))
+             -> (whenIsZ  : SystemV ctxt UnitTy)
+             -> (whenNotZ : SystemV ctxt UnitTy)
+                         -> SystemV ctxt UnitTy
 
   -- Connect two ports together.
-  Connect : {type : MTy (DATA TYPE)}
+  Connect : {type : TYPE (DATA TYPE)}
          -> {dirL, dirR : Direction}
-         -> (portL : SystemV ctxt (PortVal type dirL))
-         -> (portR : SystemV ctxt (PortVal type dirR))
+
+         -> (portL : SystemV ctxt (PortTy type dirL))
+         -> (portR : SystemV ctxt (PortTy type dirR))
+
          -> (prf   : ValidFlow dirL dirR)
-                  -> SystemV ctxt UnitVal
+                  -> SystemV ctxt UnitTy
 
   -- Casts
-  Cast : {tyA,tyB : MTy (DATA TYPE)}
+  Cast : {tyA,tyB : TYPE (DATA TYPE)}
       -> {dirA,dirB : Direction}
-      -> (portA : SystemV ctxt (PortVal tyA dirA))
-      -> (prf   : ValidCast (PortVal tyA dirA) (PortVal tyB dirB))
-               -> SystemV ctxt (PortVal tyB dirB)
 
-  -- Params
-  TyParam : SystemV ctxt ParamTy
+      -> (portA : SystemV ctxt (PortTy tyA dirA))
 
-  MkParam : (val : Nat) -> SystemV ctxt ParamVal
+      -> (prf   : ValidCast (PortTy tyA dirA)
+                            (PortTy tyB dirB))
 
-  ParamOpBool : (op    : Nat -> Nat -> Bool)
-             -> (left  : SystemV ctxt ParamVal)
-             -> (right : SystemV ctxt ParamVal)
-                      -> SystemV ctxt BoolTy
+               -> SystemV ctxt (PortTy tyB dirB)
 
-  ParamOpNot : (left  : SystemV ctxt BoolTy)
-                     -> SystemV ctxt BoolTy
 
   -- Operations on Data.
-  Slice : {s           : Whole}
-       -> {type        : Meta (DATA TYPE)}
-       -> (port        : SystemV ctxt (PortVal (VectorTyDesc s type) dir))
-       -> (alpha : Nat)
-       -> (omega : Whole)
-       -> (prf         : CanSlice (DATA TYPE) (VectorTyDesc s type) alpha omega out)
-                      -> SystemV ctxt (PortVal out dir)
+  Slice : {s     : Whole}
+       -> {type  : TYPE (DATA TYPE)}
+       -> {a,o   : Nat}
+
+       -> (port  : SystemV ctxt (PortTy (VectorTyDesc s type) dir))
+       -> (alpha : SystemV ctxt (NatTy a))
+       -> (omega : SystemV ctxt (NatTy o))
+       -> (prf   : ValidBound a o s)
+                -> SystemV ctxt (PortTy (VectorTyDesc (minus s o a prf) type) dir)
 
   -- Gates
-  Not : {type : Meta (DATA TYPE)}
-     -> (portO : SystemV ctxt (PortVal type OUT))
-     -> (portI : SystemV ctxt (PortVal type IN))
-              -> SystemV ctxt UnitVal
+  Not : {type : TYPE (DATA TYPE)}
+     -> (portO : SystemV ctxt (PortTy type OUT))
+     -> (portI : SystemV ctxt (PortTy type IN))
+              -> SystemV ctxt UnitTy
 
-  Gate : {type : Meta (DATA TYPE)}
+  Gate : {type : TYPE (DATA TYPE)}
+
       -> (kind          : GateKind)
-      -> (portO         : SystemV ctxt (PortVal type OUT))
-      -> (portIA,portIB : SystemV ctxt (PortVal type IN))
-                       -> SystemV ctxt UnitVal
+      -> (portO         : SystemV ctxt (PortTy type OUT))
+      -> (portIA,portIB : SystemV ctxt (PortTy type IN))
+                       -> SystemV ctxt UnitTy
 
-  -- Compile time wiring decisions
-  IfThenElseC : (test      : SystemV ctxt BoolTy)
-             -> (whenTrue  : SystemV ctxt UnitVal)
-             -> (whenFalse : SystemV ctxt UnitVal)
-                          -> SystemV ctxt UnitVal
 
-  -- Binders
-  Let : {  mtypeValue : MTy (IDX VALUE)}
-     -> {  bodyType   : MTy (IDX VALUE)}
-     -> (  value : SystemV ctxt mtypeValue)
-     -> (  body  : SystemV (ctxt += mtypeValue) bodyType)
-                -> SystemV  ctxt                bodyType
+  -- [ Binders ]
 
-public export
-seq : {b        : MTy (IDX VALUE)}
-   -> (this     : SystemV  ctxt    UnitVal)
-   -> (thenThis : SystemV (ctxt += UnitVal)  b)
-               -> SystemV  ctxt              b
-seq this thenThis = App (Func TyUnit thenThis ChkUnit) this
+  Let : {typeU,typeB : Universe}
+     -> {typeValue   : TYPE typeU}
+     -> {typeBody    : TYPE typeB}
+
+     -> (value : SystemV  ctxt    typeValue)
+     -> (body  : SystemV (ctxt += typeValue) typeBody)
+              -> SystemV  ctxt               typeBody
+
+  -- [ Sequencing ]
+
+  Seq : {level : Level}
+     -> {type : TYPE (IDX level)}
+
+     -> (left  : SystemV ctxt UnitTy)
+     -> (right : SystemV ctxt type)
+              -> SystemV ctxt type
+
+  MkNat : (n : Nat) -> SystemV ctxt (NatTy n)
+
+-- [ For ]
+--
+--  It is just sequences of applications.
+--
+--  For : {n : Nat}
+--     -> (counter : SystemV ctxt (NatTy n))
+--     -> (body    : SystemV ctxt (FuncTy (NatTy n) UnitTy))
+--                -> SystemV ctxt UnitTy
+
 -- --------------------------------------------------------------------- [ EOF ]

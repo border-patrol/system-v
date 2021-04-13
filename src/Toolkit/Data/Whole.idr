@@ -56,9 +56,10 @@ export
 toNat : Whole -> Nat
 toNat (W n prf) = n
 
-export
-fromNat : (x : Nat) -> {auto prf : IsSucc x} -> Whole
-fromNat x {prf} = W x prf
+namespace Auto
+  export
+  fromNat : (x : Nat) -> {auto prf : IsSucc x} -> Whole
+  fromNat x {prf} = W x prf
 
 public export
 data LT : Whole -> Whole -> Type where
@@ -114,17 +115,21 @@ namespace IsLteNatWhole
     isLTE n (W k prf) | (Yes x) = Yes (IsLTE x)
     isLTE n (W k prf) | (No contra) = No (isLTENot contra)
 
-public export
-data IsWhole : Nat -> Whole -> Type where
-  YesIsWhole : IsWhole (S n) (W (S n) ItIsSucc)
+namespace Nat
+  public export
+  data IsWhole : Nat -> Type where
+    YesIsWhole : IsWhole (S n)
 
-isZero : (w ** IsWhole 0 w) -> Void
-isZero (MkDPair _ YesIsWhole) impossible
+  isZero : IsWhole 0 -> Void
+  isZero YesIsWhole impossible
 
-export
-isWhole : (n : Nat) -> Dec (w ** IsWhole n w)
-isWhole 0 = No isZero
-isWhole (S k) = Yes (MkDPair (W (S k) ItIsSucc) YesIsWhole)
+
+  export
+  isWhole : (n : Nat) -> Dec (IsWhole n)
+  isWhole 0 = No isZero
+  isWhole (S k) = Yes YesIsWhole
+
+
 
 
 -- --------------------------------------------------------------------- [ EOF ]

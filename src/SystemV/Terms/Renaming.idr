@@ -19,82 +19,106 @@ weaken func (T rest) = T (func rest)
 
 public export
 rename : (f : {level : Universe}
-           -> {type  : MTy level}
+           -> {type  : TYPE level}
                     -> Types.Contains old type
                     -> Types.Contains new type)
       -> ({level : Universe}
-       -> {type : MTy level}
+       -> {type : TYPE level}
        -> SystemV old type
        -> SystemV new type)
 
--- STLC
-rename f (Var idx)            = Var (f idx)
-rename f (Func type body prf) = Func (rename f type) (rename (weaken f) body) prf
-rename f (App func param)     = App (rename f func) (rename f param)
-rename f (TyFunc param body)
-  = TyFunc (rename f param) (rename f body)
+-- [ Types ]
+rename f (TyFunc paramTy returnTy prf)
+  = TyFunc (rename f paramTy)
+           (rename f returnTy)
+           prf
 
--- Unit
-rename f TyUnit = TyUnit
-rename f MkUnit = MkUnit
+rename f TyUnit
+  = TyUnit
 
--- Data Types
-rename f TyLogic = TyLogic
-rename f (TyVect s type) = TyVect s (rename f type)
+rename f (TyNat n)
+  = TyNat n
 
-rename f TyBool = TyBool
-rename f (B b)  = B b
+rename f TyModule
+  = TyModule
 
--- Modules
-rename f TyModule  = TyModule
-rename f EndModule = EndModule
+rename f (TyChan typeD)
+  = TyChan (rename f typeD)
 
--- TypeDefs
-rename f (TypeDefType desc) = TypeDefType (rename f desc)
-rename f (TypeDefCTor type value prf)
-    = TypeDefCTor (rename f type)
-                  (rename f value)
-                  prf
+rename f (TyPort desc dir)
+  = TyPort (rename f desc)
+           dir
 
-rename f (TypeDef type body)
-    = TypeDef (rename f type)
-              (rename (weaken f) body)
+rename f (TyTypeDef desc)
+  = TyTypeDef (rename f desc)
 
--- Ports
-rename f (TyPort desc dir) = TyPort (rename f desc) dir
-rename f (MkPort type dir) = MkPort (rename f type) dir
+rename f TyLogic
+  = TyLogic
 
--- Channels
-rename f (TyChan desc) = TyChan (rename f desc)
-rename f (MkChan type) = MkChan (rename f type)
+rename f (TyVect s type)
+  = TyVect s
+           (rename f type)
 
-rename f (WriteTo  chan) = WriteTo  (rename f chan)
-rename f (ReadFrom chan) = ReadFrom (rename f chan)
+-- [ STLC ]
+rename f (Var idx)
+  = Var (f idx)
+
+rename f (Func type body prf vld)
+  = Func (rename         f  type)
+         (rename (weaken f) body)
+         prf
+         vld
+
+rename f (App func value)
+  = App (rename f func)
+        (rename f value)
+
+-- [ Hardware Prims ]
+rename f MkUnit
+  = MkUnit
+
+rename f EndModule
+  = EndModule
+
+rename f (MkPort typeD dir)
+  = MkPort (rename f typeD)
+           dir
+
+rename f (MkChan typeD)
+  = MkChan (rename f typeD)
+
+rename f (WriteTo chan)
+  = WriteTo (rename f chan)
+
+rename f (ReadFrom chan)
+  = ReadFrom (rename f chan)
 
 rename f (Drive chan)
   = Drive (rename f chan)
 
-rename f (Catch chan) = Catch (rename f chan)
+rename f (Catch chan)
+  = Catch (rename f chan)
 
--- RunTime wiring
-rename f (IfThenElseR cond true false)
-  = IfThenElseR (rename f cond)
-                (rename f true)
-                (rename f false)
+rename f (IfThenElseR test whenIsZ whenNotZ)
+  = IfThenElseR (rename f test)
+                (rename f whenIsZ)
+                (rename f whenNotZ)
 
--- Connections
 rename f (Connect portL portR prf)
   = Connect (rename f portL)
             (rename f portR)
             prf
 
--- Casting
-rename f (Cast this prf) = Cast (rename f this) prf
+rename f (Cast portA prf)
+  = Cast (rename f portA)
+         prf
 
--- Slicing
-rename f (Slice this a o prf) = Slice (rename f this) a o prf
+rename f (Slice port alpha omega prf)
+  = Slice (rename f port)
+          (rename f alpha)
+          (rename f omega)
+          prf
 
--- Gates
 rename f (Not portO portI)
   = Not (rename f portO)
         (rename f portI)
@@ -104,23 +128,15 @@ rename f (Gate kind portO portIA portIB)
               (rename f portIA)
               (rename f portIB)
 
--- Params
-rename f TyParam       = TyParam
-rename f (MkParam val) = MkParam val
-
-rename f (ParamOpBool op l r)
-  = ParamOpBool op (rename f l) (rename f r)
-
-rename f (ParamOpNot p)
-  = ParamOpNot (rename f p)
-
-rename f (IfThenElseC cond true false)
-  = IfThenElseC (rename f cond)
-                (rename f true)
-                (rename f false)
--- Binders
 rename f (Let value body)
-    = Let (rename f value)
-          (rename (weaken f) body)
+  = Let (rename         f  value)
+        (rename (weaken f) body)
+
+rename f (Seq left right)
+  = Seq (rename f left)
+        (rename f right)
+
+rename f (MkNat n)
+  = MkNat n
 
 -- --------------------------------------------------------------------- [ EOF ]

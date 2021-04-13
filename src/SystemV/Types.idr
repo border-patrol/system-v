@@ -14,14 +14,17 @@ import SystemV.Utilities
 
 import public SystemV.Types.Direction
 import public SystemV.Types.Gate
-import public SystemV.Types.Meta
-import public SystemV.Types.Meta.Equality
-import public SystemV.Types.Meta.Equiv
-import public SystemV.Types.Meta.Cast
-import public SystemV.Types.Meta.Sliceable
 
-import public SystemV.Types.Meta.Check.Data
-import public SystemV.Types.Meta.Check.Types
+import public SystemV.Types.TYPE
+
+import public SystemV.Types.TYPE.Equality
+import public SystemV.Types.TYPE.Equiv
+import public SystemV.Types.TYPE.Cast
+import public SystemV.Types.TYPE.Sliceable
+import public SystemV.Types.TYPE.Function
+
+import public SystemV.Types.TYPE.Check.Data
+import public SystemV.Types.TYPE.Check.Types
 
 %default total
 
@@ -32,11 +35,11 @@ Universes = List Universe
 ||| A context is a list of types in different universes.
 public export
 Context : Universes -> Type
-Context = DList Universe Meta
+Context = DList Universe TYPE
 
 
 public export
-Contains : Context lvls -> MTy kind -> Type
-Contains g ty = Elem Universe Meta ty g
+Contains : Context lvls -> TYPE kind -> Type
+Contains g ty = Elem Universe TYPE ty g
 
--- --------------------------------------------------------------------- [ EOF ]
+-- [ EOF ]

@@ -2,6 +2,7 @@ module SystemV.Terms.Substitution
 
 import SystemV.Utilities
 import SystemV.Types
+
 import SystemV.Terms
 import SystemV.Terms.Renaming
 
@@ -9,95 +10,118 @@ import SystemV.Terms.Renaming
 
 public export
 weakens : (f : {level : Universe}
-            -> {type  : MTy level}
+            -> {type  : TYPE level}
                      -> Types.Contains old type
                      -> SystemV new type)
        -> ({level : Universe}
-        -> {type  : MTy level}
+        -> {type  : TYPE level}
                  -> Types.Contains (old += type') type
                  -> SystemV (new += type') type)
 weakens f (H (Same Refl Refl)) = Var (H (Same Refl Refl))
 weakens f (T rest) = rename T (f rest)
 
--- general substitute
 namespace General
   public export
   subst : (f : {level : Universe}
-            -> {type  : MTy level}
+            -> {type  : TYPE level}
                      -> Types.Contains old type
                      -> SystemV new type)
        -> ({level : Universe}
-        -> {type  : MTy level}
+        -> {type  : TYPE level}
                  -> SystemV old type
                  -> SystemV new type)
+  -- [ Types ]
+  subst f (TyFunc paramTy returnTy prf)
+    = TyFunc (subst f paramTy)
+             (subst f returnTy)
+             prf
 
-  -- STLC
-  subst f (Var idx) = f idx
+  subst f TyUnit
+    = TyUnit
 
-  subst f (Func type body prf)
-    = Func (subst f type) (subst (weakens f) body) prf
+  subst f (TyNat n)
+    = TyNat n
 
-  subst f (App func var)
-    = App (subst f func) (subst f var)
+  subst f TyModule
+    = TyModule
 
-  subst f (TyFunc param return)
-    = TyFunc (subst f param) (subst f return)
+  subst f (TyChan typeD)
+    = TyChan (subst f typeD)
 
-  -- Unit
-  subst f TyUnit = TyUnit
-  subst f MkUnit = MkUnit
+  subst f (TyPort desc dir)
+    = TyPort (subst f desc)
+             dir
 
-  -- Data Types & Values
-  subst f TyLogic = TyLogic
+  subst f (TyTypeDef desc)
+    = TyTypeDef (subst f desc)
 
-  subst f (TyVect s type) = TyVect s (subst f type)
+  subst f TyLogic
+    = TyLogic
 
-  subst f TyBool = TyBool
-  subst f (B b)  = B b
+  subst f (TyVect s type)
+    = TyVect s
+             (subst f type)
 
-  -- Modules
-  subst f TyModule  = TyModule
-  subst f EndModule = EndModule
+  -- [ STLC ]
+  subst f (Var idx)
+    = (f idx)
 
-  -- TypeDefs
-  subst f (TypeDefCTor type value prf)
-      = TypeDefCTor (subst f type) (subst f value) prf
+  subst f (Func type body prf vld)
+    = Func (subst          f  type)
+           (subst (weakens f) body)
+           prf
+           vld
 
-  subst f (TypeDefType desc) = TypeDefType (subst f desc)
-  subst f (TypeDef desc body)
-      = TypeDef (subst f desc) (subst (weakens f) body)
+  subst f (App func value)
+    = App (subst f func)
+          (subst f value)
 
-  -- Ports
-  subst f (TyPort desc dir) = TyPort (subst f desc) dir
-  subst f (MkPort type dir) = MkPort (subst f type) dir
+  -- [ Hardware Prims ]
+  subst f MkUnit
+    = MkUnit
 
-  -- Chans
-  subst f (TyChan   desc) = TyChan   (subst f desc)
-  subst f (MkChan   type) = MkChan   (subst f type)
-  subst f (WriteTo  chan) = WriteTo  (subst f chan)
-  subst f (ReadFrom chan) = ReadFrom (subst f chan)
+  subst f EndModule
+    = EndModule
 
-  subst f (Drive chan) = Drive (subst f chan)
-  subst f (Catch chan) = Catch (subst f chan)
+  subst f (MkPort typeD dir)
+    = MkPort (subst f typeD)
+             dir
 
-  -- Runtime wiring
-  subst f (IfThenElseR cond true false)
-    = IfThenElseR (subst f cond)
-                  (subst f true)
-                  (subst f false)
+  subst f (MkChan typeD)
+    = MkChan (subst f typeD)
 
-  -- Connections
+  subst f (WriteTo chan)
+    = WriteTo (subst f chan)
+
+  subst f (ReadFrom chan)
+    = ReadFrom (subst f chan)
+
+  subst f (Drive chan)
+    = Drive (subst f chan)
+
+  subst f (Catch chan)
+    = Catch (subst f chan)
+
+  subst f (IfThenElseR test whenIsZ whenNotZ)
+    = IfThenElseR (subst f test)
+                  (subst f whenIsZ)
+                  (subst f whenNotZ)
+
   subst f (Connect portL portR prf)
-    = Connect (subst f portL) (subst f portR) prf
+    = Connect (subst f portL)
+              (subst f portR)
+              prf
 
-  subst f (Cast this prf)
-    = Cast (subst f this) prf
+  subst f (Cast portA prf)
+    = Cast (subst f portA)
+           prf
 
-  -- slicing
-  subst f (Slice this a o prf)
-    = Slice (subst f this) a o prf
+  subst f (Slice port alpha omega prf)
+    = Slice (subst f port)
+            (subst f alpha)
+            (subst f omega)
+            prf
 
-  -- Gates
   subst f (Not portO portI)
     = Not (subst f portO)
           (subst f portI)
@@ -107,31 +131,21 @@ namespace General
                 (subst f portIA)
                 (subst f portIB)
 
-
-  -- Params
-  subst f TyParam       = TyParam
-  subst f (MkParam val) = MkParam val
-
-  subst f (ParamOpBool op l r)
-    = ParamOpBool op (subst f l) (subst f r)
-
-  subst f (ParamOpNot p)
-    = ParamOpNot (subst f p)
-
-  subst f (IfThenElseC cond true false)
-    = IfThenElseC (subst f cond)
-                  (subst f true)
-                  (subst f false)
-
-  -- Bindings
   subst f (Let value body)
-      = Let (subst f value)
-            (subst (weakens f) body)
+    = Let (subst          f  value)
+          (subst (weakens f) body)
+
+  subst f (Seq left right)
+    = Seq (subst f left)
+          (subst f right)
+
+  subst f (MkNat n)
+    = MkNat n
 
 namespace Single
   public export
   apply : {levelA : Universe}
-       -> {typeA  : MTy levelA}
+       -> {typeA  : TYPE levelA}
        -> (this   : SystemV ctxt typeB)
        -> (idx    : Contains (ctxt += typeB) typeA)
                  -> SystemV ctxt typeA
@@ -140,8 +154,8 @@ namespace Single
 
   public export
   subst : {levelA,levelB : Universe}
-       -> {typeA         : MTy levelA}
-       -> {typeB         : MTy levelB}
+       -> {typeA         : TYPE levelA}
+       -> {typeB         : TYPE levelB}
        -> (this          : SystemV  ctxt           typeB)
        -> (inThis        : SystemV (ctxt += typeB) typeA)
                         -> SystemV  ctxt           typeA

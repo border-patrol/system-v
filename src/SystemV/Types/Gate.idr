@@ -1,3 +1,4 @@
+||| A set of structures to describe primitive gates.
 module SystemV.Types.Gate
 
 import public Data.Nat
@@ -58,6 +59,7 @@ nandNior Refl impossible
 xnorNior  : XNOR = NIOR -> Void
 xnorNior Refl impossible
 
+||| Standard definition of decidable equality.
 export
 DecEq GateKind where
   decEq AND AND  = Yes Refl
@@ -103,4 +105,4 @@ DecEq GateKind where
   decEq NIOR NIOR = Yes Refl
 
 
--- --------------------------------------------------------------------- [ EOF ]
+-- [ EOF ]

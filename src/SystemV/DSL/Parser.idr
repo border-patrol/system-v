@@ -174,18 +174,6 @@ direction = do {keyword "input"; pure IN}
         <|> do {keyword "output"; pure OUT}
         <|> do {keyword "inout";  pure INOUT}
 
-
-paramDecl : Rule Token String
-paramDecl
-  = do st <- location
-       keyword "parameter"
-       label <- name
-       e <- location
-       pure (label)
-
-paramDecls : Rule Token (List String)
-paramDecls = symbol "#" *> parens (commaSepBy1 paramDecl)
-
 port : Rule Token (String, AST)
 port
   = do st <- location
@@ -221,49 +209,6 @@ cast
        e <- location
        pure (Cast (newFC st e) p t d)
 
-param : Rule Token AST
-param =   ref
-      <|> do st <- location
-             n <- natLit
-             e <- location
-             pure (MkParam (newFC st e) n)
-
-params : Rule Token (as : List AST ** NonEmpty as)
-params
-  = do symbol "#"
-       ps <- parens (commaSepBy1' param)
-       pure ps
-
-paramOp : String -> Rule Token (AST, AST)
-paramOp s = parens body
-  where
-    body : Rule Token (AST, AST)
-    body = do keyword s
-              commit
-              a <- param
-              b <- param
-              pure (a,b)
-
-paramOpBool : String -> (Nat -> Nat -> Bool) -> Rule Token AST
-paramOpBool s op
-  = do st <- location
-       lr <- paramOp s
-       e <- location
-       pure (ParamOpBool (newFC st e) op (fst lr) (snd lr))
-
-paramOpNot :  Rule Token AST
-paramOpNot
-    = do st <- location
-         p <- parens (keyword "not" *> param)
-         e <- location
-         pure (ParamOpNot (newFC st e) p)
-
-paramOpsB : Rule Token AST
-paramOpsB =   paramOpBool "lt"  (<)
-          <|> paramOpBool "gt"  (>)
-          <|> paramOpBool "eq"  (==)
-          <|> paramOpNot
-
 proj : Rule Token AST
     -> String
     -> (FileContext -> AST -> AST)
@@ -291,7 +236,7 @@ mutual
     = do s <- location
          keyword "if"
          commit
-         c <- (paramOpsB <|> ref)
+         c <- ref
          keyword "begin"
          t <- entries False
          keyword "end"
@@ -356,26 +301,16 @@ mutual
   moduleInst
       = do s <- location
            f <- ref
-           ps <- optional params
            n <- name
            as <- parens (commaSepBy1' (ref <|> projChan <|> parens cast <|> slice))
            e <- location
-           pure ((newFC s e), n, case ps of
-                      Just ps' => mkApp f ps' as
-                      Nothing  => mkApp' f as )
+           pure ((newFC s e), n, mkApp f as)
     where
-      mkApp' : AST
-           -> (as : List AST ** NonEmpty as)
-           -> AST
-      mkApp' f (a::as ** IsNonEmpty)
-        = foldl App (App f a) as
-
       mkApp : AST
-           -> (ps : List AST ** NonEmpty ps)
            -> (as : List AST ** NonEmpty as)
            -> AST
-      mkApp f (p::ps ** IsNonEmpty) (a::as ** IsNonEmpty)
-        = foldl App (App f p) (ps ++ (a::as))
+      mkApp f (a::as ** IsNonEmpty)
+        = foldl App (App f a) as
 
   data MBody = Expr AST
              | TDef (FileContext, String, AST)
@@ -435,41 +370,24 @@ mutual
                -> AST
       foldPorts fc = foldr (foldPort fc)
 
-      foldParam : FileContext
-               -> String
-               -> AST
-               -> AST
-      foldParam fc p acc = Func fc p TyParam acc
-
-      foldParams : FileContext
-                -> AST
-                -> List String
-                -> AST
-      foldParams fc = foldr (foldParam fc)
-
       buildFunc : FileContext
                -> AST
-               -> List String
+
                -> List (String, AST)
                -> AST
-      buildFunc fc body Nil    Nil
+      buildFunc fc body Nil
         = Func fc "" TyUnit body
-      buildFunc fc body params Nil
-        = foldParams fc body params
-      buildFunc fc body Nil ports
+      buildFunc fc body ports
         = foldPorts fc body ports
-      buildFunc fc body params ports
-        = foldParams fc (foldPorts fc body ports) params
 
       moduleFunc : Rule Token AST
       moduleFunc = do s <- location
-                      ps <- option Nil paramDecls
                       xs <- ports
                       symbol ";"
                       es <- option EndModule (entries True)
                       keyword "endmodule"
                       e <- location
-                      pure (buildFunc (newFC s e) es ps xs)
+                      pure (buildFunc (newFC s e) es xs)
 
   moduleDef : Rule Token (FileContext, String, AST)
   moduleDef = moduleDefGen name

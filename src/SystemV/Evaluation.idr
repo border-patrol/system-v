@@ -1,13 +1,19 @@
 module SystemV.Evaluation
 
+import Data.Fuel
+
 import SystemV.Utilities
 import SystemV.Types
 import SystemV.Terms
-import SystemV.Values
+
 
 import SystemV.Terms.Renaming
+
 import SystemV.Terms.Substitution
-import SystemV.Terms.Reduction
+
+import SystemV.Evaluation.Values
+
+import SystemV.Evaluation.Reduction
 
 import SystemV.Evaluation.Progress
 
@@ -42,20 +48,12 @@ data Evaluate : (term : SystemV Nil type) -> Type where
                        -> Evaluate this
 
 public export
-data Fuel = Empty | More (Lazy Fuel)
-
-public export
-covering
-forever : Fuel
-forever = More forever
-
-public export
 total
 compute : forall type
         . (fuel : Fuel)
        -> (term : SystemV Nil type)
        -> Evaluate term
-compute Empty term = RunEval Refl OOF
+compute Dry term = RunEval Refl OOF
 compute (More fuel) term with (progress term)
   compute (More fuel) term | (Done value) = RunEval Refl (Normalised value)
   compute (More fuel) term | (Step step {that}) with (compute fuel that)

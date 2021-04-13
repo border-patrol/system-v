@@ -15,7 +15,7 @@ clean:
 	${MAKE} -C tests clean IDRIS2=$(IDRIS2)
 
 
-test: systemv
+test:
 	${MAKE} -C tests testbin IDRIS2=$(IDRIS2)
 	${MAKE} -C tests test \
 			 IDRIS2=$(IDRIS2) \
