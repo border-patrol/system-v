@@ -25,9 +25,6 @@ data TYPE : Universe -> Type where
   TypeDefTy : TYPE (DATA level) -> TYPE (DATA level)
 
   -- Primitive Types
-  BoolTyDesc : TYPE (DATA TYPE)
-  BoolTy     : TYPE (DATA TERM)
-
   LogicTyDesc : TYPE (DATA TYPE)
   LogicTy     : TYPE (DATA TERM)
 

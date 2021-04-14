@@ -7,8 +7,7 @@ import        Toolkit.Decidable.Informative
 import        Toolkit.Decidable.Equality.Indexed
 import        Toolkit.Data.Whole
 
-import        SystemV.Common.Utilities
-import        SystemV.Base.Types.Direction
+import        SystemV.Common.Types.Direction
 import        SystemV.Base.Types.TYPE
 
 import public SystemV.Base.Types.TYPE.Equality.Error
@@ -43,7 +42,7 @@ byIndex : {idxA, idxB : Universe}
        -> (a : TYPE idxA)
        -> (b : TYPE idxB)
        -> ByIndex a b
-byIndex a b {idxA} {idxB} with (decEq idxA idxB)
+byIndex a b {idxA} {idxB} with (Universe.decEq idxA idxB)
   byIndex a b {idxA = idxB} {idxB = idxB} | (Yes Refl) = (IdxSame a b Refl)
   byIndex a b {idxA = idxA} {idxB = idxB} | (No contra) = (IdxDiff a b contra)
 

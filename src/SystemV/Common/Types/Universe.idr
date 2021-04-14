@@ -25,18 +25,23 @@ idxNotSameLevel : (contra : x = y -> Void)
                          -> Void
 idxNotSameLevel contra Refl = contra Refl
 
+export
+decEq : (a,b : Universe)
+            -> Dec (a === b)
+decEq (DATA x) (DATA y) with (decEq x y)
+  decEq (DATA x) (DATA x) | (Yes Refl) = Yes Refl
+  decEq (DATA x) (DATA y) | (No contra) = No (dataNotSameLevel contra)
+
+decEq (DATA x) (IDX y) = No dataIdxNotEq
+
+
+decEq (IDX x) (DATA y) = No (negEqSym dataIdxNotEq)
+decEq (IDX x) (IDX y) with (decEq x y)
+  decEq (IDX x) (IDX x) | (Yes Refl) = Yes Refl
+  decEq (IDX x) (IDX y) | (No contra) = No (idxNotSameLevel contra)
 
 export
 DecEq Universe where
-  decEq (DATA x) (DATA y) with (decEq x y)
-    decEq (DATA x) (DATA x) | (Yes Refl) = Yes Refl
-    decEq (DATA x) (DATA y) | (No contra) = No (dataNotSameLevel contra)
-
-  decEq (DATA x) (IDX y) = No dataIdxNotEq
-
-  decEq (IDX x) (DATA y) = No (negEqSym dataIdxNotEq)
-  decEq (IDX x) (IDX y) with (decEq x y)
-    decEq (IDX x) (IDX x) | (Yes Refl) = Yes Refl
-    decEq (IDX x) (IDX y) | (No contra) = No (idxNotSameLevel contra)
+  decEq = Universe.decEq
 
 -- [ EOF ]

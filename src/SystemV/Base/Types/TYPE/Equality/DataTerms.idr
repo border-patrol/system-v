@@ -17,20 +17,11 @@ typeDefTyTermNotEqual : (contra : Equals Universe TYPE x y -> Void)
                                -> Void
 typeDefTyTermNotEqual contra (Same Refl Refl) = contra (Same Refl Refl)
 
-typeDefTyTermNotABool : Equals Universe TYPE (TypeDefTy x) BoolTy -> Void
-typeDefTyTermNotABool (Same Refl Refl) impossible
-
 typeDefTyTermNotALogic : Equals Universe TYPE (TypeDefTy x) LogicTy -> Void
 typeDefTyTermNotALogic (Same Refl Refl) impossible
 
 typeDefTyTermNotAVect : Equals Universe TYPE (TypeDefTy x) (VectorTy n y) -> Void
 typeDefTyTermNotAVect (Same Refl Refl) impossible
-
-boolTypeNotALogic : Equals Universe TYPE BoolTy LogicTy -> Void
-boolTypeNotALogic (Same Refl Refl) impossible
-
-boolTypeNotAVect : Equals Universe TYPE BoolTy (VectorTy n x) -> Void
-boolTypeNotAVect (Same Refl Refl) impossible
 
 logicTypeNotAVect : Equals Universe TYPE LogicTy (VectorTy n x) -> Void
 logicTypeNotAVect (Same Refl Refl) impossible
@@ -55,28 +46,17 @@ decEq a b with (a)
         decEq a b | (TypeDefTy x) | (TypeDefTy x) | (Yes prf) | (Same Refl Refl) = Yes (Same Refl Refl)
       decEq a b | (TypeDefTy x) | (TypeDefTy y) | (No msg contra) =  No msg (typeDefTyTermNotEqual contra)
 
-    decEq a b | (TypeDefTy x) | BoolTy =  No (TypeMismatch a b) (typeDefTyTermNotABool)
-
     decEq a b | (TypeDefTy x) | LogicTy =  No (TypeMismatch a b) (typeDefTyTermNotALogic)
 
     decEq a b | (TypeDefTy x) | (VectorTy n y) =  No (TypeMismatch a b) (typeDefTyTermNotAVect)
 
-  decEq a b | BoolTy with (b)
-    decEq a b | BoolTy | (TypeDefTy x) =  No (TypeMismatch a b) (negEqSym typeDefTyTermNotABool)
-
-    decEq a b | BoolTy | BoolTy = Yes (Same Refl Refl)
-    decEq a b | BoolTy | LogicTy =  No (TypeMismatch a b) (boolTypeNotALogic)
-    decEq a b | BoolTy | (VectorTy n x) =  No (TypeMismatch a b) (boolTypeNotAVect)
-
   decEq a b | LogicTy with (b)
     decEq a b | LogicTy | (TypeDefTy x) =  No (TypeMismatch a b) (negEqSym typeDefTyTermNotALogic)
-    decEq a b | LogicTy | BoolTy =  No (TypeMismatch a b) (negEqSym boolTypeNotALogic)
     decEq a b | LogicTy | LogicTy = Yes (Same Refl Refl)
     decEq a b | LogicTy | (VectorTy n x) =  No (TypeMismatch a b) logicTypeNotAVect
 
   decEq a b | (VectorTy n x) with (b)
     decEq a b | (VectorTy n x) | (TypeDefTy y) =  No (TypeMismatch a b) (negEqSym typeDefTyTermNotAVect)
-    decEq a b | (VectorTy n x) | BoolTy =  No (TypeMismatch a b) (negEqSym boolTypeNotAVect)
     decEq a b | (VectorTy n x) | LogicTy =  No (TypeMismatch a b) (negEqSym logicTypeNotAVect)
     decEq a b | (VectorTy n x) | (VectorTy k y) with (decEq n k)
       decEq a b | (VectorTy k x) | (VectorTy k y) | (Yes Refl) with (decEq x y)

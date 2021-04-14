@@ -70,12 +70,6 @@ Show (TYPE level) where
   show (TypeDefTy x)
     = "TypeDef(" ++ show x ++ ")"
 
-  show BoolTyDesc
-    = "Bool"
-
-  show BoolTy
-    = "BoolVal"
-
   show LogicTyDesc
     = "Logic"
   show LogicTy
