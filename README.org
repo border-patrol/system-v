@@ -1,7 +1,7 @@
 #+TITLE: README
 
 We are interested in the /physical/ structure of Hardware Designs, that is how they are wired rather than how they behave.
-SystemV is a featherweight version of SystemVerilog (a well-known Hardware Design & Verification language) that captures salient structural properties of Hardware Design as presented in SystemVerilog.
+Ostensibly, SystemV is a subset of SystemVerilog (a well-known Hardware Design & Verification language) that captures salient structural properties of SystemVerilog-style Hardware Design.
 
 Specifically, we are interested in:
 
@@ -9,8 +9,59 @@ Specifically, we are interested in:
 2. How to 'correctly' wire hardware components together;
 3. How to represent and automatically reason about the emergent properties of data structures both nominally and structurally;
 
-We have grounded the design and formalisation of SystemV as a typed lambda calculus, and use mathematical structures to reason about data.
-We have mechanised our formalisation in Idris2 a known dependently typed general purpose functional programming language.
+Specifically, we are not interested in:
+
+1. What happens to values
+2. General behaviourally aspects of a design.
+
+We are /just/ interested in wiring things together.
+
+We do so by basing the formalism on the Simply-Typed Lambda-Calculus, restricted to follow SystemVerilog constructs more closely, and other interesting type-theoretic structures.
+
+Our contributions are that we have:
+
+1. grounded the design and formalisation of SystemV as a typed lambda calculus;
+2. used (or will use) mathematical structures to reason about data structures and their properties;
+3. mechanised our formalisation in Idris2, a known dependently-typed general purpose functional programming language;
+4. presented our formalisms as /verified compilers/ for creating hardware designs using DSLs that look almost like SystemVerilog;
+5. extended and expanded the formalism in novel ways to explore the SystemVerilog design space
+
+We position SystemV as a base formalism that we will look to either:
+
++ extend :: by introducing new reducible terms;
++ expand :: by introducing new values;
++ excite :: by taking *full* advantage of the STLC as a host formalism
+
+Doing so supports:
+
+1. reasoning about more SystemVerilog design constructs (extending/expanding);
+2. investigation of novel extensions (expanding/exciting);
+3. designing new and interesting language features (expanding/exciting);
+
+* Languages presented
+** SystemV Base
+   SystemV-Base is the core formalism upon which all things are based.
+   These base constructs are:
+
++ Modules as functions;
++ Channel creation (projection);
++ Logic and Vectors
++ Vector slicing, indexing, and sizing
++ Driving and catching
++ Compile-time decisions using Conditional statements
++ Connecting ports together
++ Casting ports
++ Primitive binary gates (and not)
+
+
+** SystemV Params
+
+   SystemV-Params is an extension of SystemV-Base that adds:
++ Arithmetic on Natural Numbers
++ Parameterised (with Defaults) Modules
++ Division-by-Zero checking---run-time and compile-time
+
+
 
 * Note
 
@@ -32,7 +83,4 @@ of how types are formed and their use to type values.
 Standard constructions are used to represent the language as an
 EDSL, together with proof of progress taken from PLFA Part 2.
 
-* Known Upstream Issues
-
-Although the code appears to be total, there are known issues with Idris2's totality checker that causes it to slow down when
-dealing with mutually defined terms.
+We are yet to investigate nominal typing of data types when it comes to equivalence and compatibility.
