@@ -5,20 +5,25 @@ import Test.Golden
 
 %default total
 
-tests : TestPool
-tests =
-  MkTestPool
-  []
-  [ "000-hello-world"
-  , "001-scrub"
-  , "002-split"
-  , "003-gates"
-  , "004-for"
-  ]
+testPaths : String -> TestPool -> TestPool
+testPaths dir
+  = record { testCases $= map ((dir ++ "/") ++) }
+
+baseTests : TestPool
+baseTests
+  = MkTestPool []
+               [ "000-hello-world"
+               , "001-scrub"
+               , "002-split"
+               , "003-gates"
+               , "004-for"
+               ]
 
 covering
 main : IO ()
-main = runner [tests]
+main
+  = runner [testPaths "base" baseTests]
+
 
 
 -- [ EOF ]
