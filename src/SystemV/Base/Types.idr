@@ -6,14 +6,19 @@
 module SystemV.Base.Types
 
 import public Decidable.Equality
+import public Data.Nat
 
 import public Toolkit.Decidable.Informative
 import public Toolkit.Decidable.Equality.Indexed
 
-import SystemV.Common.Utilities
+import public Toolkit.Data.Whole
 
-import public SystemV.Base.Types.Direction
-import public SystemV.Base.Types.Gate
+import public Toolkit.Data.List.DeBruijn
+import public Toolkit.Data.DList
+import public Toolkit.Data.DList.Elem
+import public Toolkit.Data.DList.DeBruijn
+
+import public SystemV.Common.Types.Direction
 
 import public SystemV.Base.Types.TYPE
 

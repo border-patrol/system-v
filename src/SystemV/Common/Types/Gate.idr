@@ -1,12 +1,12 @@
 ||| A set of structures to describe primitive gates.
-module SystemV.Base.Types.Gate
+module SystemV.Common.Types.Gate
 
-import public Data.Nat
-import public Decidable.Equality
+import Data.Nat
+import Decidable.Equality
 
-import public Toolkit.Decidable.Informative
-import public Toolkit.Decidable.Equality.Indexed
-import public Toolkit.Data.Whole
+import Toolkit.Decidable.Informative
+import Toolkit.Decidable.Equality.Indexed
+import Toolkit.Data.Whole
 
 %default total
 

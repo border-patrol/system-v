@@ -10,7 +10,9 @@ import Toolkit.Decidable.Equality.Indexed
 import Toolkit.Data.Whole
 
 import SystemV.Common.Utilities
-import SystemV.Base.Types.Direction
+
+import SystemV.Common.Types.Direction
+
 import SystemV.Base.Types.TYPE
 
 %default total

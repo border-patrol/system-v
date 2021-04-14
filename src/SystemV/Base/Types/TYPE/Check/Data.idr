@@ -6,8 +6,7 @@ import Toolkit.Decidable.Informative
 
 import SystemV.Common.Utilities
 
-import public SystemV.Base.Types.Direction
-import public SystemV.Base.Types.TYPE
+import SystemV.Base.Types.TYPE
 
 %default total
 

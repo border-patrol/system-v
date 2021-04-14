@@ -2,7 +2,8 @@ module SystemV.Base.DSL.AST
 
 import Toolkit.Data.Location
 
-import SystemV.Base.Types
+import public SystemV.Common.Types.Direction
+import public SystemV.Common.Types.Gate
 
 %default total
 

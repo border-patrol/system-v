@@ -5,7 +5,6 @@ import Decidable.Equality
 import Toolkit.Decidable.Informative
 import Toolkit.Decidable.Equality.Indexed
 
-import SystemV.Common.Utilities
 import SystemV.Base.Types.Direction
 
 import SystemV.Base.Types.TYPE

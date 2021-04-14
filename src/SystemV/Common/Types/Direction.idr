@@ -1,8 +1,8 @@
 ||| Structures to describe port direction.
-module SystemV.Base.Types.Direction
+module SystemV.Common.Types.Direction
 
-import public Decidable.Equality
-import public Toolkit.Decidable.Informative
+import Decidable.Equality
+import Toolkit.Decidable.Informative
 
 %default total
 

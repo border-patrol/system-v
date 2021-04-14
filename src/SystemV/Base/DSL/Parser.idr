@@ -18,14 +18,9 @@ import public Toolkit.Text.Parser.Run
 
 import public SystemV.Common.Lexer
 
-import        SystemV.Base.Types.Direction
-import        SystemV.Base.Types.Gate
-
 import        SystemV.Base.DSL.AST
 
-
-
-%default total -- Idris2 does it!
+%default total
 
 eoi : RuleEmpty Token ()
 eoi = eoi isEOI

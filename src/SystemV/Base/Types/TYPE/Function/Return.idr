@@ -8,7 +8,8 @@ import Data.List.Views
 import Data.Strings
 import Data.Maybe
 
-import SystemV.Common.Utilities
+import Toolkit.Decidable.Informative
+import Toolkit.Decidable.Equality.Indexed
 
 import SystemV.Base.Types.TYPE
 
@@ -16,8 +17,8 @@ import SystemV.Base.Types.TYPE
 
 public export
 data ValidType : (level : Universe)
-                  -> (type  : TYPE level)
-                           -> Type
+              -> (type  : TYPE level)
+                       -> Type
   where
     IsModuleTyDesc : ValidType (IDX TYPE) ModuleTyDesc
     IsUnitTyDesc   : ValidType (IDX TYPE) UnitTyDesc

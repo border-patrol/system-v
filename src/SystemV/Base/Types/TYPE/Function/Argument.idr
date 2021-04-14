@@ -8,7 +8,8 @@ import Data.List.Views
 import Data.Strings
 import Data.Maybe
 
-import SystemV.Common.Utilities
+import Toolkit.Decidable.Informative
+import Toolkit.Decidable.Equality.Indexed
 
 import SystemV.Base.Types.TYPE
 

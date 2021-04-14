@@ -1,15 +1,15 @@
 module SystemV.Base.Types.TYPE.Equality
 
-import Data.Nat
-import Decidable.Equality
+import        Data.Nat
+import        Decidable.Equality
 
-import Toolkit.Decidable.Informative
-import Toolkit.Decidable.Equality.Indexed
-import Toolkit.Data.Whole
+import        Toolkit.Decidable.Informative
+import        Toolkit.Decidable.Equality.Indexed
+import        Toolkit.Data.Whole
 
-import SystemV.Common.Utilities
-import SystemV.Base.Types.Direction
-import SystemV.Base.Types.TYPE
+import        SystemV.Common.Utilities
+import        SystemV.Base.Types.Direction
+import        SystemV.Base.Types.TYPE
 
 import public SystemV.Base.Types.TYPE.Equality.Error
 

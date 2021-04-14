@@ -2,14 +2,10 @@
 |||
 module SystemV.Base.Terms
 
-import Data.Nat
+-- import SystemV.Common.Utilities
 
-import Toolkit.Data.DList
-import Toolkit.Data.DList.Elem
-import Toolkit.Data.DList.DeBruijn
-
-import SystemV.Common.Utilities
-import SystemV.Base.Types
+import public SystemV.Common.Types.Gate
+import public SystemV.Base.Types
 
 %default total
 

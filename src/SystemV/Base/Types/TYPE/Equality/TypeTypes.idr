@@ -8,7 +8,6 @@ import Toolkit.Decidable.Equality.Indexed
 import Toolkit.Data.Whole
 
 import SystemV.Base.Types.TYPE
-
 import SystemV.Base.Types.TYPE.Equality.Error
 import SystemV.Base.Types.TYPE.Equality.DataTypes
 

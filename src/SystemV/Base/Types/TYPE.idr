@@ -7,71 +7,14 @@
 |||
 module SystemV.Base.Types.TYPE
 
-import Data.Nat
-import Decidable.Equality
-
 import public Toolkit.Data.Whole
-import Toolkit.Decidable.Equality.Indexed
 
-import        SystemV.Common.Utilities
-import public SystemV.Base.Types.Direction
+import public SystemV.Common.Types.Direction
+
+import public SystemV.Common.Types.Level
+import public SystemV.Common.Types.Universe
 
 %default total
-
-namespace Level
-
-
-  ||| Levels at which types and their types are defined in our type
-  ||| universes.
-  public export
-  data Level = TERM -- Describes a type that describes a value.
-             | TYPE  -- Describes a type that describes a type.
-
-  valueNotType : TERM = TYPE -> Void
-  valueNotType Refl impossible
-
-  export
-  DecEq Level where
-    decEq TERM TERM = Yes Refl
-    decEq TERM TYPE = No valueNotType
-    decEq TYPE TERM = No (negEqSym valueNotType)
-    decEq TYPE TYPE = Yes Refl
-
-
-||| The Universes in our setup: Data or things that contain data.
-public export
-data Universe = DATA Level -- Describes things that are data.
-              | IDX  Level -- Describes things that contain data.
-
-namespace Universe
-
-  dataNotSameLevel : (contra : x = y -> Void)
-                  -> (prf    : DATA x = DATA y)
-                            -> Void
-  dataNotSameLevel contra Refl = contra Refl
-
-  dataIdxNotEq : DATA x = IDX y -> Void
-  dataIdxNotEq Refl impossible
-
-  idxNotSameLevel : (contra : x = y -> Void)
-                 -> (prf    : IDX x = IDX y)
-                           -> Void
-  idxNotSameLevel contra Refl = contra Refl
-
-
-  export
-  DecEq Universe where
-    decEq (DATA x) (DATA y) with (decEq x y)
-      decEq (DATA x) (DATA x) | (Yes Refl) = Yes Refl
-      decEq (DATA x) (DATA y) | (No contra) = No (dataNotSameLevel contra)
-
-    decEq (DATA x) (IDX y) = No dataIdxNotEq
-
-    decEq (IDX x) (DATA y) = No (negEqSym dataIdxNotEq)
-    decEq (IDX x) (IDX y) with (decEq x y)
-      decEq (IDX x) (IDX x) | (Yes Refl) = Yes Refl
-      decEq (IDX x) (IDX y) | (No contra) = No (idxNotSameLevel contra)
-
 
 ||| Our types are meta types...
 public export
@@ -128,6 +71,8 @@ data TYPE : Universe -> Type where
 
   NatTyDesc : Nat -> TYPE (IDX TYPE)
   NatTy     : Nat -> TYPE (IDX TERM)
+
+
 
 
 -- --------------------------------------------------------------------- [ EOF ]

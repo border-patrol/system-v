@@ -7,7 +7,8 @@ import Toolkit.Decidable.Equality.Indexed
 
 import SystemV.Common.Utilities
 
-import SystemV.Base.Types.Direction
+import SystemV.Common.Types.Direction
+
 import SystemV.Base.Types.TYPE
 import SystemV.Base.Types.TYPE.Equality
 import SystemV.Base.Types.TYPE.Equiv

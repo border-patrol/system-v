@@ -8,13 +8,12 @@ import Data.List.Views
 import Data.Strings
 import Data.Maybe
 
-import SystemV.Common.Utilities
+import Toolkit.Decidable.Informative
+import Toolkit.Decidable.Equality.Indexed
 
 import SystemV.Base.Types.TYPE
 import SystemV.Base.Types.TYPE.Check.Types
-
 import SystemV.Base.Types.TYPE.Function.Argument
---import SystemV.Base.Types.TYPE.Function.Return
 
 
 %default total

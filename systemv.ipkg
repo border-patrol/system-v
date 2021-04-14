@@ -8,7 +8,7 @@ executable = systemv
 sourcedir = "src"
 
 modules =
-        -- [ Vendored Utilities ]
+-- ## Vendored Utilities
           Toolkit.Decidable.Equality.Indexed
 
         , Toolkit.Data.Vect.Extra
@@ -39,36 +39,49 @@ modules =
 
         , Toolkit.System
 
-        -- [ Things Common to All ]
+-- ## Things Common to All
         , SystemV.Common.Utilities
         , SystemV.Common.Lexer
 
-        -- [ SystemV 'Base' ]
+        , SystemV.Common.Types.Level
+        , SystemV.Common.Types.Universe
 
-        , SystemV.Base.Types.Direction
-        , SystemV.Base.Types.Gate
+        , SystemV.Common.Types.Direction
+        , SystemV.Common.Types.Gate
+
+-- ## SystemV 'Base'
+
+-- ### Types
 
         , SystemV.Base.Types.TYPE
 
         , SystemV.Base.Types.TYPE.Equality.Error
         , SystemV.Base.Types.TYPE.Equality.DataTypes
         , SystemV.Base.Types.TYPE.Equality.DataTerms
-
         , SystemV.Base.Types.TYPE.Equality
+
         , SystemV.Base.Types.TYPE.Equiv
         , SystemV.Base.Types.TYPE.Cast
         , SystemV.Base.Types.TYPE.Sliceable
-        , SystemV.Base.Types.TYPE.Function
+
         , SystemV.Base.Types.TYPE.Function.Argument
         , SystemV.Base.Types.TYPE.Function.Return
         , SystemV.Base.Types.TYPE.Function.Synthesis
+        , SystemV.Base.Types.TYPE.Function
+
         , SystemV.Base.Types.TYPE.Check.Data
         , SystemV.Base.Types.TYPE.Check.Types
+
         , SystemV.Base.Types
+
+-- ### Terms
+
         , SystemV.Base.Terms
 
         , SystemV.Base.Terms.Renaming
         , SystemV.Base.Terms.Substitution
+
+-- ### Evaluation
 
         , SystemV.Base.Evaluation.Values
 
@@ -83,7 +96,7 @@ modules =
 
         , SystemV.Base
 
-        -- [ SystemV 'Core' DSL ]
+-- ### DSL
 
         , SystemV.Base.DSL.AST
 
@@ -96,5 +109,7 @@ modules =
 
         , SystemV.Base.DSL
 
-        -- [ Main ]
+-- ## Main
         , Main
+
+-- [ EOF ]
