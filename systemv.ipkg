@@ -58,6 +58,8 @@ modules =
         , SystemV.Base.Types.TYPE.Equality.Error
         , SystemV.Base.Types.TYPE.Equality.DataTypes
         , SystemV.Base.Types.TYPE.Equality.DataTerms
+        , SystemV.Base.Types.TYPE.Equality.TypeTypes
+        , SystemV.Base.Types.TYPE.Equality.TypeTerms
         , SystemV.Base.Types.TYPE.Equality
 
         , SystemV.Base.Types.TYPE.Equiv
@@ -108,6 +110,43 @@ modules =
         , SystemV.Base.DSL.Build
 
         , SystemV.Base.DSL
+
+-- ## SystemV 'Params'
+
+-- ### Types
+
+        , SystemV.Params.Types.TYPE
+
+        , SystemV.Params.Types.TYPE.Equality.Error
+        , SystemV.Params.Types.TYPE.Equality.View
+        , SystemV.Params.Types.TYPE.Equality.DataTypes
+        , SystemV.Params.Types.TYPE.Equality.DataTerms
+        , SystemV.Params.Types.TYPE.Equality.Types.Types
+        , SystemV.Params.Types.TYPE.Equality.Types.Terms
+        , SystemV.Params.Types.TYPE.Equality.Types
+        , SystemV.Params.Types.TYPE.Equality
+
+        , SystemV.Params.Types.TYPE.Equiv
+        , SystemV.Params.Types.TYPE.Cast
+        , SystemV.Params.Types.TYPE.Sliceable
+
+        , SystemV.Params.Types.TYPE.Function.Argument
+        , SystemV.Params.Types.TYPE.Function.Argument.Default
+        , SystemV.Params.Types.TYPE.Function.Return
+        , SystemV.Params.Types.TYPE.Function.Synthesis
+        , SystemV.Params.Types.TYPE.Function
+
+        , SystemV.Params.Types.TYPE.Check.Data
+        , SystemV.Params.Types.TYPE.Check.Types
+        , SystemV.Params.Types.TYPE.Check.Default
+
+        , SystemV.Params.Types
+
+-- ### Terms
+
+        , SystemV.Params.Terms
+        , SystemV.Params.Terms.Renaming
+        , SystemV.Params.Terms.Substitution
 
 -- ## Main
         , Main
