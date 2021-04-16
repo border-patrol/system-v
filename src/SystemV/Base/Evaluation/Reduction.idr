@@ -238,9 +238,9 @@ data Redux : (this : SystemV ctxt type)
     RewriteSize : Redux (Size (Seq left port))
                         (Seq left (Size port))
 
-    ReduceSize : (val : Value port)
-                     -> Redux (Size port)
-                              (size port val)
+    ReduceSize : (v : Value port)
+              -> Redux (Size port)
+                       (size port v)
 
     -- ### Gates
 

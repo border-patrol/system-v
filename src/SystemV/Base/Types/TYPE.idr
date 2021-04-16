@@ -69,7 +69,4 @@ data TYPE : Universe -> Type where
   NatTyDesc : Nat -> TYPE (IDX TYPE)
   NatTy     : Nat -> TYPE (IDX TERM)
 
-
-
-
 -- --------------------------------------------------------------------- [ EOF ]

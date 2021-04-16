@@ -3,7 +3,9 @@ module SystemV.Base.DSL.Parser
 import        Data.Vect
 import        Data.Nat
 import        Data.List
+
 import        Data.List.Views
+import        Data.List1
 import        Data.Strings
 import        Data.Maybe
 
@@ -76,31 +78,9 @@ parens : Inf (Rule Token a)
       -> Rule Token a
 parens = between (symbol "(") (symbol ")")
 
-semiSepBy1 : Rule Token a -> Rule Token (List a)
-semiSepBy1 = sepBy1 (symbol ";")
 
-commaSepBy1 : Rule Token a -> Rule Token (List a)
+commaSepBy1 : Rule Token a -> Rule Token (List1 a)
 commaSepBy1 = sepBy1 (symbol ",")
-
-commaSepBy1' : Rule Token a -> Rule Token (xs : List a ** NonEmpty xs)
-commaSepBy1' = sepBy1' (symbol ",")
-
-
-sepBy1V : (sep : Rule Token b)
-       -> (p : Rule Token a)
-       -> Rule Token (n ** Vect (S n) a)
-sepBy1V sep p = do {x <- p; xs <- many (sep *> p); pure (_ ** fromList $ x::xs)}
-
-sepBy2V : (sep : Rule Token b)
-       -> (p : Rule Token a)
-       -> Rule Token (n ** Vect (S (S n)) a)
-sepBy2V sep p = do {x <- p; sep; y <- p; rest <- many (sep *> p); pure (_ ** fromList $ x::y::rest)}
-
-commaSepBy1V : (p : Rule Token a) -> Rule Token (n ** Vect (S n) a)
-commaSepBy1V = sepBy1V (symbol ",")
-
-commaSepBy2V : (p : Rule Token a) -> Rule Token (n ** Vect (S (S n)) a)
-commaSepBy2V = sepBy2V (symbol ",")
 
 ref : Rule Token AST
 ref = do
@@ -247,7 +227,7 @@ port
 
 ports : Rule Token (List (String, AST))
 ports =  symbol "(" *> symbol ")" *> pure Nil
-     <|> parens (commaSepBy1 port)
+     <|> do {p <- parens (commaSepBy1 port); pure (forget p)}
 
 assign : Rule Token AST
 assign
@@ -352,14 +332,14 @@ mutual
       = do s <- location
            f <- ref
            n <- name
-           as <- parens (commaSepBy1' appArg)
+           as <- parens (commaSepBy1 appArg)
            e <- location
            pure ((newFC s e), n, mkApp f as)
     where
       mkApp : AST
-           -> (as : List AST ** NonEmpty as)
+           -> List1 AST
            -> AST
-      mkApp f (a::as ** IsNonEmpty)
+      mkApp f (a:::as)
         = foldl App (App f a) as
 
   data MBody = Expr AST
@@ -423,7 +403,6 @@ mutual
 
       buildFunc : FileContext
                -> AST
-
                -> List (String, AST)
                -> AST
       buildFunc fc body Nil

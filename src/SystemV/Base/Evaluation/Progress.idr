@@ -267,13 +267,13 @@ progress (Index n port prf) with (progress n)
 -- ### Sizing
 
 progress (Size port) with (progress port)
-  progress (Size (MkPort ty dir)) | (Done (MkPort tyV dir))
-    = Step (ReduceSize (MkPort tyV dir))
 
   progress (Size (Seq left right)) | (Done (Seq x y))
     = Step RewriteSize
+  progress (Size port) | (Done portV)
+    = Step (ReduceSize portV)
 
-  progress (Size port) | (Step step)
+  progress (Size port) | Step step
     = Step (SimplifySize step)
 
 -- ### Gates

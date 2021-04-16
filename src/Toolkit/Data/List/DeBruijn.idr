@@ -97,16 +97,12 @@ namespace KV
 
 
   public export
-  indexEmpty : DecEq type
-           => (t ** Index (String, type) [] (k, t))
-           -> Void
-  indexEmpty (MkDPair _ Here) impossible
-  indexEmpty (MkDPair _ (There _)) impossible
-
+  indexEmpty : (t ** Index (String, type) [] (k, t))
+            -> Void
+  indexEmpty (MkDPair fst snd) impossible
 
   public export
-  notInIndex : DecEq type
-           => (keyContra : (k = a) -> Void)
+  notInIndex : (keyContra : (k = a) -> Void)
            -> (index     : List (String, type))
            -> (kvContra  : (t : type ** Index (String, type) xs (k, t)) -> Void)
            -> (prf       : (t : type ** Index (String, type) ((a, b) :: xs) (k, t)))

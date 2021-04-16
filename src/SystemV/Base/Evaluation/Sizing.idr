@@ -9,13 +9,10 @@ import SystemV.Base.Evaluation.Values
 %default total
 
 public export
-size : (port : SystemV ctxt (PortTy (VectorTyDesc (W (S n) ItIsSucc) type) dir))
+size : {n : Nat}
+    -> (port : SystemV ctxt (PortTy (VectorTyDesc (W (S n) ItIsSucc) type) dir))
     -> (val  : Value port)
             -> SystemV ctxt (NatTy (S n))
-size port val {n} with (val)
-  size (MkPort ty dir) val {n} | (MkPort tyV dir)
-    = MkNat (S n)
-  size (Seq left right) val {n} | (Seq x y)
-    = size right y
+size _ _ {n} = MkNat (S n)
 
 -- [ EOF ]

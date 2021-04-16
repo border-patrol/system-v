@@ -52,8 +52,8 @@ namespace Name
   Names = DList Universe Name
 
   listEmpty : (level ** Elem Universe Name (MkName (Just name) level) Nil) -> Void
-  listEmpty (MkDPair _ (H x)) impossible
-  listEmpty (MkDPair _ (T later)) impossible
+  listEmpty (MkDPair fst snd) impossible
+
 
   notInLater : (contra : (level ** Elem Universe Name (MkName (Just name) level) xs) -> Void)
             -> (prf    : (level ** Elem Universe Name (MkName (Just name) level) (MkName Nothing level'::xs)))
