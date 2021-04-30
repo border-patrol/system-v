@@ -96,6 +96,8 @@ modules =
         , SystemV.Base.Evaluation.Progress
         , SystemV.Base.Evaluation
 
+-- ### Base
+
         , SystemV.Base
 
 -- ### DSL
@@ -147,6 +149,25 @@ modules =
         , SystemV.Params.Terms
         , SystemV.Params.Terms.Renaming
         , SystemV.Params.Terms.Substitution
+
+-- ### Evaluation
+
+        , SystemV.Params.Evaluation.Values
+        , SystemV.Params.Evaluation.Values.Overridden
+        , SystemV.Params.Evaluation.Values.Predicates
+
+        , SystemV.Params.Evaluation.Connecting
+        , SystemV.Params.Evaluation.Casting
+        , SystemV.Params.Evaluation.Slicing
+        , SystemV.Params.Evaluation.Indexing
+        , SystemV.Params.Evaluation.Sizing
+        , SystemV.Params.Evaluation.Comparing
+
+        , SystemV.Params.Evaluation.Reduction
+--
+        , SystemV.Params.Evaluation.Progress
+--        , SystemV.Base.Evaluation
+
 
 -- ## Main
         , Main

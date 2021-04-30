@@ -186,6 +186,11 @@ rename f (OpBool op left right)
            (rename f left)
            (rename f right)
 
+rename f (OpCmp op left right)
+  = OpCmp op
+          (rename f left)
+          (rename f right)
+
 rename f (OpNot bool)
   = OpNot (rename f bool)
 

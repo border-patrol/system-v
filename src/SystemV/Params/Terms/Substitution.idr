@@ -184,6 +184,11 @@ namespace General
               (subst f left)
               (subst f right)
 
+  subst f (OpCmp op left right)
+    = OpCmp op
+            (subst f left)
+            (subst f right)
+
   subst f (OpBool op left right)
     = OpBool op
              (subst f left)

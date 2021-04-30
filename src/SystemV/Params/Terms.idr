@@ -258,11 +258,16 @@ data SystemV : Context lvls -> TYPE level -> Type where
          -> (right : SystemV ctxt (NatTy r))
                   -> SystemV ctxt (NatTy (op l r))
 
-  OpBool : {l,r : Nat}
+  OpCmp : {l,r : Nat}
 
         -> (op    : Nat -> Nat -> Bool)
         -> (left  : SystemV ctxt (NatTy l))
         -> (right : SystemV ctxt (NatTy r))
+                 -> SystemV ctxt BoolTy
+
+  OpBool : (op    : Bool -> Bool -> Bool)
+        -> (left  : SystemV ctxt BoolTy)
+        -> (right : SystemV ctxt BoolTy)
                  -> SystemV ctxt BoolTy
 
   OpNot : (bool  : SystemV ctxt BoolTy)
