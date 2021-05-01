@@ -9,20 +9,35 @@ testPaths : String -> TestPool -> TestPool
 testPaths dir
   = record { testCases $= map ((dir ++ "/") ++) }
 
-baseTests : TestPool
-baseTests
-  = MkTestPool []
-               [ "000-hello-world"
-               , "001-scrub"
-               , "002-split"
-               , "003-gates"
-               , "004-for"
-               ]
+namespace Base
+  export
+  tests : TestPool
+  tests
+    = MkTestPool []
+                 [ "000-hello-world"
+                 , "001-scrub"
+                 , "002-split"
+                 , "003-gates"
+                 , "004-for"
+                 ]
+
+namespace Core
+  export
+  tests : TestPool
+  tests
+    = MkTestPool []
+                 [ "000-hello-world"
+                 , "001-scrub"
+                 , "002-split"
+                 , "003-gates"
+                 ]
 
 covering
 main : IO ()
 main
-  = runner [testPaths "base" baseTests]
+  = runner [ testPaths "core" Core.tests
+           --, testPaths "base" Base.tests
+           ]
 
 
 
