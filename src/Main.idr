@@ -5,16 +5,43 @@ import System.File
 import System.Clock
 
 import Toolkit.System
+import Toolkit.Options.ArgParse
 
 import SystemV.Core
 import SystemV.Core.DSL
 
-processArgs : List String -> IO $ Maybe (Bool, String)
-processArgs (x::"--timing"::z::xs) = pure $ Just (True, z)
-processArgs (x::y::xs) = pure $ Just (False, y)
-processArgs _          = pure $ Nothing
+record Opts where
+  constructor MkOpts
+  timing : Bool
+  file   : List String
+
+%inline
+defOpts : Opts
+defOpts = MkOpts False Nil
+
+processArgs : List String -> IO Opts
+processArgs args
+    = case parseArgs defOpts convOpts args of
+        Left err =>
+          do printLn err
+             exitFailure
+        Right o => pure o
+
+  where
+
+    convOpts : Arg -> Opts -> Maybe Opts
+    convOpts (File f)       o
+      = Just (record {file $= (::)f} o)
+
+    convOpts (KeyValue k v) o = Nothing
+
+    convOpts (Flag x) o
+      = case x of
+          "timing"  => Just $ record {timing  = True} o
+          otherwise => Nothing
 
 
+%inline
 printLog : Bool -> Clock type -> String -> IO ()
 printLog True  t m = do putStr m
                         printLn t
@@ -43,24 +70,32 @@ timeToTryOrDie timing msg f a
 
 main : IO ()
 main = do
-  args <- getArgs
-  Just (timing, fname) <- processArgs args | Nothing =>  putStrLn "Invalid args."
-  (res) <- (parseSystemVDesignFile fname)
-  case res of
-    Left (FError err) => do {putStr "File Error: "; printLn err}
-    Left (PError err) => do {putStrLn $ maybe "" show (location err); putStrLn (error err)}
-    Left (LError (MkLexFail l i)) => do {print l; printLn i}
-    Right ast => do
-      putStrLn "LOG: Parsing Complete "
+  opts <- processArgs !getArgs
+  case file opts of
+    Nil =>
+      do putStrLn "Error"
+         exitFailure
+    (a::_) =>
+      do res <- parseSystemVDesignFile a
+         case res of
+           Left (FError err) =>
+             do putStr "File Error: "
+                printLn err
+           Left (PError err) =>
+             do putStrLn $ maybe "" show (location err)
+                putStrLn (error err)
+           Left (LError (MkLexFail l i)) =>
+             do print l
+                printLn i
+           Right ast =>
+             do putStrLn "LOG: Parsing Complete "
+                term <- timeToTryOrDie (timing opts)
+                                       "LOG: Typing Complete "
+                                       isTerm
+                                       ast
+                v <- timeToTryOrDie (timing opts)
+                                    "LOG: Evaluating "
+                                    eval
+                                    term
 
-
-      term <- timeToTryOrDie timing
-                             "LOG: Typing Complete "
-                             isTerm
-                             ast
-      v <- timeToTryOrDie timing
-                          "LOG: Evaluating "
-                          eval
-                          term
-
-      putStrLn "LOG : Bye"
+                putStrLn "LOG : Bye"

@@ -37,6 +37,13 @@ modules =
 
         , Toolkit.Text.Lexer.Run
 
+        , Toolkit.Options.ArgParse.Error
+        , Toolkit.Options.ArgParse.Lexer
+        , Toolkit.Options.ArgParse.Model
+        , Toolkit.Options.ArgParse.Parser.API
+        , Toolkit.Options.ArgParse.Parser
+        , Toolkit.Options.ArgParse
+
         , Toolkit.System
 
 -- ## Things Common to All
