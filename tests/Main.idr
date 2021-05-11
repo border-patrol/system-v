@@ -9,11 +9,12 @@ testPaths : String -> TestPool -> TestPool
 testPaths dir
   = record { testCases $= map ((dir ++ "/") ++) }
 
-namespace Base
+namespace Param
   export
   tests : TestPool
   tests
-    = MkTestPool []
+    = MkTestPool -- "Params"
+                 []
                  [ "000-hello-world"
                  , "001-scrub"
                  , "002-split"
@@ -25,7 +26,8 @@ namespace Core
   export
   tests : TestPool
   tests
-    = MkTestPool []
+    = MkTestPool --"Core Language"
+                 []
                  [ "000-hello-world"
                  , "001-scrub"
                  , "002-split"
@@ -36,7 +38,7 @@ covering
 main : IO ()
 main
   = runner [ testPaths "core" Core.tests
-           --, testPaths "base" Base.tests
+           --, testPaths "param" Param.tests
            ]
 
 

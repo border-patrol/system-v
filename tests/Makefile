@@ -14,3 +14,10 @@ clean:
 
 clobber: clean
 	${RM} -rf build
+
+
+# est:
+#	./build/exec/runtests $(IDRIS2) $(INTERACTIVE) --failure-file failures --threads $(threads) --only $(only)
+#
+# retest:
+#	./build/exec/runtests $(IDRIS2) $(INTERACTIVE) --failure-file failures --threads $(threads) --only-file failures --only $(only)

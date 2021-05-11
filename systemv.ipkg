@@ -43,11 +43,17 @@ modules =
         , SystemV.Common.Utilities
         , SystemV.Common.Lexer
 
+        , SystemV.Common.Sliceable
+
         , SystemV.Common.Types.Level
         , SystemV.Common.Types.Universe
 
         , SystemV.Common.Types.Direction
         , SystemV.Common.Types.Gate
+
+        , SystemV.Common.Types.Nat.Arithmetic
+        , SystemV.Common.Types.Nat.Comparison
+        , SystemV.Common.Types.Boolean
 
 -- ## SystemV 'Core'
 
@@ -64,7 +70,6 @@ modules =
 
         , SystemV.Core.Types.TYPE.Equiv
         , SystemV.Core.Types.TYPE.Cast
-        , SystemV.Core.Types.TYPE.Sliceable
 
         , SystemV.Core.Types.TYPE.Function.Argument
         , SystemV.Core.Types.TYPE.Function.Return
@@ -90,9 +95,10 @@ modules =
         , SystemV.Core.Evaluation.Casting
         , SystemV.Core.Evaluation.Slicing
         , SystemV.Core.Evaluation.Indexing
-        , SystemV.Core.Evaluation.Reduction
 
+        , SystemV.Core.Evaluation.Reduction
         , SystemV.Core.Evaluation.Progress
+
         , SystemV.Core.Evaluation
 
 -- ### Core
@@ -112,128 +118,56 @@ modules =
 
         , SystemV.Core.DSL
 
---
----- ## SystemV 'Base'
---
----- ### Types
---
---        , SystemV.Base.Types.TYPE
---
---        , SystemV.Base.Types.TYPE.Equality.Error
---        , SystemV.Base.Types.TYPE.Equality.DataTypes
---        , SystemV.Base.Types.TYPE.Equality.DataTerms
---        , SystemV.Base.Types.TYPE.Equality.TypeTypes
---        , SystemV.Base.Types.TYPE.Equality.TypeTerms
---        , SystemV.Base.Types.TYPE.Equality
---
---        , SystemV.Base.Types.TYPE.Equiv
---        , SystemV.Base.Types.TYPE.Cast
---        , SystemV.Base.Types.TYPE.Sliceable
---
---        , SystemV.Base.Types.TYPE.Function.Argument
---        , SystemV.Base.Types.TYPE.Function.Return
---        , SystemV.Base.Types.TYPE.Function.Synthesis
---        , SystemV.Base.Types.TYPE.Function
---
---        , SystemV.Base.Types.TYPE.Check.Data
---        , SystemV.Base.Types.TYPE.Check.Types
---
---        , SystemV.Base.Types
---
----- ### Terms
---
---        , SystemV.Base.Terms
---
---        , SystemV.Base.Terms.Renaming
---        , SystemV.Base.Terms.Substitution
---
----- ### Evaluation
---
---        , SystemV.Base.Evaluation.Values
---
---        , SystemV.Base.Evaluation.Casting
---        , SystemV.Base.Evaluation.Slicing
---        , SystemV.Base.Evaluation.Indexing
---        , SystemV.Base.Evaluation.Sizing
---        , SystemV.Base.Evaluation.Reduction
---
---        , SystemV.Base.Evaluation.Progress
---        , SystemV.Base.Evaluation
---
----- ### Base
---
---        , SystemV.Base
---
----- ### DSL
---
---        , SystemV.Base.DSL.AST
---
---        , SystemV.Base.DSL.Parser
---        , SystemV.Base.DSL.Build.Context
---        , SystemV.Base.DSL.Build.Result
---        , SystemV.Base.DSL.Build.Error
---
---        , SystemV.Base.DSL.Build
---
---        , SystemV.Base.DSL
+-- ## SystemV 'Params'
 
----- ## SystemV 'Params'
---
----- ### Types
---
---        , SystemV.Params.Types.TYPE
---
---        , SystemV.Params.Types.TYPE.Equality.Error
---        , SystemV.Params.Types.TYPE.Equality.View
---        , SystemV.Params.Types.TYPE.Equality.DataTypes
---        , SystemV.Params.Types.TYPE.Equality.DataTerms
---        , SystemV.Params.Types.TYPE.Equality.Types.Types
---        , SystemV.Params.Types.TYPE.Equality.Types.Terms
---        , SystemV.Params.Types.TYPE.Equality.Types
---        , SystemV.Params.Types.TYPE.Equality
---
---        , SystemV.Params.Types.TYPE.Equiv
---        , SystemV.Params.Types.TYPE.Cast
---        , SystemV.Params.Types.TYPE.Sliceable
---
---        , SystemV.Params.Types.TYPE.Function.Argument
---        , SystemV.Params.Types.TYPE.Function.Argument.Default
---        , SystemV.Params.Types.TYPE.Function.Return
---        , SystemV.Params.Types.TYPE.Function.Synthesis
---        , SystemV.Params.Types.TYPE.Function
---
---        , SystemV.Params.Types.TYPE.Check.Data
---        , SystemV.Params.Types.TYPE.Check.Types
---        , SystemV.Params.Types.TYPE.Check.Default
---
---        , SystemV.Params.Types
---
----- ### Terms
---
---        , SystemV.Params.Terms
---        , SystemV.Params.Terms.Renaming
---        , SystemV.Params.Terms.Substitution
---
----- ### Evaluation
---
---        , SystemV.Params.Evaluation.Values
---        , SystemV.Params.Evaluation.Values.Overridden
---        , SystemV.Params.Evaluation.Values.Predicates
---
---        , SystemV.Params.Evaluation.Connecting
---        , SystemV.Params.Evaluation.Casting
---        , SystemV.Params.Evaluation.Slicing
---        , SystemV.Params.Evaluation.Indexing
---        , SystemV.Params.Evaluation.Sizing
---        , SystemV.Params.Evaluation.Comparing
---
---        , SystemV.Params.Evaluation.Reduction
-----
---        , SystemV.Params.Evaluation.Progress
-----        , SystemV.Base.Evaluation
---
+-- ### Types
 
----- ## Main
---        , Main
+        , SystemV.Param.Types.TYPE
+
+        , SystemV.Param.Types.TYPE.Equality.Error
+        , SystemV.Param.Types.TYPE.Equality.View
+        , SystemV.Param.Types.TYPE.Equality.DataTypes
+        , SystemV.Param.Types.TYPE.Equality.DataTerms
+        , SystemV.Param.Types.TYPE.Equality.Types.Types
+        , SystemV.Param.Types.TYPE.Equality.Types.Terms
+        , SystemV.Param.Types.TYPE.Equality.Types
+        , SystemV.Param.Types.TYPE.Equality
+
+        , SystemV.Param.Types.TYPE.Function.Argument
+        , SystemV.Param.Types.TYPE.Function.Argument.Default
+        , SystemV.Param.Types.TYPE.Function.Return
+        , SystemV.Param.Types.TYPE.Function.Synthesis
+        , SystemV.Param.Types.TYPE.Function
+
+        , SystemV.Param.Types.TYPE.Check.Data
+        , SystemV.Param.Types.TYPE.Check.Types
+        , SystemV.Param.Types.TYPE.Check.Default
+
+        , SystemV.Param.Types.TYPE.Equiv
+        , SystemV.Param.Types.TYPE.Cast
+
+        , SystemV.Param.Types
+
+-- ### Terms
+
+        , SystemV.Param.Terms
+        , SystemV.Param.Terms.Renaming
+        , SystemV.Param.Terms.Substitution
+
+-- ### Elaboration
+
+        , SystemV.Param.Evaluation.Values
+
+        , SystemV.Param.Evaluation.Casting
+        , SystemV.Param.Evaluation.Slicing
+        , SystemV.Param.Evaluation.Sizing
+
+        , SystemV.Param.Evaluation.Reduction
+        , SystemV.Param.Evaluation.Progress
+        , SystemV.Param.Evaluation
+
+
+-- ## Main
+        , Main
 
 -- [ EOF ]

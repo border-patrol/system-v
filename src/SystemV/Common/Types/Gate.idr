@@ -6,7 +6,6 @@ import Decidable.Equality
 
 import Toolkit.Decidable.Informative
 import Toolkit.Decidable.Equality.Indexed
-import Toolkit.Data.Whole
 
 %default total
 

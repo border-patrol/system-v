@@ -1,9 +1,9 @@
 ||| A Meta-Type System for SystemV
 |||
-||| We provide a 'meta' type-system to provide intrinsic typing of terms in SystemV.Core.
-||| Certain terms in SystemV.Core.are typed using nominal types: Where they are defined matters.
+||| We provide a 'meta' type-system to provide intrinsic typing of terms in SystemV.Param.
+||| Certain terms in SystemV.Param.are typed using nominal types: Where they are defined matters.
 ||| We use the meta-type system to ensure that nominally typed values can be typed intrinsically against their nominal types.
-module SystemV.Core.Types
+module SystemV.Param.Types
 
 import public Decidable.Equality
 import public Data.Nat
@@ -18,18 +18,24 @@ import public Toolkit.Data.DList
 import public Toolkit.Data.DList.Elem
 import public Toolkit.Data.DList.DeBruijn
 
-import public SystemV.Common.Types.Direction
 import public SystemV.Common.Sliceable
 
-import public SystemV.Core.Types.TYPE
+import public SystemV.Common.Types.Direction
+import public SystemV.Common.Types.Nat.Arithmetic
+import public SystemV.Common.Types.Nat.Comparison
+import public SystemV.Common.Types.Boolean
 
-import public SystemV.Core.Types.TYPE.Equality
-import public SystemV.Core.Types.TYPE.Equiv
-import public SystemV.Core.Types.TYPE.Cast
-import public SystemV.Core.Types.TYPE.Function
 
-import public SystemV.Core.Types.TYPE.Check.Data
-import public SystemV.Core.Types.TYPE.Check.Types
+import public SystemV.Param.Types.TYPE
+
+import public SystemV.Param.Types.TYPE.Equality
+import public SystemV.Param.Types.TYPE.Function
+import public SystemV.Param.Types.TYPE.Check.Data
+import public SystemV.Param.Types.TYPE.Check.Default
+import public SystemV.Param.Types.TYPE.Check.Types
+import public SystemV.Param.Types.TYPE.Equiv
+import public SystemV.Param.Types.TYPE.Cast
+
 
 %default total
 

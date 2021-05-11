@@ -63,8 +63,4 @@ main = do
                           eval
                           term
 
---      putStrLn "LOG : Pretty Printing"
---      let prettyMSV = prettySpec msv
---      printLn prettyMSV
-
       putStrLn "LOG : Bye"
