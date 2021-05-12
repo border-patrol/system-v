@@ -95,9 +95,11 @@ modules =
         , SystemV.Core.Terms.Renaming
         , SystemV.Core.Terms.Substitution
 
+        , SystemV.Core.Values
+
 -- ### Evaluation
 
-        , SystemV.Core.Evaluation.Values
+
 
         , SystemV.Core.Evaluation.Casting
         , SystemV.Core.Evaluation.Slicing
@@ -173,6 +175,39 @@ modules =
         , SystemV.Param.Evaluation.Progress
         , SystemV.Param.Evaluation
 
+
+-- ## SystemV 'HigherOrder'
+
+-- ### Types
+
+        , SystemV.HigherOrder.Types.Function
+        , SystemV.HigherOrder.Types
+
+-- ### Terms
+
+        , SystemV.HigherOrder.Terms
+
+        , SystemV.HigherOrder.Terms.Renaming
+        , SystemV.HigherOrder.Terms.Substitution
+
+        , SystemV.HigherOrder.Values
+
+-- ### Evaluation
+
+
+
+        , SystemV.HigherOrder.Evaluation.Casting
+        , SystemV.HigherOrder.Evaluation.Slicing
+        , SystemV.HigherOrder.Evaluation.Indexing
+
+        , SystemV.HigherOrder.Evaluation.Reduction
+        , SystemV.HigherOrder.Evaluation.Progress
+
+        , SystemV.HigherOrder.Evaluation
+
+-- ### HigherOrder
+
+        , SystemV.HigherOrder
 
 -- ## Main
         , Options

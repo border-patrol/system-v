@@ -1,11 +1,11 @@
-||| Values in SystemV.Core.
+||| Values in SystemV.HigherOrder.
 |||
-module SystemV.Core.Evaluation.Values
+module SystemV.HigherOrder.Values
 
 import SystemV.Common.Utilities
 
-import SystemV.Core.Types
-import SystemV.Core.Terms
+import SystemV.HigherOrder.Types
+import SystemV.HigherOrder.Terms
 
 %default total
 

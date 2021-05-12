@@ -1,20 +1,20 @@
-module SystemV.Core.Evaluation.Progress
+module SystemV.HigherOrder.Evaluation.Progress
 
 import SystemV.Common.Utilities
-import SystemV.Core.Types
+import SystemV.HigherOrder.Types
 
-import SystemV.Core.Terms
+import SystemV.HigherOrder.Terms
 
-import SystemV.Core.Terms.Renaming
-import SystemV.Core.Terms.Substitution
+import SystemV.HigherOrder.Terms.Renaming
+import SystemV.HigherOrder.Terms.Substitution
 
-import SystemV.Core.Values
+import SystemV.HigherOrder.Values
 
-import SystemV.Core.Evaluation.Casting
-import SystemV.Core.Evaluation.Slicing
-import SystemV.Core.Evaluation.Indexing
+import SystemV.HigherOrder.Evaluation.Casting
+import SystemV.HigherOrder.Evaluation.Slicing
+import SystemV.HigherOrder.Evaluation.Indexing
 
-import SystemV.Core.Evaluation.Reduction
+import SystemV.HigherOrder.Evaluation.Reduction
 
 %default total
 

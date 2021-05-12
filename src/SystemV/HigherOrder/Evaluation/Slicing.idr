@@ -1,10 +1,10 @@
-module SystemV.Core.Evaluation.Slicing
+module SystemV.HigherOrder.Evaluation.Slicing
 
 import SystemV.Common.Utilities
-import SystemV.Core.Types
-import SystemV.Core.Terms
+import SystemV.HigherOrder.Types
+import SystemV.HigherOrder.Terms
 
-import SystemV.Core.Values
+import SystemV.HigherOrder.Values
 
 %default total
 

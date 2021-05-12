@@ -1,17 +1,17 @@
-module SystemV.Core.Evaluation.Reduction
+module SystemV.HigherOrder.Evaluation.Reduction
 
 import SystemV.Common.Utilities
-import SystemV.Core.Types
-import SystemV.Core.Terms
+import SystemV.HigherOrder.Types
+import SystemV.HigherOrder.Terms
 
-import SystemV.Core.Terms.Renaming
-import SystemV.Core.Terms.Substitution
+import SystemV.HigherOrder.Terms.Renaming
+import SystemV.HigherOrder.Terms.Substitution
 
-import SystemV.Core.Values
+import SystemV.HigherOrder.Values
 
-import SystemV.Core.Evaluation.Casting
-import SystemV.Core.Evaluation.Slicing
-import SystemV.Core.Evaluation.Indexing
+import SystemV.HigherOrder.Evaluation.Casting
+import SystemV.HigherOrder.Evaluation.Slicing
+import SystemV.HigherOrder.Evaluation.Indexing
 
 %default total
 
@@ -77,7 +77,7 @@ data Redux : (this : SystemV ctxt type)
               -> {var           : SystemV  ctxt    param}
               -> {type          : SystemV  ctxt    paramTyDesc}
               -> {prfTyCheck    : TyCheck paramTyDesc param}
-              -> {prfValid      : Function.ValidTerm (IDX TERM) (FuncTy param return)}
+              -> {prfValid      : Function.Term.Valid (IDX TERM) (FuncTy param return)}
 
               -> Value var
               -> Redux (App (Func type body prfTyCheck prfValid) var)

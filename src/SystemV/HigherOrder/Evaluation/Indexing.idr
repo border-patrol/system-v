@@ -1,10 +1,10 @@
-module SystemV.Core.Evaluation.Indexing
+module SystemV.HigherOrder.Evaluation.Indexing
 
 import SystemV.Common.Utilities
-import SystemV.Core.Types
-import SystemV.Core.Terms
+import SystemV.HigherOrder.Types
+import SystemV.HigherOrder.Terms
 
-import SystemV.Core.Values
+import SystemV.HigherOrder.Values
 
 %default total
 

@@ -1,18 +1,18 @@
-module SystemV.Core.Evaluation
+module SystemV.HigherOrder.Evaluation
 
 import Data.Fuel
 
 import SystemV.Common.Utilities
-import SystemV.Core.Types
-import SystemV.Core.Terms
+import SystemV.HigherOrder.Types
+import SystemV.HigherOrder.Terms
 
-import SystemV.Core.Terms.Renaming
-import SystemV.Core.Terms.Substitution
+import SystemV.HigherOrder.Terms.Renaming
+import SystemV.HigherOrder.Terms.Substitution
 
-import SystemV.Core.Values
+import SystemV.HigherOrder.Values
 
-import SystemV.Core.Evaluation.Reduction
-import SystemV.Core.Evaluation.Progress
+import SystemV.HigherOrder.Evaluation.Reduction
+import SystemV.HigherOrder.Evaluation.Progress
 
 %default total
 
