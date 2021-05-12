@@ -175,6 +175,7 @@ modules =
 
 
 -- ## Main
+        , Options
         , Main
 
 -- [ EOF ]
