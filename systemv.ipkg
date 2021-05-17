@@ -194,8 +194,6 @@ modules =
 
 -- ### Evaluation
 
-
-
         , SystemV.HigherOrder.Evaluation.Casting
         , SystemV.HigherOrder.Evaluation.Slicing
         , SystemV.HigherOrder.Evaluation.Indexing
@@ -208,6 +206,58 @@ modules =
 -- ### HigherOrder
 
         , SystemV.HigherOrder
+
+-- ## SystemV 'Annotated'
+
+---- ### Types
+        , SystemV.Annotated.Types.Sensitivity
+        , SystemV.Annotated.Types.Intention
+
+        , SystemV.Annotated.Types.TYPE
+
+        , SystemV.Annotated.Types.TYPE.Equality.Error
+        , SystemV.Annotated.Types.TYPE.Equality.DataTypes
+        , SystemV.Annotated.Types.TYPE.Equality.DataTerms
+        , SystemV.Annotated.Types.TYPE.Equality.TypeTypes
+        , SystemV.Annotated.Types.TYPE.Equality.TypeTerms
+        , SystemV.Annotated.Types.TYPE.Equality
+
+        , SystemV.Annotated.Types.TYPE.Function.Argument
+        , SystemV.Annotated.Types.TYPE.Function.Return
+        , SystemV.Annotated.Types.TYPE.Function.Synthesis
+        , SystemV.Annotated.Types.TYPE.Function
+
+        , SystemV.Annotated.Types.TYPE.Check.Data
+        , SystemV.Annotated.Types.TYPE.Check.Types
+
+        , SystemV.Annotated.Types.TYPE.Equiv
+        , SystemV.Annotated.Types.TYPE.Cast
+
+        , SystemV.Annotated.Types
+
+-- ### Terms
+
+        , SystemV.Annotated.Terms
+
+        , SystemV.Annotated.Terms.Renaming
+        , SystemV.Annotated.Terms.Substitution
+
+        , SystemV.Annotated.Values
+
+---- ### Evaluation
+
+        , SystemV.Annotated.Evaluation.Casting
+        , SystemV.Annotated.Evaluation.Slicing
+        , SystemV.Annotated.Evaluation.Indexing
+
+        , SystemV.Annotated.Evaluation.Reduction
+        , SystemV.Annotated.Evaluation.Progress
+
+        , SystemV.Annotated.Evaluation
+--
+---- ### Annotated
+--
+        , SystemV.Annotated
 
 -- ## Main
         , Options
