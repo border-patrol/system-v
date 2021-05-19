@@ -48,7 +48,6 @@ modules =
 
 -- ## Things Common to All
         , SystemV.Common.Utilities
-        , SystemV.Common.Lexer
 
         , SystemV.Common.Sliceable
 
@@ -61,6 +60,21 @@ modules =
         , SystemV.Common.Types.Nat.Arithmetic
         , SystemV.Common.Types.Nat.Comparison
         , SystemV.Common.Types.Boolean
+
+        , SystemV.Common.Builder.Context
+        , SystemV.Common.Builder.Result
+        , SystemV.Common.Builder
+
+        , SystemV.Common.Lexer
+
+        , SystemV.Common.Parser.Ref
+
+        , SystemV.Common.Parser
+
+        , SystemV.Common.Parser.Direction
+        , SystemV.Common.Parser.Gate
+        , SystemV.Common.Parser.Boolean
+        , SystemV.Common.Parser.Arithmetic
 
 -- ## SystemV 'Core'
 
@@ -88,6 +102,8 @@ modules =
 
         , SystemV.Core.Types
 
+        , SystemV.Core.Types.Views
+
 -- ### Terms
 
         , SystemV.Core.Terms
@@ -98,7 +114,6 @@ modules =
         , SystemV.Core.Values
 
 -- ### Evaluation
-
 
 
         , SystemV.Core.Evaluation.Casting
@@ -117,14 +132,10 @@ modules =
 -- ### DSL
 
         , SystemV.Core.DSL.AST
-
         , SystemV.Core.DSL.Parser
-        , SystemV.Core.DSL.Build.Context
-        , SystemV.Core.DSL.Build.Result
-        , SystemV.Core.DSL.Build.Error
-
+        , SystemV.Core.DSL.Error
+        , SystemV.Core.DSL.Build.Helpers
         , SystemV.Core.DSL.Build
-
         , SystemV.Core.DSL
 
 -- ## SystemV 'Params'
@@ -209,7 +220,7 @@ modules =
 
 -- ## SystemV 'Annotated'
 
----- ### Types
+-- ### Types
         , SystemV.Annotated.Types.Sensitivity
         , SystemV.Annotated.Types.Intention
 
@@ -244,7 +255,7 @@ modules =
 
         , SystemV.Annotated.Values
 
----- ### Evaluation
+-- ### Evaluation
 
         , SystemV.Annotated.Evaluation.Casting
         , SystemV.Annotated.Evaluation.Slicing
@@ -255,9 +266,23 @@ modules =
 
         , SystemV.Annotated.Evaluation
 --
----- ### Annotated
---
-        , SystemV.Annotated
+-- ### Annotated
+
+        , SystemV.Core.DSL.AST
+
+        , SystemV.Annotated.DSL.Parser.Sensitivity
+        , SystemV.Annotated.DSL.Parser.Intention
+
+        , SystemV.Annotated.DSL.Parser
+
+ --       , SystemV.Core.DSL.Build.Error
+ --
+ --       , SystemV.Core.DSL.Build
+ --
+ --       , SystemV.Core.DSL
+
+-- ### DSL
+
 
 -- ## Main
         , Options

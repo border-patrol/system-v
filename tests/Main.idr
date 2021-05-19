@@ -13,7 +13,7 @@ namespace Param
   export
   tests : TestPool
   tests
-    = MkTestPool -- "Params"
+    = MkTestPool "Params"
                  []
                  [ "000-hello-world"
                  , "001-scrub"
@@ -26,7 +26,7 @@ namespace Core
   export
   tests : TestPool
   tests
-    = MkTestPool --"Core Language"
+    = MkTestPool "Core Language"
                  []
                  [ "000-hello-world"
                  , "001-scrub"

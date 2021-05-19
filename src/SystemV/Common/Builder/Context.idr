@@ -1,4 +1,4 @@
-module SystemV.Core.DSL.Build.Context
+module SystemV.Common.Builder.Context
 
 import        Decidable.Equality
 
@@ -13,13 +13,7 @@ import public Toolkit.Data.DList
 import public Toolkit.Data.DList.Elem
 
 import        SystemV.Common.Utilities
-
-import        SystemV.Core.Types
-import        SystemV.Core.Terms
-
-import        SystemV.Core.DSL.AST
-
-
+import        SystemV.Common.Types.Universe
 
 %default total
 
@@ -48,7 +42,7 @@ namespace Name
     hasName s lvl (MkName (Just x) lvl) | (No contra) = No (wrongName contra)
 
   public export
-  Names : Universes -> Type
+  Names : List Universe -> Type
   Names = DList Universe Name
 
   listEmpty : (level ** Elem Universe Name (MkName (Just name) level) Nil) -> Void
@@ -86,21 +80,21 @@ namespace Name
 export
 mkVar : {names : Names lvls}
      -> (prf   : Elem Universe Name (MkName (Just name) level) names)
-     -> (ctxt  : Context lvls)
-     -> (type : TYPE level ** Elem Universe TYPE type ctxt)
+     -> (ctxt  : DList Universe typeDesc lvls)
+     -> (type : typeDesc level ** Elem Universe typeDesc type ctxt)
 mkVar (H (Same Refl prfVal)) (elem :: rest) = MkDPair elem (H (Same Refl Refl))
 mkVar (T later) (elem :: rest) with (mkVar later rest)
   mkVar (T later) (elem :: rest) | (MkDPair fst snd) = MkDPair fst (T snd)
 
 public export
-data Context : (lvls : Universes)
-            -> (ctxt : Types.Context lvls)
+data Context : (type : Universe -> Type)
+            -> (lvls : List Universe)
+            -> (ctxt : DList Universe type lvls)
                       -> Type
   where
-    Ctxt : (lvls  : Universes)
+    Ctxt : (lvls  : List Universe)
         -> (names : Names lvls)
-        -> (ctxt  : Types.Context lvls)
-                 -> Context lvls ctxt
+        -> (ctxt  : DList Universe type lvls)
+                 -> Context type lvls ctxt
 
-
--- --------------------------------------------------------------------- [ EOF ]
+-- [ EOF ]

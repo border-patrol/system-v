@@ -1,11 +1,15 @@
-module SystemV.Core.DSL.AST
+module SystemV.Annotated.DSL.AST
 
 import Toolkit.Data.Location
 
-import public SystemV.Common.Parser.Ref
-
 import public SystemV.Common.Types.Direction
 import public SystemV.Common.Types.Gate
+
+import public SystemV.Common.Parser.Ref
+
+import public SystemV.Annotated.Types.Intention
+import public SystemV.Annotated.Types.Sensitivity
+
 
 %default total
 
@@ -71,6 +75,8 @@ data AST : Type where
   TyPort : (fc   : FileContext)
         -> (type : AST)
         -> (dir  : Direction)
+        -> (sense : Sensitivity)
+        -> (intent : Intention)
                 -> AST
 
   ||| Creating a channel of the given type.
@@ -88,6 +94,8 @@ data AST : Type where
   ||| ```
   MkChan : (fc   : FileContext)
         -> (type : AST)
+        -> (sense : Sensitivity)
+        -> (intent : Intention)
                 -> AST
 
   ||| Getting the input from a channel.
@@ -116,6 +124,8 @@ data AST : Type where
   ||| (drive (writeTo chan));
   ||| ```
   Drive : (fc   : FileContext)
+       -> (sense : Sensitivity)
+       -> (intent : Intention)
        -> (chan : AST)
                -> AST
 
@@ -182,6 +192,8 @@ data AST : Type where
       -> (port : AST)
       -> (type : AST)
       -> (dir  : Direction)
+      -> (sense : Sensitivity)
+      -> (intent : Intention)
               -> AST
 
   ||| Binders
@@ -259,14 +271,18 @@ setFileName fname (TyVect fc s type)
            s
            (setFileName fname type)
 
-setFileName fname (TyPort fc type dir)
+setFileName fname (TyPort fc type dir sense intent)
   = TyPort (setSource fname fc)
            (setFileName fname type)
            dir
+           sense
+           intent
 
-setFileName fname (MkChan fc type)
+setFileName fname (MkChan fc type sense intent)
   = MkChan (setSource fname fc)
            (setFileName fname type)
+           sense
+           intent
 
 setFileName fname (WriteTo fc chan)
   = WriteTo (setSource fname fc)
@@ -276,8 +292,10 @@ setFileName fname (ReadFrom fc chan)
   = ReadFrom (setSource fname fc)
              (setFileName fname chan)
 
-setFileName fname (Drive fc chan)
+setFileName fname (Drive fc sense intent chan )
   = Drive (setSource fname fc)
+          sense
+          intent
           (setFileName fname chan)
 
 setFileName fname (Catch fc chan)
@@ -301,11 +319,13 @@ setFileName fname (Connect fc portL portR)
             (setFileName fname portL)
             (setFileName fname portR)
 
-setFileName fname (Cast fc port type dir)
+setFileName fname (Cast fc port type dir sense intent)
   = Cast (setSource fname fc)
          (setFileName fname port)
          (setFileName fname type)
          dir
+         sense
+         intent
 
 setFileName fname (Let fc name value body)
   = Let (setSource fname fc)

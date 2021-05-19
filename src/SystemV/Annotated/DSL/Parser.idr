@@ -1,4 +1,4 @@
-module SystemV.Core.DSL.Parser
+module SystemV.Annotated.DSL.Parser
 
 import        Data.Vect
 import        Data.Nat
@@ -24,13 +24,15 @@ import        SystemV.Common.Parser
 import        SystemV.Common.Parser.Direction
 import        SystemV.Common.Parser.Gate
 
-import        SystemV.Core.DSL.AST
+import        SystemV.Annotated.DSL.Parser.Intention
+import        SystemV.Annotated.DSL.Parser.Sensitivity
+
+import        SystemV.Annotated.DSL.AST
 
 %default total
 
 ref : Rule Token AST
 ref = inserts rawRef Ref
-
 
 logic : Rule Token AST
 logic = do
@@ -78,8 +80,22 @@ projChan : Rule Token AST
 projChan = readFrom
        <|> writeTo
 
+drive : Rule Token AST
+drive
+  = do st <- location
+       symbol "("
+       keyword "drive"
+       commit
+       p <- writeTo
+       s <- sensitivity
+       i <- intention
+       symbol ")"
+       e <- location
+       pure (Drive (newFC st e) s i p)
+
+
 driveCatch : Rule Token AST
-driveCatch = (proj (writeTo)  "drive"    Drive)
+driveCatch = drive
          <|> (proj (readFrom) "catch"    Catch)
 
 mutual
@@ -116,12 +132,14 @@ portP = ref <|> slidx <|> projChan
 chanDef : Rule Token (FileContext, String, AST)
 chanDef
   = do st <- location
+       i <- intention
+       s <- sensitivity
        keyword "wire"
        commit
        ty <- type_
        n <- name
        e <- location
-       pure (newFC st e, n, MkChan (newFC st e) ty)
+       pure (newFC st e, n, MkChan (newFC st e) ty s i)
 
 typeDef : Rule Token (FileContext, String, AST)
 typeDef = do
@@ -136,12 +154,14 @@ typeDef = do
 port : Rule Token (String, AST)
 port
   = do st <- location
+       i <- intention
+       s <- sensitivity
        d <- direction
        keyword "wire"
        t <- type_
        label <- name
        e <- location
-       pure (label, TyPort (newFC st e) t d)
+       pure (label, TyPort (newFC st e) t d s i)
 
 ports : Rule Token (List (String, AST))
 ports =  symbol "(" *> symbol ")" *> pure Nil
@@ -166,8 +186,10 @@ cast
        p <- (ref <|> slidx)
        t <- type_
        d <- direction
+       s <- sensitivity
+       i <- intention
        e <- location
-       pure (Cast (newFC st e) p t d)
+       pure (Cast (newFC st e) p t d s i)
 
 mutual
   cond : Rule Token AST
@@ -344,14 +366,14 @@ design = do ds <- decls
              -> AST
     foldDecls = foldr foldDecl
 
-namespace Core
+namespace Annotated
+
   parseSystemVStr : {e   : _}
                -> (rule : Grammar (TokenData Token) e ty)
                -> (str : String)
                -> Either (Run.ParseError Token) ty
   parseSystemVStr rule str
     = parseString SystemVLexer rule str
-
 
   parseSystemVFile : {e     : _}
                 -> (rule  : Grammar (TokenData Token) e ty)

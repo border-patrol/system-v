@@ -47,7 +47,7 @@ main = do
   Right opts <- processArgs
      | Left err => exitFailure
 
-  case !(parseSystemVDesignFile ((head . files) opts)) of
+  case !(Core.fromFile ((head . files) opts)) of
     Left (FError err) =>
       do putStr "File Error: "
          printLn err
@@ -61,7 +61,7 @@ main = do
       do putStrLn "LOG: Parsing Complete "
          term <- timeToTryOrDie (timing opts)
                                 "LOG: Typing Complete "
-                                isTerm
+                                build
                                 ast
          v <- timeToTryOrDie (timing opts)
                              "LOG: Evaluating "

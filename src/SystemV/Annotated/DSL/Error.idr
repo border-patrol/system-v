@@ -1,4 +1,4 @@
-module SystemV.Core.DSL.Build.Error
+module SystemV.Annotated.DSL.Build.Error
 
 import        Decidable.Equality
 
