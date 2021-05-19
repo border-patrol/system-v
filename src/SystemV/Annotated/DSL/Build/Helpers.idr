@@ -1,4 +1,4 @@
-module SystemV.Core.DSL.Build.Helpers
+module SystemV.Annotated.DSL.Build.Helpers
 
 import        Decidable.Equality
 
@@ -23,18 +23,18 @@ import        SystemV.Common.Utilities
 
 import        SystemV.Common.Builder
 
-import        SystemV.Core.Types
-import        SystemV.Core.Types.Views
-import        SystemV.Core.Terms
+import        SystemV.Annotated.Types
+import        SystemV.Annotated.Types.Views
+import        SystemV.Annotated.Terms
 
-import        SystemV.Core.DSL.AST
-import public SystemV.Core.DSL.Error
+import        SystemV.Annotated.DSL.AST
+import public SystemV.Annotated.DSL.Error
 
 %default total
 
 public export
 TermBuilder : Type -> Type
-TermBuilder = Either Core.Error
+TermBuilder = Either Annotated.Error
 
 public export
 data Func : {lvls  : Universes}
@@ -79,6 +79,7 @@ isData ctxt term with (view isData term)
       = Right (D ty' term)
     isData ctxt (Res u type term) | (HasView Fail) | ty'
       = Left (WrongType (NotADataType ctxt) ty')
+
 
 public export
 data Term : {lvls  : Universes}
@@ -166,8 +167,10 @@ data PortVect : {lvls  : Universes}
       -> {types : Context lvls}
       -> {tyD   : _}
       -> {dir   : _}
-      -> (s     : Whole)
-      -> (term  : SystemV types (PortTy (VectorTyDesc s tyD) dir))
+      -> {s     : Sensitivity}
+      -> {i     : Intention}
+      -> (w     : Whole)
+      -> (term  : SystemV types (PortTy (VectorTyDesc w tyD) dir s i))
                -> PortVect types
 
 export
@@ -177,10 +180,10 @@ isPortVect : {lvls  : Universes}
                    -> TermBuilder (PortVect types)
 isPortVect port with (view (isPortVect) port)
   isPortVect (Res u type term) | (HasView prf) with (type)
-    isPortVect (Res (IDX TERM) type term) | (HasView Match) | (PortTy (VectorTyDesc s ty) dir)
-      = Right (PV s term)
-    isPortVect (Res (IDX TERM) type term) | (HasView Fail) | (PortTy ty dir)
-      = Left (WrongType NotAVect (PortTy ty dir))
+    isPortVect (Res (IDX TERM) type term) | (HasView Match) | (PortTy (VectorTyDesc w ty) dir s i)
+      = Right (PV w term)
+    isPortVect (Res (IDX TERM) type term) | (HasView Fail) | (PortTy ty dir s i)
+      = Left (WrongType NotAVect (PortTy ty dir s i))
     isPortVect (Res u type term) | (HasView NotAPort) | type'
       = Left (WrongType NotAPort type')
 
@@ -190,13 +193,13 @@ isPortWithDir : {lvls  : Universes}
              -> {types : Context lvls}
              -> (port  : Result TYPE SystemV lvls types)
              -> (dir   : Direction)
-                      -> TermBuilder (tyD ** SystemV types (PortTy tyD dir))
+                      -> TermBuilder (i ** s ** tyD ** SystemV types (PortTy tyD dir s i))
 isPortWithDir port dir with (view (hasDirection dir) port)
   isPortWithDir (Res u type term) dir | (HasView prf) with (type)
-    isPortWithDir (Res (IDX TERM) type term) db | (HasView (Match Refl)) | (PortTy ty db)
-      = pure (ty ** term)
-    isPortWithDir (Res (IDX TERM) type term) dir | (HasView (Fail contra)) | (PortTy ty db)
-      = Left (TypeMismatch (PortTy ty dir) (PortTy ty db))
+    isPortWithDir (Res (IDX TERM) type term) db | (HasView (Match Refl)) | (PortTy ty db s i)
+      = pure (i ** s ** ty ** term)
+    isPortWithDir (Res (IDX TERM) type term) dir | (HasView (Fail contra)) | (PortTy ty db s i)
+      = Left (TypeMismatch (PortTy ty dir s i) (PortTy ty db s i))
     isPortWithDir (Res u type term) dir | (HasView NotAPort) | type'
       = Left (WrongType NotAPort type')
 
@@ -206,9 +209,11 @@ data Port : {lvls  : Universes}
   where
     P : {lvls  : Universes}
      -> {types : Context lvls}
+     -> (i    : Intention)
+     -> (s    : Sensitivity)
      -> (d    : Direction)
      -> (ty   : TYPE (DATA TYPE))
-     -> (port : SystemV types (PortTy ty d))
+     -> (port : SystemV types (PortTy ty d s i))
               -> Port types
 
 export
@@ -218,11 +223,48 @@ isPort : {lvls  : Universes}
                -> TermBuilder (Port types)
 isPort port with (view isPort port)
   isPort (Res u type term) | (HasView prf) with (type)
-    isPort (Res (IDX TERM) type term) | (HasView Match) | (PortTy ty dir)
-      = Right (P dir ty term)
+    isPort (Res (IDX TERM) type term) | (HasView Match) | (PortTy ty dir s i)
+      = Right (P i s dir ty term)
     isPort (Res u type term) | (HasView Fail) | ty'
       = Left (WrongType NotAPort ty')
 
+public export
+data PortAttr : {lvls  : Universes}
+             -> (types : Context lvls)
+             -> (i : Intention)
+             -> (s : Sensitivity)
+             -> (d : Direction)
+                      -> Type
+  where
+    Pa : {lvls  : Universes}
+      -> {types : Context lvls}
+      -> (ty   : TYPE (DATA TYPE))
+      -> (port : SystemV types (PortTy ty d s i))
+              -> PortAttr types i s d
+
+export
+isPortAttr : {lvls  : Universes}
+          -> {types : Context lvls}
+          -> (port  : Result TYPE SystemV lvls types)
+          -> (d     : Direction)
+          -> (s     : Sensitivity)
+          -> (i     : Intention)
+                   -> TermBuilder (PortAttr types i s d)
+isPortAttr port d s i
+  = do (P ip sp dp ty p) <- isPort port
+       let pg = PortTy ty dp sp ip
+       let pe = PortTy ty d  s  i
+       case decEq ip i of
+         Yes Refl =>
+           case decEq sp s of
+             Yes Refl =>
+               case Direction.decEq dp d of
+                 Yes Refl => Right (Pa ty p)
+                 No contra => Left (TypeMismatch pe pg)
+             No contra =>
+               Left (TypeMismatch pe pg)
+         No contra =>
+           Left (TypeMismatch pe pg)
 
 public export
 data NotPorts : {lvls    : Universes}
@@ -230,8 +272,10 @@ data NotPorts : {lvls    : Universes}
                         -> Type
   where
     NP : {ty : _}
-      -> (pout : SystemV types (PortTy ty OUT))
-      -> (pin  : SystemV types (PortTy ty IN))
+      -> {s     : Sensitivity}
+      -> {i     : Intention}
+      -> (pout : SystemV types (PortTy ty OUT s i))
+      -> (pin  : SystemV types (PortTy ty IN  s i))
               -> NotPorts types
 
 export
@@ -241,18 +285,24 @@ notGatePorts : {lvls  : Universes}
             -> (portIN  : Result TYPE SystemV lvls types)
                        -> TermBuilder (NotPorts types)
 notGatePorts portOUT portIN
-  = do (to ** output) <- isPortWithDir portOUT OUT
-       (ti ** input)  <- isPortWithDir portIN  IN
+  = do (io ** so ** to ** output) <- isPortWithDir portOUT OUT
+       (ii ** si ** ti ** input)  <- isPortWithDir portIN  IN
 
-       let po = PortTy to OUT
-       let pi = PortTy ti IN
+       let po = PortTy to OUT so io
+       let pi = PortTy ti IN  si ii
 
        case DataTypes.decEq to ti of
          Yes (Same Refl Refl) =>
-           Right (NP output input)
-
+           case decEq so si of
+             Yes Refl =>
+               case decEq io ii of
+                 Yes Refl => Right (NP output input)
+                 No contra =>
+                   Left (TypeMismatch po pi)
+             No contra =>
+                 Left (TypeMismatch po pi)
          No msgWhyNot prfWhyNot =>
-           Left (TypeMismatch to ti)
+           Left (TypeMismatch po pi)
 
 public export
 data Conditionals : {lvls    : Universes}
@@ -260,7 +310,9 @@ data Conditionals : {lvls    : Universes}
                             -> Type
   where
     IF : {ty : _}
-      -> (cond : SystemV types (PortTy ty IN))
+      -> {s  : Sensitivity}
+      -> {i  : Intention}
+      -> (cond : SystemV types (PortTy ty IN s i))
       -> (tt   : SystemV types UnitTy)
       -> (ff   : SystemV types UnitTy)
               -> Conditionals types
@@ -273,7 +325,7 @@ conditionals : {lvls  : Universes}
             -> (ff    : Result TYPE SystemV lvls types)
                      -> TermBuilder (Conditionals types)
 conditionals cond tt ff
-  = do (tyD ** cc) <- isPortWithDir cond IN
+  = do (i ** s ** tyD ** cc) <- isPortWithDir cond IN
        t  <- isUnit tt
        f  <- isUnit ff
        pure (IF cc t f)
@@ -285,9 +337,11 @@ data BinPorts : {lvls    : Universes}
                         -> Type
   where
     BP : {ty   : _}
-      -> (pout : SystemV types (PortTy ty OUT))
-      -> (pinA : SystemV types (PortTy ty IN))
-      -> (pinB : SystemV types (PortTy ty IN))
+      -> {s  : Sensitivity}
+      -> {i  : Intention}
+      -> (pout : SystemV types (PortTy ty OUT s i))
+      -> (pinA : SystemV types (PortTy ty IN  s i))
+      -> (pinB : SystemV types (PortTy ty IN  s i))
               -> BinPorts types
 
 export
@@ -298,18 +352,26 @@ binGatePorts : {lvls    : Universes}
             -> (portInB : Result TYPE SystemV lvls types)
                        -> TermBuilder (BinPorts types)
 binGatePorts o a b
-  = do (to ** output) <- isPortWithDir o OUT
-       (ta ** inputA) <- isPortWithDir a IN
-       (tb ** inputB) <- isPortWithDir b IN
+  = do (io ** so ** to ** output) <- isPortWithDir o OUT
+       (ia ** sa ** ta ** inputA) <- isPortWithDir a IN
+       (ib ** sb ** tb ** inputB) <- isPortWithDir b IN
 
-       let po = PortTy to OUT
-       let pa = PortTy ta IN
-       let pb = PortTy tb IN
+       let po = PortTy to OUT so io
+       let pa = PortTy ta IN sa ia
+       let pb = PortTy tb IN sb ib
 
        case allDataEqual to ta tb of
-         No AB contra => Left (TypeMismatch to ta)
-         No AC contra => Left (TypeMismatch to tb)
-         Yes ADE      => Right (BP output inputA inputB)
+         No AB contra => Left (TypeMismatch po pa)
+         No AC contra => Left (TypeMismatch po pb)
+         Yes ADE =>
+           case allEqual so sa sb of
+             No AB prfWhyNot => Left (TypeMismatch po pa)
+             No AC prfWhyNot => Left (TypeMismatch po pb)
+             Yes AE =>
+               case allEqual io ia ib of
+                 No AB prfWhyNot => Left (TypeMismatch po pa)
+                 No AC prfWhyNot => Left (TypeMismatch po pb)
+                 Yes AE => Right (BP output inputA inputB)
 
 export
 canCast : {lvls  : Universes}
@@ -317,15 +379,18 @@ canCast : {lvls  : Universes}
        -> (port  : Result TYPE SystemV lvls types)
        -> (toTy  : Result TYPE SystemV lvls types)
        -> (toDir : Direction)
+       -> (s     : Sensitivity)
+       -> (i     : Intention)
                 -> TermBuilder (Result TYPE SystemV lvls types)
-canCast port toTy toDir
-  = do (P fromDir fromTy from) <- isPort port
+canCast port toTy toDir toS toI
+
+  = do (P fromI fromS fromDir fromTy from) <- isPort port
        (D toDTy data_) <- isData InCast toTy
 
-       let fromP = PortTy fromTy fromDir
-       let toP   = PortTy toDTy   toDir
+       let fromP = PortTy fromTy fromDir fromS fromI
+       let toP   = PortTy toDTy  toDir   toS   toI
 
-       case validCast (PortTy fromTy fromDir) (PortTy toDTy toDir) of
+       case cast (PortTy fromTy fromDir fromS fromI) (PortTy toDTy toDir toS toI) of
          (Yes prfWhy)             => Right (Res _ _ (Cast from prfWhy))
          (No msgWhyNot prfWhyNot) => Left (InvalidCast msgWhyNot fromP toP)
 
@@ -336,8 +401,10 @@ data ConnectPorts : {lvls    : Universes}
   where
     CP : {ty  : _}
       -> {dirA,dirB : Direction}
-      -> (pA  : SystemV types (PortTy ty dirA))
-      -> (pB  : SystemV types (PortTy ty dirB))
+      -> {s     : Sensitivity}
+      -> {i     : Intention}
+      -> (pA  : SystemV types (PortTy ty dirA s i))
+      -> (pB  : SystemV types (PortTy ty dirB s i))
       -> (prf : ValidFlow dirA dirB)
              -> ConnectPorts types
 export
@@ -347,19 +414,28 @@ connectPorts : {lvls  : Universes}
             -> (b     : Result TYPE SystemV lvls types)
                      -> TermBuilder (ConnectPorts types)
 connectPorts a b
-  = do (P da ta pa) <- isPort a
-       (P db tb pb) <- isPort b
+  = do (P ia sa da ta pa) <- isPort a
+       (P ib sb db tb pb) <- isPort b
 
-       let ptA = PortTy ta da
-       let ptB = PortTy tb db
+       let ptA = PortTy ta da sa ia
+       let ptB = PortTy tb db sb ib
 
        case DataTypes.decEq ta tb of
          (Yes (Same Refl Refl)) =>
-           case validFlow da db of
-             (Yes x) => Right (CP pa pb x)
+           case decEq sa sb of
+             Yes Refl =>
+               case decEq ia ib of
+                 Yes Refl =>
+                   case validFlow da db of
+                     Yes prfFlow => Right (CP pa pb prfFlow)
+                     No msgWhyNot prfWhyNot =>
+                       Left (InvalidFlow msgWhyNot)
+                 No contra =>
+                  Left (TypeMismatch ptA ptB)
 
-             (No msgWhyNot prfWhyNot) =>
-               Left (InvalidFlow msgWhyNot)
+             No contra =>
+               Left (TypeMismatch ptA ptB)
+
          (No msgWhyNot prfWhyNot) =>
            Left (TypeMismatch ptA ptB)
 
@@ -434,8 +510,6 @@ body a type
        case Function.validTerm (IDX TERM) (FuncTy a ty) of
          Yes prfWhy => Right (B term prfWhy)
          No msgWhyNot prfWhyNot => (Left (InvalidFunc msgWhyNot a ty))
-
-
 
 
 -- [ EOF ]

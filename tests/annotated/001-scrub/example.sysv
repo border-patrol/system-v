@@ -1,0 +1,31 @@
+module Scrub ( data insensitive input  wire logic[32] dirty
+             , data insensitive output wire logic[32] clean
+             );
+  assign clean = dirty;
+endmodule
+
+module Producer (address high output wire logic[32] stuff);
+
+  //
+
+endmodule
+
+module Consumer (data high input wire logic[32] stuff);
+
+  //
+
+endmodule
+
+module Top ();
+
+  data insensitive wire logic[32] chanPS;
+  data insensitive wire logic[32] chanSC;
+
+  Scrub s ((readFrom chanPS),(writeTo chanSC));
+
+  Producer pA ((writeTo chanPS));
+  Producer pB ((writeTo chanPS));
+
+  Consumer c ((readFrom chanSC));
+
+endmodule

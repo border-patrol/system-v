@@ -11,6 +11,10 @@ modules =
 -- ## Vendored Utilities
           Toolkit.Decidable.Equality.Indexed
 
+        , Toolkit.Decidable.Informative
+
+        , Toolkit.Decidable.Equality.Views
+
         , Toolkit.Data.Vect.Extra
 
         , Toolkit.Data.DList
@@ -28,8 +32,6 @@ modules =
         , Toolkit.Data.Rig
 
         , Toolkit.Data.Whole
-
-        , Toolkit.Decidable.Informative
 
         , Toolkit.Text.Parser.Support
         , Toolkit.Text.Parser.Location
@@ -75,6 +77,9 @@ modules =
         , SystemV.Common.Parser.Gate
         , SystemV.Common.Parser.Boolean
         , SystemV.Common.Parser.Arithmetic
+
+        , SystemV.Common.Options
+        , SystemV.Common.Run
 
 -- ## SystemV 'Core'
 
@@ -137,6 +142,10 @@ modules =
         , SystemV.Core.DSL.Build.Helpers
         , SystemV.Core.DSL.Build
         , SystemV.Core.DSL
+
+-- ### Main
+
+        , SystemV.Core.Run
 
 -- ## SystemV 'Params'
 
@@ -245,6 +254,7 @@ modules =
         , SystemV.Annotated.Types.TYPE.Cast
 
         , SystemV.Annotated.Types
+        , SystemV.Annotated.Types.Views
 
 -- ### Terms
 
@@ -265,27 +275,29 @@ modules =
         , SystemV.Annotated.Evaluation.Progress
 
         , SystemV.Annotated.Evaluation
---
--- ### Annotated
 
-        , SystemV.Core.DSL.AST
+-- ### DSL
+
+        , SystemV.Annotated.DSL.AST
 
         , SystemV.Annotated.DSL.Parser.Sensitivity
         , SystemV.Annotated.DSL.Parser.Intention
 
         , SystemV.Annotated.DSL.Parser
 
- --       , SystemV.Core.DSL.Build.Error
- --
- --       , SystemV.Core.DSL.Build
- --
- --       , SystemV.Core.DSL
+        , SystemV.Annotated.DSL.Error
 
--- ### DSL
+        , SystemV.Annotated.DSL.Build.Helpers
+        , SystemV.Annotated.DSL.Build
+
+        , SystemV.Annotated.DSL
+
+-- ### Main
+
+        , SystemV.Annotated.Run
 
 
 -- ## Main
-        , Options
         , Main
 
 -- [ EOF ]

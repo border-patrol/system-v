@@ -87,8 +87,8 @@ drive
        keyword "drive"
        commit
        p <- writeTo
-       s <- sensitivity
-       i <- intention
+       s <- option Insensitive sensitivity
+       i <- option General     intention
        symbol ")"
        e <- location
        pure (Drive (newFC st e) s i p)
@@ -132,8 +132,8 @@ portP = ref <|> slidx <|> projChan
 chanDef : Rule Token (FileContext, String, AST)
 chanDef
   = do st <- location
-       i <- intention
-       s <- sensitivity
+       i <- option General intention
+       s <- option Insensitive sensitivity
        keyword "wire"
        commit
        ty <- type_
@@ -154,8 +154,8 @@ typeDef = do
 port : Rule Token (String, AST)
 port
   = do st <- location
-       i <- intention
-       s <- sensitivity
+       i <- option General     intention
+       s <- option Insensitive sensitivity
        d <- direction
        keyword "wire"
        t <- type_
@@ -164,8 +164,8 @@ port
        pure (label, TyPort (newFC st e) t d s i)
 
 ports : Rule Token (List (String, AST))
-ports =  symbol "(" *> symbol ")" *> pure Nil
-     <|> do {p <- parens (commaSepBy1 port); pure (forget p)}
+ports =  do {p <- parens (commaSepBy1 port); pure (forget p)}
+     <|> symbol "(" *> symbol ")" *> pure Nil
 
 assign : Rule Token AST
 assign

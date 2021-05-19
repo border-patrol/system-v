@@ -1,4 +1,4 @@
-module SystemV.Annotated.DSL.Build.Error
+module SystemV.Annotated.DSL.Error
 
 import        Decidable.Equality
 
@@ -19,12 +19,12 @@ import public Toolkit.Decidable.Equality.Indexed
 
 import        SystemV.Common.Utilities
 
-import        SystemV.Core.Types
-import        SystemV.Core.Terms
+import        SystemV.Annotated.Types
+import        SystemV.Annotated.Terms
 
 namespace Build
   public export
-  data NotDataTypeContext = InTypeDef | InVector | InPort | InChan
+  data NotDataTypeContext = InTypeDef | InVector | InPort | InChan | InCast
 
   public export
   data Context = NotADataType NotDataTypeContext
@@ -37,23 +37,41 @@ namespace Build
                | NotAFunc
                | NotANat
 
-  public export
-  data Error = Err FileContext Build.Error
-             | NotAName String
-             | TypeMismatch (TYPE a) (TYPE b)
-             | VectorSizeZero
-             | IndexOutOfBounds Nat Whole
-             | WrongType Context (TYPE a)
-             | InvalidCast Cast.Error (TYPE (IDX TERM)) (TYPE (IDX TERM))
-             | InvalidBound Sliceable.Error
-             | InvalidFlow  Flow.Error
-             | InvalidFuncSynth Synthesis.Error (TYPE a)
-             | InvalidFunc Function.ValidTerm.Error (TYPE a) (TYPE b)
+  namespace Annotated
+    public export
+    data Error = Err FileContext Annotated.Error
+               | NotAName String
+               | TypeMismatch (TYPE a) (TYPE b)
+               | VectorSizeZero
+               | IndexOutOfBounds Nat Whole
+               | WrongType Context (TYPE a)
+               | InvalidCast Cast.Error (TYPE (IDX TERM)) (TYPE (IDX TERM))
+               | InvalidBound Sliceable.Error
+               | InvalidFlow  Flow.Error
+               | InvalidFuncSynth Synthesis.Error (TYPE a)
+               | InvalidFunc Function.ValidTerm.Error (TYPE a) (TYPE b)
 
 Show Direction where
   show IN = "IN"
   show OUT = "OUT"
   show INOUT = "INOUT"
+
+Show Intention where
+  show Data      = "Data"
+  show Address   = "Address"
+  show Clock     = "Clock"
+  show Reset     = "Reset"
+  show Info      = "Info"
+  show Interrupt = "Interrupt"
+  show Control   = "Control"
+  show General   = "General"
+
+Show Sensitivity where
+  show High        = "High"
+  show Low         = "Low"
+  show Rising      = "Rising"
+  show Falling     = "Falling"
+  show Insensitive = "Insensitive"
 
 
 Show Sliceable.Error where
@@ -73,7 +91,7 @@ Show (TYPE level) where
     = "LogicVal"
 
   show (VectorTyDesc size type)
-    = "Vect(" ++ show size ++ show type ++ ")"
+    = "Vect(" ++ show size ++ "," ++show type ++ ")"
 
   show (VectorTy size type)
     = "VectVal(" ++ show size ++ "," ++ show type ++ ")"
@@ -87,15 +105,30 @@ Show (TYPE level) where
   show ModuleTy
     = "Module"
 
-  show (ChanTyDesc type)
-    = "ChanMeta(" ++ show type ++ ")"
-  show (ChanTy type)
-    = "Chan(" ++ show type ++ ")"
+  show (ChanTyDesc type s i)
+    = "ChanMeta(" ++ show type ++ ","
+                  ++ show s    ++ ","
+                  ++ show i
+                  ++ ")"
+  show (ChanTy type s i)
+    = "Chan(" ++ show type ++ ","
+              ++ show s    ++ ","
+              ++ show i
+              ++ ")"
 
-  show (PortTyDesc type dir)
-    = "PortMeta(" ++ show type ++ ", " ++ show dir ++ ")"
-  show (PortTy type dir)
-    = "Port(" ++ show type ++ ", " ++ show dir ++ ")"
+  show (PortTyDesc type dir s i)
+    = "PortMeta(" ++ show type ++ ","
+                  ++ show dir  ++ ","
+                  ++ show s    ++ ","
+                  ++ show i
+                  ++ ")"
+
+  show (PortTy type dir s i)
+    = "Port(" ++ show type ++ ","
+              ++ show dir  ++ ","
+              ++ show s    ++ ","
+              ++ show i
+              ++ ")"
 
   show UnitTyDesc
     = "UnitMeta"
@@ -114,7 +147,19 @@ Show Equality.Error where
                      , "\t" ++ show x
                      , "Given:"
                      , "\t" ++ show y]
+  show (SensitivityMismatch x y)
+    = trim $ unlines [ "Sensitivity Mismatch:"
+                     , "Expected:"
+                     , "\t" ++ show x
+                     , "Given:"
+                     , "\t" ++ show y]
 
+  show (IntentionMismatch x y)
+    = trim $ unlines [ "Intention Mismatch:"
+                     , "Expected:"
+                     , "\t" ++ show x
+                     , "Given:"
+                     , "\t" ++ show y]
 
 Show Equiv.Error where
   show (NotEquiv x y z)
@@ -131,11 +176,15 @@ Show Cast.Error where
     = "Cannot go from: " ++ show x
   show (TypesNotEquiv prf)
     = "Types are not equiv:\n" ++ show prf
-
   show (NotCastableFrom x)
     = "Cannot cast from: " ++ show x
   show (NotCastableTo x)
     = "Cannot cast to: " ++ show x
+
+  show (SensitivityNotCompat err)
+    = "Sensitivity not compatible"
+  show (IntentionNotCompat err)
+    = "Intention not compatible"
 
 Show Flow.Error where
  show (CannotFlow x y)
@@ -184,7 +233,7 @@ Show Function.ValidTerm.Error where
   show IsPort    = "Is a port"
 
 export
-Show Build.Error where
+Show Annotated.Error where
   show (Err fc err) = trim (unlines [show fc, show err])
 
   show (NotAName a)

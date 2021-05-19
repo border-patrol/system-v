@@ -1,4 +1,4 @@
-module Options
+module SystemV.Common.Options
 
 import System
 
@@ -10,6 +10,14 @@ import Toolkit.Options.ArgParse
 
 data Error = MissingFile
            | ProcessError ArgParseError
+
+export
+Show Error where
+  show MissingFile = "File expected"
+  show (ProcessError err) = "Wrong args\n" ++ show err
+
+public export
+data Mode = CORE | ANNOTATED
 
 public export
 record Opts where
@@ -23,9 +31,10 @@ record RawOpts where
   constructor MkRawOpts
   timing' : Bool
   files'  : List String
+  mode'   : Mode
 
 defOpts : RawOpts
-defOpts = MkRawOpts False Nil
+defOpts = MkRawOpts False Nil CORE
 
 getRawOpts : List String -> Either Options.Error RawOpts
 getRawOpts args
@@ -43,18 +52,26 @@ getRawOpts args
 
     convOpts (Flag x) o
       = case x of
-          "timing"  => Just $ record {timing'  = True} o
+          "timing"    => Just $ record {timing' = True} o
+          "annotated" => Just $ record {mode'   = ANNOTATED} o
+          "core"      => Just $ record {mode'   = CORE} o
           otherwise => Nothing
 
 
-processRawOpts : RawOpts -> Either Options.Error Opts
-processRawOpts (MkRawOpts timing []) = Left MissingFile
-processRawOpts (MkRawOpts timing (x :: xs)) = Right (MkOpts timing (x ::: xs))
+processRawOpts : RawOpts -> Either Options.Error (Mode, Opts)
+processRawOpts (MkRawOpts timing [] m)
+  = Left MissingFile
+processRawOpts (MkRawOpts timing (x :: xs) m)
+  = Right (m, MkOpts timing (x ::: xs))
 
 export
 processArgs : IO (Either Options.Error
-                       Opts)
+                         (Mode, Opts))
 processArgs
   = case getRawOpts !getArgs of
       Left err => pure (Left err)
       Right o => pure (processRawOpts o)
+
+export
+getFirstFile : Opts -> String
+getFirstFile = (head . files)

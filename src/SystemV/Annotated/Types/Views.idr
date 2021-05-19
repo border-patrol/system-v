@@ -1,4 +1,4 @@
-module SystemV.Core.Types.Views
+module SystemV.Annotated.Types.Views
 
 import Decidable.Equality
 
@@ -7,10 +7,9 @@ import Toolkit.Decidable.Equality.Indexed
 
 import SystemV.Common.Utilities
 
-import SystemV.Core.Types
+import SystemV.Annotated.Types
 
 %default total
-
 
 namespace AllDataEqual
   public export
@@ -40,20 +39,24 @@ namespace AllDataEqual
 
 namespace HasDirection
   public export
-  data HasDirection : (d : Direction) -> (u : Universe) -> (type : TYPE u) -> Type where
-     Match : (prf : da === db)
-                 -> HasDirection da (IDX TERM) (PortTy ty db)
-     Fail  : (contra : Not (da === db))
-                    -> HasDirection da (IDX TERM) (PortTy ty db)
-     NotAPort : HasDirection da u type
+  data HasDirection : (d    : Direction)
+                   -> (u    : Universe)
+                   -> (type : TYPE u)
+                           -> Type
+    where
+      Match : (prf : da === db)
+                  -> HasDirection da (IDX TERM) (PortTy ty db s i)
+      Fail  : (contra : Not (da === db))
+                     -> HasDirection da (IDX TERM) (PortTy ty db s i)
+      NotAPort : HasDirection da u type
 
 
   export
   hasDirection : (d : Direction) -> (u : Universe) -> (type : TYPE u) -> HasDirection d u type
-  hasDirection d (IDX TERM) (PortTy type dir) with (Direction.decEq d dir)
-    hasDirection d (IDX TERM) (PortTy type dir) | (Yes prf)
+  hasDirection d (IDX TERM) (PortTy type dir s i) with (Direction.decEq d dir)
+    hasDirection d (IDX TERM) (PortTy type dir s i) | (Yes prf)
       = Match prf
-    hasDirection d (IDX TERM) (PortTy type dir) | (No contra)
+    hasDirection d (IDX TERM) (PortTy type dir s i) | (No contra)
       = Fail contra
 
   hasDirection d _ _ = NotAPort
@@ -61,12 +64,12 @@ namespace HasDirection
 namespace IsPort
   public export
   data IsPort : (u : Universe) -> (type : TYPE u) -> Type where
-    Match : IsPort (IDX TERM) (PortTy ty dir)
+    Match : IsPort (IDX TERM) (PortTy ty dir s i)
     Fail  : IsPort u type
 
   export
   isPort : (u : Universe) -> (type : TYPE u) -> IsPort u type
-  isPort (IDX TERM) (PortTy type dir) = Match
+  isPort (IDX TERM) (PortTy type dir s i) = Match
   isPort _ _ = Fail
 
 namespace IsUnit
@@ -116,14 +119,14 @@ namespace IsType
 namespace IsPortVect
   public export
   data IsPortVect : (u : Universe) -> (type : TYPE u) -> Type where
-    Match    : IsPortVect (IDX TERM) (PortTy (VectorTyDesc s ty) dir)
-    Fail     : IsPortVect (IDX TERM) (PortTy ty dir)
+    Match    : IsPortVect (IDX TERM) (PortTy (VectorTyDesc w ty) dir s i)
+    Fail     : IsPortVect (IDX TERM) (PortTy ty dir s i)
     NotAPort : IsPortVect u          type
 
   export
   isPortVect : (u : Universe) -> (type : TYPE u) -> IsPortVect u type
-  isPortVect (IDX TERM) (PortTy (VectorTyDesc size type) dir) = Match
-  isPortVect (IDX TERM) (PortTy LogicTyDesc dir) = Fail
+  isPortVect (IDX TERM) (PortTy (VectorTyDesc size type) dir s i) = Match
+  isPortVect (IDX TERM) (PortTy LogicTyDesc dir s i) = Fail
   isPortVect _ _ = NotAPort
 
 namespace IsFunc

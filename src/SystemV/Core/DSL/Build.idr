@@ -319,16 +319,17 @@ termBuilder ctxt (Index fc i port) with (termBuilder ctxt port)
 -- [ End of Build ]
 
 
-export
-build : (ast : AST)
-             -> Either Build.Error (SystemV Nil ModuleTy)
-build ast with (termBuilder (Ctxt Nil Nil Nil) ast)
-  build ast | (Left err)
-    = Left err
-  build ast | (Right (Res _ (FuncTy UnitTy ModuleTy) term))
-    = Right (App term MkUnit)
-  build ast | (Right (Res _ type term))
+namespace Core
+  export
+  build : (ast : AST)
+               -> Either Core.Error (SystemV Nil ModuleTy)
+  build ast with (termBuilder (Ctxt Nil Nil Nil) ast)
+    build ast | (Left err)
+      = Left err
+    build ast | (Right (Res _ (FuncTy UnitTy ModuleTy) term))
+      = Right (App term MkUnit)
+    build ast | (Right (Res _ type term))
 
-    = Left (TypeMismatch (FuncTy UnitTy ModuleTy) type)
+      = Left (TypeMismatch (FuncTy UnitTy ModuleTy) type)
 
 -- --------------------------------------------------------------------- [ EOF ]

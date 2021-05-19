@@ -1,7 +1,7 @@
 LOG : Starting SystemV 
-LOG : Running SystemV Core
+LOG : Running SystemV Annotated
 LOG : Parsing Complete
 LOG: Typing Complete 
 LOG: Evaluating 
-LOG : Exiting Core
+LOG : Exiting Annotated
 LOG : Bye

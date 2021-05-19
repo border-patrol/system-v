@@ -24,6 +24,8 @@ keywords = [ "input", "output", "inout"
            , "add", "mul", "sub", "div"
            , "xor", "nor", "nand", "nxor"
            , "for", "index"
+           , "high", "low", "rising", "falling", "insensitive"
+           , "data", "address", "clock", "reset", "info", "interrupt", "control", "general"
            ]
 
 public export

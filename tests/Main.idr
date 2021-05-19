@@ -22,6 +22,18 @@ namespace Param
                  , "004-for"
                  ]
 
+namespace Annotated
+  export
+  tests : TestPool
+  tests
+    = MkTestPool "Annotated"
+                 []
+                 [ "000-hello-world"
+                 , "001-scrub"
+                 , "002-split"
+                 , "003-gates"
+                 ]
+
 namespace Core
   export
   tests : TestPool
@@ -37,8 +49,8 @@ namespace Core
 covering
 main : IO ()
 main
-  = runner [ testPaths "core" Core.tests
-           --, testPaths "param" Param.tests
+  = runner [ testPaths "core"      Core.tests
+           , testPaths "annotated" Annotated.tests
            ]
 
 

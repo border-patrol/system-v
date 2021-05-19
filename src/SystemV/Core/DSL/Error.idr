@@ -37,18 +37,19 @@ namespace Build
                | NotAFunc
                | NotANat
 
-  public export
-  data Error = Err FileContext Build.Error
-             | NotAName String
-             | TypeMismatch (TYPE a) (TYPE b)
-             | VectorSizeZero
-             | IndexOutOfBounds Nat Whole
-             | WrongType Context (TYPE a)
-             | InvalidCast Cast.Error (TYPE (IDX TERM)) (TYPE (IDX TERM))
-             | InvalidBound Sliceable.Error
-             | InvalidFlow  Flow.Error
-             | InvalidFuncSynth Synthesis.Error (TYPE a)
-             | InvalidFunc Function.ValidTerm.Error (TYPE a) (TYPE b)
+  namespace Core
+    public export
+    data Error = Err FileContext Core.Error
+               | NotAName String
+               | TypeMismatch (TYPE a) (TYPE b)
+               | VectorSizeZero
+               | IndexOutOfBounds Nat Whole
+               | WrongType Context (TYPE a)
+               | InvalidCast Cast.Error (TYPE (IDX TERM)) (TYPE (IDX TERM))
+               | InvalidBound Sliceable.Error
+               | InvalidFlow  Flow.Error
+               | InvalidFuncSynth Synthesis.Error (TYPE a)
+               | InvalidFunc Function.ValidTerm.Error (TYPE a) (TYPE b)
 
 Show Direction where
   show IN = "IN"
@@ -184,7 +185,7 @@ Show Function.ValidTerm.Error where
   show IsPort    = "Is a port"
 
 export
-Show Build.Error where
+Show Core.Error where
   show (Err fc err) = trim (unlines [show fc, show err])
 
   show (NotAName a)

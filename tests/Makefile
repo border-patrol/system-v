@@ -4,7 +4,10 @@ SYSTEMV_TEST_U ?= --interactive
 
 
 test: testbin
-	./build/exec/runtests $(SYSTEMV_BIN) --timing $(SYSTEMV_TEST_U) --only $(SYSTEMV_TEST_O)
+	./build/exec/runtests $(SYSTEMV_BIN) \
+			     --timing \
+			     $(SYSTEMV_TEST_U) \
+			     --only $(SYSTEMV_TEST_O)
 
 testbin:
 	${IDRIS2} --build tests.ipkg
@@ -15,9 +18,4 @@ clean:
 clobber: clean
 	${RM} -rf build
 
-
-# est:
-#	./build/exec/runtests $(IDRIS2) $(INTERACTIVE) --failure-file failures --threads $(threads) --only $(only)
-#
-# retest:
-#	./build/exec/runtests $(IDRIS2) $(INTERACTIVE) --failure-file failures --threads $(threads) --only-file failures --only $(only)
+# -- [ EOF ]

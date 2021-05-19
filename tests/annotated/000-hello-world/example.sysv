@@ -1,0 +1,38 @@
+typedef logic foo;
+
+typedef foo[30] fs;
+
+typedef logic[30] fduip;
+
+module Swap ( general insensitive input  wire logic a
+            , general insensitive input  wire logic b
+            , general insensitive output wire logic x
+            , general insensitive output wire logic y
+            );
+    assign x = a;
+    assign y = b;
+endmodule
+
+module DoSwap ();
+  general insensitive wire logic a;
+  general insensitive wire logic b;
+  general insensitive wire logic x;
+  general insensitive wire logic y;
+
+  (drive (writeTo a)  insensitive general);
+  (drive (writeTo b)  insensitive general);
+  (catch (readFrom x));
+  (catch (readFrom y));
+
+  Swap ms ((readFrom a)
+          ,(readFrom b)
+          ,(writeTo x)
+          ,(writeTo y)
+          );
+endmodule
+
+module Top ();
+
+  //
+
+endmodule

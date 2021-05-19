@@ -1,4 +1,4 @@
-module SystemV.Core.DSL.Build
+module SystemV.Annotated.DSL.Build
 
 import        Decidable.Equality
 
@@ -18,25 +18,26 @@ import public Toolkit.Decidable.Informative
 import public Toolkit.Decidable.Equality.Indexed
 
 import        SystemV.Common.Utilities
-import        SystemV.Common.Builder
+
+import public SystemV.Common.Builder
 
 import        SystemV.Annotated.Types
+import        SystemV.Annotated.Types.Views
 import        SystemV.Annotated.Terms
 
 import        SystemV.Annotated.DSL.AST
+import public SystemV.Annotated.DSL.Error
 
-import public SystemV.Annotated.DSL.Build.Error
+import        SystemV.Annotated.DSL.Build.Helpers
+
+%hide Data.Nat.pred -- shadowing
 
 %default total
 
 
-public export
-TermBuilder : Type -> Type
-TermBuilder = Either Build.Error
-
-termBuilder : (ctxt : Context lvls types)
+termBuilder : (ctxt : Context TYPE lvls types)
            -> (ast  : AST)
-                   -> TermBuilder (Result lvls types)
+                   -> TermBuilder (Result TYPE SystemV lvls types)
 -- ## Types
 
 -- ### Unit
@@ -66,67 +67,55 @@ termBuilder ctxt (TyVect fc size type) with (isWhole size)
     = Left (Err fc VectorSizeZero)
 
 -- ### Ports
-termBuilder ctxt (TyPort fc type dir sense intent) with (termBuilder ctxt type)
-  termBuilder ctxt (TyPort fc type dir sense intent) | (Left err)
+termBuilder ctxt (TyPort fc type dir s i) with (termBuilder ctxt type)
+  termBuilder ctxt (TyPort fc type dir s i) | (Left err)
     = Left (Err fc err)
 
-  termBuilder ctxt (TyPort fc type dir sense intent) | (Right (Res (DATA TYPE) typeT term))
-    = pure (Res _ _ (TyPort term dir sense intent))
+  termBuilder ctxt (TyPort fc type dir s i) | (Right (Res (DATA TYPE) typeT term))
+    = pure (Res _ _ (TyPort term dir s i))
 
-  termBuilder ctxt (TyPort fc type dir sense intent) | (Right (Res u typeT _))
+  termBuilder ctxt (TyPort fc type dir s i) | (Right (Res u typeT _))
     = Left (Err fc (WrongType (NotADataType InPort) typeT))
 
 -- ## STLC
 
 -- ### References
-termBuilder (Ctxt lvls names types) (Ref ref) with (isName (get ref) names)
-  termBuilder (Ctxt lvls names types) (Ref ref) | (Yes (MkDPair level idx_name)) with (mkVar idx_name types)
-    termBuilder (Ctxt lvls names types) (Ref ref) | (Yes (MkDPair level idx_name)) | (MkDPair type idx)
+termBuilder (Ctxt lvls names types) (Ref name) with (isName (get name) names)
+  termBuilder (Ctxt lvls names types) (Ref name) | (Yes (MkDPair level idx_name)) with (mkVar idx_name types)
+    termBuilder (Ctxt lvls names types) (Ref name) | (Yes (MkDPair level idx_name)) | (MkDPair type idx)
       = pure (Res _ _ (Var idx))
-  termBuilder (Ctxt lvls names types) (Ref ref) | (No contra)
-    = Left (Err (span ref) (NotAName (get ref)))
+  termBuilder (Ctxt lvls names types) (Ref name) | (No contra)
+    = Left (Err (span name) (NotAName (get name)))
 
 -- ### Functions
 termBuilder ctxt (Func fc name type body) with (termBuilder ctxt type)
   termBuilder ctxt (Func fc name type body) | (Left err)
     = Left (Err fc err)
-  termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right (Res (IDX TYPE) typeTy termType)) with (synthesis typeTy)
-    termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right (Res (IDX TYPE) typeTy termType)) | (Yes (MkDPair argTy (Synth argTy prfArg prfRet prfCheck))) with (termBuilder (Ctxt (IDX TERM :: lvls) (MkName (Just name) (IDX TERM) :: names) (argTy :: types)) body)
-      termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right (Res (IDX TYPE) typeTy termType)) | (Yes (MkDPair argTy (Synth argTy prfArg prfRet prfCheck))) | (Left err)
+  termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right tres) with (annotation tres)
+    termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right tres) | (Left err)
+      = Left (Err fc err)
+    termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right tres) | (Right (ANN meta termTy termPa chk)) with (termBuilder (Ctxt (IDX TERM :: lvls) (MkName (Just name) (IDX TERM) :: names) (termPa :: types)) body)
+      termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right tres) | (Right (ANN meta termTy termPa chk)) | (Left err)
         = Left (Err fc err)
-      termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right (Res (IDX TYPE) typeTy termType)) | (Yes (MkDPair argTy (Synth argTy prfArg prfRet prfCheck))) | (Right (Res (IDX TERM) bodyTy termBody)) with (Function.validTerm (IDX TERM) (FuncTy argTy bodyTy))
-        termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right (Res (IDX TYPE) typeTy termType)) | (Yes (MkDPair argTy (Synth argTy prfArg prfRet prfCheck))) | (Right (Res (IDX TERM) bodyTy termBody)) | (Yes prfValid)
-          = pure (Res _ _ (Func termType termBody prfCheck prfValid))
-        termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right (Res (IDX TYPE) typeTy termType)) | (Yes (MkDPair argTy (Synth argTy prfArg prfRet prfCheck))) | (Right (Res (IDX TERM) bodyTy termBody)) | (No msgWhyNot prfWhyNot)
-          = Left (Err fc (InvalidFunc msgWhyNot argTy bodyTy))
-
-      termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right (Res (IDX TYPE) typeTy termType)) | (Yes (MkDPair argTy (Synth argTy prfArg prfRet prfCheck))) | (Right (Res u bodyTy termBody))
-        = Left (Err fc (WrongType NotATerm bodyTy))
-
-
-    termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right (Res (IDX TYPE) typeTy termType)) | (No msgWhyNot prfWhyNot)
-      = Left (Err fc (InvalidFuncSynth msgWhyNot typeTy)) -- Internal Error...
-
-  termBuilder ctxt (Func fc name type body) | (Right (Res levelTy typeTy _))
-    = Left (Err fc (WrongType NotAType typeTy))
+      termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right tres) | (Right (ANN meta termTy termPa chk)) | (Right bres) with (Helpers.body termPa bres)
+        termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right tres) | (Right (ANN meta termTy termPa chk)) | (Right bres) | (Left err)
+          = Left (Err fc err)
+        termBuilder (Ctxt lvls names types) (Func fc name type body) | (Right tres) | (Right (ANN meta termTy termPa chk)) | (Right bres) | (Right (B termBody vld))
+          = Right (Res _ _ (Func termTy termBody chk vld))
 
 -- ### Application
 termBuilder ctxt (App func param) with (termBuilder ctxt func)
   termBuilder ctxt (App func param) | (Left err)
     = Left err
-  termBuilder ctxt (App func param) | (Right (Res (IDX TERM) (FuncTy argTy retTy) funcTerm)) with (termBuilder ctxt param)
-    termBuilder ctxt (App func param) | (Right (Res (IDX TERM) (FuncTy argTy retTy) funcTerm)) | (Left err)
+  termBuilder ctxt (App func param) | (Right fres) with (termBuilder ctxt param)
+    termBuilder ctxt (App func param) | (Right fres) | (Left err)
       = Left err
-    termBuilder ctxt (App func param) | (Right (Res (IDX TERM) (FuncTy argTy retTy) funcTerm)) | (Right (Res (IDX TERM) paramTy termVal)) with (TypeTerms.decEq argTy paramTy)
-      termBuilder ctxt (App func param) | (Right (Res (IDX TERM) (FuncTy argTy retTy) funcTerm)) | (Right (Res (IDX TERM) paramTy termVal)) | (Yes prfWhy) with (prfWhy) -- Why Idris, Why!
-        termBuilder ctxt (App func param) | (Right (Res (IDX TERM) (FuncTy argTy retTy) funcTerm)) | (Right (Res (IDX TERM) argTy termVal)) | (Yes prfWhy) | (Same Refl Refl)
-          = pure (Res _ _ (App funcTerm termVal))
-      termBuilder ctxt (App func param) | (Right (Res (IDX TERM) (FuncTy argTy retTy) funcTerm)) | (Right (Res (IDX TERM) paramTy termVal)) | (No msgWhyNot prfWhyNot)
-        = Left (TypeMismatch argTy paramTy)
-    termBuilder ctxt (App func param) | (Right (Res (IDX TERM) (FuncTy argTy retTy) funcTerm)) | (Right (Res u type _))
-      = Left (WrongType NotATerm type)
-  termBuilder ctxt (App func param) | (Right (Res u type _))
-    = Left (WrongType NotAFunc type)
+    termBuilder (Ctxt lvls names types) (App func param) | (Right fres) | (Right pres) with (application fres pres)
+      termBuilder (Ctxt lvls names types) (App func param) | (Right fres) | (Right pres) | (Left err)
+        = Left err
+      termBuilder (Ctxt lvls names types) (App func param) | (Right fres) | (Right pres) | (Right (APP f a))
+        = Right (Res _ _ (App f a))
+
 
 -- ## Modules \& Units \& Nats
 
@@ -140,14 +129,14 @@ termBuilder (Ctxt lvls names types) UnitVal
 
 -- ### Creation
 
-termBuilder ctxt (MkChan fc type sense intent) with (termBuilder ctxt type)
-  termBuilder ctxt (MkChan fc type sense intent) | (Left err)
+termBuilder ctxt (MkChan fc type s i) with (termBuilder ctxt type)
+  termBuilder ctxt (MkChan fc type s i) | (Left err)
     = Left (Err fc err)
 
-  termBuilder ctxt (MkChan fc type sense intent) | (Right (Res (DATA TYPE) typeT term))
-    = pure (Res _ _ (MkChan term sense intent))
+  termBuilder ctxt (MkChan fc type s i) | (Right (Res (DATA TYPE) typeT term))
+    = pure (Res _ _ (MkChan term s i))
 
-  termBuilder ctxt (MkChan fc type sense intent) | (Right (Res u typeT _))
+  termBuilder ctxt (MkChan fc type s i) | (Right (Res u typeT _))
     = Left (Err fc (WrongType (NotADataType InChan) typeT))
 
 -- ### Projection
@@ -157,7 +146,7 @@ termBuilder ctxt (WriteTo fc chan) with (termBuilder ctxt chan)
   termBuilder ctxt (WriteTo fc chan) | (Left err)
     = Left (Err fc err)
 
-  termBuilder ctxt (WriteTo fc chan) | (Right (Res (IDX TERM) (ChanTy typeT) term))
+  termBuilder ctxt (WriteTo fc chan) | (Right (Res (IDX TERM) (ChanTy typeT s i) term))
     = pure (Res _ _ (WriteTo term))
 
   termBuilder ctxt (WriteTo fc chan) | (Right (Res u typeT _))
@@ -168,7 +157,7 @@ termBuilder ctxt (ReadFrom fc chan) with (termBuilder ctxt chan)
   termBuilder ctxt (ReadFrom fc chan) | (Left err)
     = Left (Err fc err)
 
-  termBuilder ctxt (ReadFrom fc chan) | (Right (Res (IDX TERM) (ChanTy typeT) term))
+  termBuilder ctxt (ReadFrom fc chan) | (Right (Res (IDX TERM) (ChanTy typeT s i) term))
     = pure (Res _ _ (ReadFrom term))
 
   termBuilder ctxt (ReadFrom fc chan) | (Right (Res u typeT _))
@@ -178,205 +167,114 @@ termBuilder ctxt (ReadFrom fc chan) with (termBuilder ctxt chan)
 
 -- #### Drive
 
-termBuilder ctxt (Drive fc sense intent port) = ?rhs_drive
--- with (termBuilder ctxt port)
---  termBuilder ctxt (Drive fc sense intent port) | (Left err)
---    = Left (Err fc err)
---
---  termBuilder ctxt (Drive fc sense intent port) | (Right (Res (IDX TERM) (PortTy typeT OUT sense intent) term))
---    = pure (Res _ _ (Drive sense intent term))
---
---  termBuilder ctxt (Drive fc port sense intent) | (Right (Res (IDX TERM) (PortTy typeT dir sense intent) term))
---    = Left (Err fc (TypeMismatch (PortTy typeT OUT) (PortTy typeT dir)))
---
---  termBuilder ctxt (Drive fc port) | (Right (Res u typeT _))
---    = Left (Err fc (WrongType NotAPort typeT))
+termBuilder ctxt (Drive fc s i port) with (termBuilder ctxt port)
+  termBuilder ctxt (Drive fc s i port) | (Left err)
+    = Left (Err fc err)
+  termBuilder (Ctxt lvls names types) (Drive fc s i port) | (Right res) with (isPortAttr res OUT s i)
+    termBuilder (Ctxt lvls names types) (Drive fc s i port) | (Right res) | (Left err)
+      = Left (Err fc err)
+    termBuilder (Ctxt lvls names types) (Drive fc s i port) | (Right res) | (Right (Pa tyD term))
+      = pure (Res _ _ (Drive s i term))
 
 -- #### Catch
 termBuilder ctxt (Catch fc port) with (termBuilder ctxt port)
   termBuilder ctxt (Catch fc port) | (Left err)
     = Left (Err fc err)
-
-  termBuilder ctxt (Catch fc port) | (Right (Res (IDX TERM) (PortTy typeT IN sense intent) term))
-    = pure (Res _ _ (Catch term))
-
-  termBuilder ctxt (Catch fc port) | (Right (Res (IDX TERM) (PortTy typeT dir sense intent) term))
-    = Left (Err fc (TypeMismatch (PortTy typeT IN) (PortTy typeT dir)))
-
-  termBuilder ctxt (Catch fc port) | (Right (Res u typeT _))
-    = Left (Err fc (WrongType NotAPort typeT))
+  termBuilder (Ctxt lvls names types) (Catch fc port) | (Right res) with (isPortWithDir res IN)
+    termBuilder (Ctxt lvls names types) (Catch fc port) | (Right res) | (Left err)
+      = Left (Err fc err)
+    termBuilder (Ctxt lvls names types) (Catch fc port) | (Right res) | (Right (i ** s ** tyD ** term))
+      = pure (Res _ _ (Catch term))
 
 -- ## Operations on Ports
 
 -- ### Casting
-termBuilder ctxt (Cast fc port type dir) with (termBuilder ctxt port)
-  termBuilder ctxt (Cast fc port type dir) | (Left err)
+termBuilder ctxt (Cast fc port type dir s i) with (termBuilder ctxt port)
+  termBuilder ctxt (Cast fc port type dir s i) | (Left err)
     = Left (Err fc err)
-
-  termBuilder ctxt (Cast fc port type dir) | (Right (Res (IDX TERM) (PortTy typeD fromDir) fromTerm)) with (termBuilder ctxt type)
-    termBuilder ctxt (Cast fc port type dir) | (Right (Res (IDX TERM) (PortTy typeD fromDir) fromTerm)) | (Left err)
+  termBuilder ctxt (Cast fc port type dir s i) | (Right res) with (termBuilder ctxt type)
+    termBuilder ctxt (Cast fc port type dir s i) | (Right resP) | (Left err)
       = Left (Err fc err)
+    termBuilder (Ctxt lvls names types) (Cast fc port type dir s i) | (Right resP) | (Right resT) with (canCast resP resT dir s i)
+      termBuilder (Ctxt lvls names types) (Cast fc port type dir s i) | (Right resP) | (Right resT) | (Left err)
+        = Left (Err fc err)
+      termBuilder (Ctxt lvls names types) (Cast fc port type dir s i) | (Right resP) | (Right resT) | (Right res) = Right res
 
-    termBuilder ctxt (Cast fc port type dir) | (Right (Res (IDX TERM) (PortTy typeD fromDir) fromTerm)) | (Right (Res (IDX TERM) (PortTy typeTo toDir) toTerm)) with (validCast (PortTy typeD fromDir) (PortTy typeTo toDir))
-      termBuilder ctxt (Cast fc port type dir) | (Right (Res (IDX TERM) (PortTy typeD fromDir) fromTerm)) | (Right (Res (IDX TERM) (PortTy typeTo toDir) toTerm)) | (Yes prfWhy)
-        = pure (Res _ _ (Cast fromTerm prfWhy))
-      termBuilder ctxt (Cast fc port type dir) | (Right (Res (IDX TERM) (PortTy typeD fromDir) fromTerm)) | (Right (Res (IDX TERM) (PortTy typeTo toDir) toTerm)) | (No msgWhyNot prfWhyNot)
-        = Left (Err fc (InvalidCast msgWhyNot (PortTy typeD fromDir) (PortTy typeTo toDir)))
-
-    termBuilder ctxt (Cast fc port type dir) | (Right (Res (IDX TERM) (PortTy typeD fromDir) fromTerm)) | (Right (Res u typeT _))
-      = Left (Err fc (WrongType NotAPort typeT))
-
-  termBuilder ctxt (Cast fc port type dir) | (Right (Res u typeT _))
-    = Left (Err fc (WrongType NotAPort typeT))
 
 -- ### Slicing
 termBuilder ctxt (Slice fc port s e) with (termBuilder ctxt port)
   termBuilder ctxt (Slice fc port s e) | (Left err)
     = Left (Err fc err)
-  termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) with (validBound s e size)
-        termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (Yes prfWhy)
-          = pure (Res _ _ (Slice term s e prfWhy))
-
-        termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size type) dir) term)) | (No msgWhyNot prfWhyNot)
-          = Left (Err fc (InvalidBound msgWhyNot))
-
-  termBuilder ctxt (Slice fc port s e) | (Right (Res (IDX TERM) (PortTy type dir) term))
-    = Left (Err fc (WrongType NotAVect (PortTy type dir)))
-
-  termBuilder ctxt (Slice fc port s e) | (Right (Res u type _))
-    = Left (Err fc (WrongType NotAPort type))
+  termBuilder (Ctxt lvls names types) (Slice fc port s e) | (Right res) with (isPortVect res)
+    termBuilder (Ctxt lvls names types) (Slice fc port s e) | (Right res) | (Left err)
+      = Left (Err fc err)
+    termBuilder (Ctxt lvls names types) (Slice fc port s e) | (Right res) | (Right (PV x term)) with (validBound s e x)
+      termBuilder (Ctxt lvls names types) (Slice fc port s e) | (Right res) | (Right (PV x term)) | (Yes prfWhy)
+        = pure (Res _ _ (Slice term s e prfWhy))
+      termBuilder (Ctxt lvls names types) (Slice fc port s e) | (Right res) | (Right (PV x term)) | (No msgWhyNot prfWhyNot)
+        = Left (Err fc (InvalidBound msgWhyNot))
 
 -- ### Conditionals
 
 termBuilder ctxt (IfThenElse fc test true false) with (termBuilder ctxt test)
-  termBuilder ctxt (IfThenElse fc test true false) | (Left err)
+  termBuilder ctxt (IfThenElse fc test true false) | Left err
     = Left (Err fc err)
-
-  termBuilder ctxt (IfThenElse fc test true false) | (Right (Res (IDX TERM) (PortTy type IN) term)) with (termBuilder ctxt true)
-    termBuilder ctxt (IfThenElse fc test true false) | (Right (Res (IDX TERM) (PortTy type IN) term)) | (Left err)
+  termBuilder ctxt (IfThenElse fc test true false) | Right res with (termBuilder ctxt true)
+    termBuilder ctxt (IfThenElse fc test true false) | Right res | (Left err)
       = Left (Err fc err)
-
-
-    termBuilder ctxt (IfThenElse fc test true false) | (Right (Res (IDX TERM) (PortTy type IN) term)) | (Right (Res (IDX TERM) UnitTy trueTerm)) with (termBuilder ctxt false)
-      termBuilder ctxt (IfThenElse fc test true false) | (Right (Res (IDX TERM) (PortTy type IN) term)) | (Right (Res (IDX TERM) UnitTy trueTerm)) | (Left err)
+    termBuilder ctxt (IfThenElse fc test true false) | Right res | (Right tt) with (termBuilder ctxt false)
+      termBuilder ctxt (IfThenElse fc test true false) | Right res | (Right tt) | (Left err)
         = Left (Err fc err)
-
-      termBuilder ctxt (IfThenElse fc test true false) | (Right (Res (IDX TERM) (PortTy type IN) term)) | (Right (Res (IDX TERM) UnitTy trueTerm)) | (Right (Res (IDX TERM) UnitTy termFalse))
-        = pure (Res _ _ (IfThenElseR term trueTerm termFalse))
-
-      termBuilder ctxt (IfThenElse fc test true false) | (Right (Res (IDX TERM) (PortTy type IN) term)) | (Right (Res (IDX TERM) UnitTy trueTerm)) | (Right (Res u typeT _))
-        = Left (Err fc (WrongType NotAUnit typeT))
-
-    termBuilder ctxt (IfThenElse fc test true false) | (Right (Res (IDX TERM) (PortTy type IN) term)) | (Right (Res u typeT _))
-      = Left (Err fc (WrongType NotAUnit typeT))
-
-  termBuilder ctxt (IfThenElse fc test true false) | (Right (Res (IDX TERM) (PortTy type dir) term))
-    = Left (Err fc (TypeMismatch (PortTy type IN) (PortTy type dir)))
-
-  termBuilder ctxt (IfThenElse fc test true false) | (Right (Res u type term))
-    = Left (Err fc (WrongType NotAPort type))
+      termBuilder (Ctxt lvls names types) (IfThenElse fc test true false) | Right res | (Right tt) | (Right ff) with (conditionals res tt ff)
+        termBuilder (Ctxt lvls names types) (IfThenElse fc test true false) | Right res | (Right tt) | (Right ff) | (Left err)
+          = Left (Err fc err)
+        termBuilder (Ctxt lvls names types) (IfThenElse fc test true false) | Right res | (Right tt) | (Right ff) | (Right (IF cond x y))
+          = Right (Res _ _ (IfThenElseR cond x y))
 
 -- ### Connecting Ports
 termBuilder ctxt (Connect fc portL portR) with (termBuilder ctxt portL)
   termBuilder ctxt (Connect fc portL portR) | (Left err)
     = Left (Err fc err)
-
-  termBuilder ctxt (Connect fc portL portR) | (Right (Res (IDX TERM) (PortTy typeLeft dirLeft) left)) with (termBuilder ctxt portR)
-    termBuilder ctxt (Connect fc portL portR) | (Right (Res (IDX TERM) (PortTy typeLeft dirLeft) left)) | (Left err)
+  termBuilder ctxt (Connect fc portL portR) | (Right resL) with (termBuilder ctxt portR)
+    termBuilder ctxt (Connect fc portL portR) | (Right resL) | (Left err)
       = Left (Err fc err)
-
-    termBuilder ctxt (Connect fc portL portR) | (Right (Res (IDX TERM) (PortTy typeLeft dirLeft) left)) | (Right (Res (IDX TERM) (PortTy typeRight dirRight) right)) with (DataTypes.decEq typeLeft typeRight)
-      termBuilder ctxt (Connect fc portL portR) | (Right (Res (IDX TERM) (PortTy typeLeft dirLeft) left)) | (Right (Res (IDX TERM) (PortTy typeRight dirRight) right)) | (Yes prfWhy) with (prfWhy) -- Why Idris, why!
-        termBuilder ctxt (Connect fc portL portR) | (Right (Res (IDX TERM) (PortTy typeLeft dirLeft) left)) | (Right (Res (IDX TERM) (PortTy typeLeft dirRight) right)) | (Yes prfWhy) | (Same Refl Refl) with (validFlow dirLeft dirRight)
-          termBuilder ctxt (Connect fc portL portR) | (Right (Res (IDX TERM) (PortTy typeLeft dirLeft) left)) | (Right (Res (IDX TERM) (PortTy typeLeft dirRight) right)) | (Yes prfWhy) | (Same Refl Refl) | (Yes x)
-            = pure (Res _ _ (Connect left right x))
-
-          termBuilder ctxt (Connect fc portL portR) | (Right (Res (IDX TERM) (PortTy typeLeft dirLeft) left)) | (Right (Res (IDX TERM) (PortTy typeLeft dirRight) right)) | (Yes prfWhy) | (Same Refl Refl) | (No msgWhyNot prfWhyNot)
-            = Left (Err fc (InvalidFlow msgWhyNot))
-
-      termBuilder ctxt (Connect fc portL portR) | (Right (Res (IDX TERM) (PortTy typeLeft dirLeft) left)) | (Right (Res (IDX TERM) (PortTy typeRight dirRight) right)) | (No msgWhyNot prfWhyNot)
-        = Left (Err fc (TypeMismatch typeLeft typeRight))
-
-    termBuilder ctxt (Connect fc portL portR) | (Right (Res (IDX TERM) (PortTy typeLeft dirLeft) left)) | (Right (Res u type term))
-      = Left (Err fc (WrongType NotAPort type))
-
-  termBuilder ctxt (Connect fc portL portR) | (Right (Res u type _))
-    = Left (Err fc (WrongType NotAPort type))
+    termBuilder (Ctxt lvls names types) (Connect fc portL portR) | (Right resL) | (Right resR) with (connectPorts resL resR)
+      termBuilder (Ctxt lvls names types) (Connect fc portL portR) | (Right resL) | (Right resR) | Left err
+        = Left (Err fc err)
+      termBuilder (Ctxt lvls names types) (Connect fc portL portR) | (Right resL) | (Right resR) | Right (CP pA pB prf)
+        = Right (Res _ _ (Connect pA pB prf))
 
 
 -- ## Gates
+-- ### Not
 termBuilder ctxt (NotGate fc portOut portIn) with (termBuilder ctxt portOut)
   termBuilder ctxt (NotGate fc portOut portIn) | (Left err)
     = Left (Err fc err)
-
-  termBuilder ctxt (NotGate fc portOut portIn) | (Right (Res (IDX TERM) (PortTy typeOut OUT) termOut)) with (termBuilder ctxt portIn)
-    termBuilder ctxt (NotGate fc portOut portIn) | (Right (Res (IDX TERM) (PortTy typeOut OUT) termOut)) | (Left err)
+  termBuilder ctxt (NotGate fc portOut portIn) | (Right pout) with (termBuilder ctxt portIn)
+    termBuilder ctxt (NotGate fc portOut portIn) | (Right pout) | (Left err)
       = Left (Err fc err)
+    termBuilder (Ctxt lvls names types) (NotGate fc portOut portIn) | (Right poutR) | (Right pinR) with (notGatePorts poutR pinR)
+      termBuilder (Ctxt lvls names types) (NotGate fc portOut portIn) | (Right poutR) | (Right pinR) | (Left err)
+        = Left (Err fc err)
+      termBuilder (Ctxt lvls names types) (NotGate fc portOut portIn) | (Right poutR) | (Right pinR) | (Right (NP pout pin))
+        = Right (Res _ _ (Not pout pin))
 
-    termBuilder ctxt (NotGate fc portOut portIn) | (Right (Res (IDX TERM) (PortTy typeOut OUT) termOut)) | (Right (Res (IDX TERM) (PortTy typeIn IN) termIn)) with (DataTypes.decEq typeOut typeIn)
-      termBuilder ctxt (NotGate fc portOut portIn) | (Right (Res (IDX TERM) (PortTy typeOut OUT) termOut)) | (Right (Res (IDX TERM) (PortTy typeIn IN) termIn)) | (Yes prfWhy) with (prfWhy)
-        termBuilder ctxt (NotGate fc portOut portIn) | (Right (Res (IDX TERM) (PortTy typeOut OUT) termOut)) | (Right (Res (IDX TERM) (PortTy typeOut IN) termIn)) | (Yes prfWhy) | (Same Refl Refl)
-          = Right (Res _ _ (Not termOut termIn))
-
-      termBuilder ctxt (NotGate fc portOut portIn) | (Right (Res (IDX TERM) (PortTy typeOut OUT) termOut)) | (Right (Res (IDX TERM) (PortTy typeIn IN) termIn)) | (No msgWhyNot prfWhyNot)
-        = Left (Err fc (TypeMismatch (typeOut) (typeIn)))
-
-    termBuilder ctxt (NotGate fc portOut portIn) | (Right (Res (IDX TERM) (PortTy typeOut OUT) termOut)) | (Right (Res (IDX TERM) (PortTy typeIn dir) termIn))
-      = Left (Err fc (TypeMismatch (PortTy typeIn OUT) (PortTy typeIn dir)))
-
-
-    termBuilder ctxt (NotGate fc portOut portIn) | (Right (Res (IDX TERM) (PortTy typeOut OUT) termOut)) | (Right (Res u type _))
-      = Left (Err fc (WrongType NotAPort type))
-
-  termBuilder ctxt (NotGate fc portOut portIn) | (Right (Res (IDX TERM) (PortTy typeOut dir) termOut))
-    = Left (Err fc (TypeMismatch (PortTy typeOut OUT) (PortTy typeOut dir)))
-
-  termBuilder ctxt (NotGate fc portOut portIn) | (Right (Res u type _))
-    = Left (Err fc (WrongType NotAPort type))
+-- ### Bin Gate
 
 termBuilder ctxt (Gate fc kind portOut portInA portInB) with (termBuilder ctxt portOut)
   termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Left err)
     = Left (Err fc err)
-
-  termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) with (termBuilder ctxt portInA)
-    termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) | (Left err)
+  termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right po) with (termBuilder ctxt portInA)
+    termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right po) | (Left err)
       = Left (Err fc err)
-
-    termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) with (termBuilder ctxt portInB)
-      termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) | (Left err)
+    termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right po) | (Right pia) with (termBuilder ctxt portInB)
+      termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right po) | (Right pia) | (Left err)
         = Left (Err fc err)
-      termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) | (Right (Res (IDX TERM) (PortTy typeIB IN) termInB)) with (DataTypes.decEq typeO typeIA)
-        termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) | (Right (Res (IDX TERM) (PortTy typeIB IN) termInB)) | (Yes prfWhy) with (prfWhy) -- Why Idris, Why!
-          termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeIA OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) | (Right (Res (IDX TERM) (PortTy typeIB IN) termInB)) | (Yes prfWhy) | (Same Refl Refl) with (DataTypes.decEq typeIA typeIB)
-            termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeIA OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) | (Right (Res (IDX TERM) (PortTy typeIB IN) termInB)) | (Yes prfWhy) | (Same Refl Refl) | (Yes prfWhyAB) with (prfWhyAB) -- Why Idris, Why!
-              termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeIA OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInB)) | (Yes prfWhy) | (Same Refl Refl) | (Yes prfWhyAB) | (Same Refl Refl)
-                = pure (Res _ _ (Gate kind termO termInA termInB))
-
-
-            termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeIA OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) | (Right (Res (IDX TERM) (PortTy typeIB IN) termInB)) | (Yes prfWhy) | (Same Refl Refl) | (No msgWhyNot prfWhyNot)
-              = Left (Err fc (TypeMismatch typeIA typeIB))
-
-        termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) | (Right (Res (IDX TERM) (PortTy typeIB IN) termInB)) | (No msgWhyNot prfWhyNot)
-          = Left (Err fc (TypeMismatch typeIA typeO))
-
-      termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) | (Right (Res (IDX TERM) (PortTy typeIB dir) termInB))
-        = Left (Err fc (TypeMismatch (PortTy typeIB IN) (PortTy typeIB dir)))
-
-      termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA IN) termInA)) | (Right (Res u type _))
-        = Left (Err fc (WrongType NotAPort type))
-
-    termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) | (Right (Res (IDX TERM) (PortTy typeIA dir) term))
-      = Left (Err fc (TypeMismatch (PortTy typeIA IN) (PortTy typeIA dir)))
-
-    termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeO OUT) termO)) | (Right (Res u type _))
-      = Left (Err fc (WrongType NotAPort type))
-
-  termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res (IDX TERM) (PortTy typeOut dir) _))
-    = Left (Err fc (TypeMismatch (PortTy typeOut OUT) (PortTy typeOut dir)))
-
-  termBuilder ctxt (Gate fc kind portOut portInA portInB) | (Right (Res u type _))
-    = Left (Err fc (WrongType NotAPort type))
-
+      termBuilder (Ctxt lvls names types) (Gate fc kind portOut portInA portInB) | (Right po) | (Right pia) | (Right pib) with (binGatePorts po pia pib)
+        termBuilder (Ctxt lvls names types) (Gate fc kind portOut portInA portInB) | (Right po) | (Right pia) | (Right pib) | (Left err)
+          = Left (Err fc err)
+        termBuilder (Ctxt lvls names types) (Gate fc kind portOut portInA portInB) | (Right po) | (Right pia) | (Right pib) | (Right (BP pout pinA pinB))
+          = Right (Res _ _ (Gate kind pout pinA pinB))
 --
 termBuilder ctxt (Let fc name value body) with (termBuilder ctxt value)
   termBuilder ctxt (Let fc name value body) | (Left err)
@@ -392,49 +290,45 @@ termBuilder ctxt (Let fc name value body) with (termBuilder ctxt value)
 termBuilder ctxt (Seq left right) with (termBuilder ctxt left)
   termBuilder ctxt (Seq left right) | (Left err)
     = Left err
-
-  termBuilder ctxt (Seq left right) | (Right (Res (IDX TERM) UnitTy termLeft)) with (termBuilder ctxt right)
-    termBuilder ctxt (Seq left right) | (Right (Res (IDX TERM) UnitTy termLeft)) | (Left err)
+  termBuilder (Ctxt lvls names types) (Seq left right) | (Right res) with (isUnit res)
+    termBuilder (Ctxt lvls names types) (Seq left right) | (Right res) | Left err
       = Left err
-    termBuilder ctxt (Seq left right) | (Right (Res (IDX TERM) UnitTy termLeft)) | (Right (Res (IDX level) type term))
-      = pure (Res _ _ (Seq termLeft term))
-
-    termBuilder ctxt (Seq left right) | (Right (Res (IDX TERM) UnitTy termLeft)) | (Right (Res u type _))
-      = Left (WrongType NotATerm type)
-
-  termBuilder ctxt (Seq left right) | (Right (Res u type _))
-    = Left (WrongType NotAUnit type)
+    termBuilder (Ctxt lvls names types) (Seq left right) | (Right res) | Right lunit with (termBuilder (Ctxt lvls names types) right)
+      termBuilder (Ctxt lvls names types) (Seq left right) | (Right res) | Right lunit | (Left err)
+        = Left err
+      termBuilder (Ctxt lvls names types) (Seq left right) | (Right res) | Right lunit | (Right resR) with (isTerm resR)
+        termBuilder (Ctxt lvls names types) (Seq left right) | (Right res) | Right lunit | (Right resR) | (Left err)
+          = Left err
+        termBuilder (Ctxt lvls names types) (Seq left right) | (Right res) | Right lunit | (Right resR) | (Right (T ty term))
+          = Right (Res _ _ (Seq lunit term))
 
 -- ## Indicies
 
 termBuilder ctxt (Index fc i port) with (termBuilder ctxt port)
     termBuilder ctxt (Index fc i port) | (Left err)
       = Left (Err fc err)
-
-    termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size ty) dir) portTerm)) with (isLTE (S i) size)
-      termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size ty) dir) portTerm)) | (Yes prf)
-        = pure (Res _ _ (Index i portTerm prf))
-      termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (PortTy (VectorTyDesc size ty) dir) portTerm)) | (No contra) = Left (Err fc (IndexOutOfBounds i size))
-
-    termBuilder ctxt (Index fc i port) | (Right (Res (IDX TERM) (PortTy ty dir) portTerm))
-      = Left (Err fc (WrongType NotAVect (PortTy ty dir)))
-
-    termBuilder ctxt (Index fc i port) | (Right (Res u type x))
-      = Left (Err fc (WrongType NotAPort type))
+    termBuilder (Ctxt lvls names types) (Index fc i port) | (Right res) with (isPortVect res)
+      termBuilder (Ctxt lvls names types) (Index fc i port) | (Right res) | (Left err)
+        = Left (Err fc err)
+      termBuilder (Ctxt lvls names types) (Index fc i port) | (Right res) | (Right (PV s term)) with (isLTE (S i) s)
+        termBuilder (Ctxt lvls names types) (Index fc i port) | (Right res) | (Right (PV s term)) | (Yes prf)
+          = Right (Res _ _ (Index i term prf))
+        termBuilder (Ctxt lvls names types) (Index fc i port) | (Right res) | (Right (PV s term)) | (No contra)
+          = Left (Err fc (IndexOutOfBounds i s))
 
 -- [ End of Build ]
 
+namespace Annotated
+  export
+  build : (ast : AST)
+               -> Either Annotated.Error (SystemV Nil ModuleTy)
+  build ast with (termBuilder (Ctxt Nil Nil Nil) ast)
+    build ast | (Left err)
+      = Left err
+    build ast | (Right (Res _ (FuncTy UnitTy ModuleTy) term))
+      = Right (App term MkUnit)
+    build ast | (Right (Res _ type term))
 
-export
-isTerm : (ast : AST)
-             -> TermBuilder (SystemV Nil ModuleTy)
-isTerm ast with (termBuilder (Ctxt Nil Nil Nil) ast)
-  isTerm ast | (Left err)
-    = Left err
-  isTerm ast | (Right (Res _ (FuncTy UnitTy ModuleTy) term))
-    = Right (App term MkUnit)
-  isTerm ast | (Right (Res _ type term))
-
-    = Left (TypeMismatch (FuncTy UnitTy ModuleTy) type)
+      = Left (TypeMismatch (FuncTy UnitTy ModuleTy) type)
 
 -- --------------------------------------------------------------------- [ EOF ]
