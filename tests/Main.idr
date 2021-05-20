@@ -34,6 +34,19 @@ namespace Annotated
                  , "003-gates"
                  ]
 
+namespace HigherOrder
+  export
+  tests : TestPool
+  tests
+    = MkTestPool "Higher Order Language"
+                 []
+                 [ "000-hello-world"
+                 , "001-scrub"
+                 , "002-split"
+                 , "003-gates"
+                 , "004-hom"
+                 ]
+
 namespace Core
   export
   tests : TestPool
@@ -49,8 +62,9 @@ namespace Core
 covering
 main : IO ()
 main
-  = runner [ testPaths "core"      Core.tests
-           , testPaths "annotated" Annotated.tests
+  = runner [ testPaths "core"         Core.tests
+           , testPaths "annotated"    Annotated.tests
+           , testPaths "higher-order" HigherOrder.tests
            ]
 
 

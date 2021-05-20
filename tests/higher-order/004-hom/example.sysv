@@ -1,0 +1,56 @@
+module MyAnd ( output wire logic[32] o
+             , input  wire logic[32] a
+             , input  wire logic[32] b
+             );
+
+ and (o, a, b);
+
+endmodule
+
+module MyOtherAnd ( output wire logic[32] o
+                  , input  wire logic[32] a
+                  , input  wire logic[32] b
+                  );
+
+ and (o, a, b);
+
+endmodule
+
+
+module Apply ( module thisAnd ( output wire logic[32] o
+                              , input  wire logic[32] a
+                              , input  wire logic[32] b
+                              )
+             , output wire logic[32] o
+             , input  wire logic[32] a
+             , input  wire logic[32] b
+             );
+
+ thisAnd app (o, a, b);
+
+endmodule
+
+
+module Top ();
+
+  wire logic[32] chanDS;
+  wire logic[32] chanSCa;
+  wire logic[32] chanSCb;
+
+  (drive (writeTo chanSCa));
+  (drive (writeTo chanSCb));
+
+  Apply myAnd (MyAnd, (writeTo  chanDS)
+                    , (readFrom chanSCa)
+                    , (readFrom chanSCb)
+                    );
+
+  Apply myOAnd (MyOtherAnd, (writeTo  chanDS)
+                         , (readFrom chanSCa)
+                         , (readFrom chanSCb)
+               );
+
+  (catch (readFrom chanDS));
+
+
+endmodule

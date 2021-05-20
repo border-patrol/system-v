@@ -113,6 +113,17 @@ namespace IsType
   isType (IDX TYPE) _ = Match
   isType _ _ = Fail
 
+namespace IsPortTy
+  public export
+  data IsPortTy : (u : Universe) -> (type : TYPE u) -> Type where
+    Match : IsPortTy (IDX TYPE) (PortTyDesc d dir)
+    Fail  : IsPortTy u type
+
+  export
+  isPortTy : (u : Universe) -> (type : TYPE u) -> IsPortTy u type
+  isPortTy (IDX TYPE) (PortTyDesc d dir) = Match
+  isPortTy _ _ = Fail
+
 namespace IsPortVect
   public export
   data IsPortVect : (u : Universe) -> (type : TYPE u) -> Type where
@@ -125,6 +136,19 @@ namespace IsPortVect
   isPortVect (IDX TERM) (PortTy (VectorTyDesc size type) dir) = Match
   isPortVect (IDX TERM) (PortTy LogicTyDesc dir) = Fail
   isPortVect _ _ = NotAPort
+
+namespace IsFuncTy
+  public export
+  data IsFuncTy : (u : Universe) -> (type : TYPE u) -> Type where
+    Match    : IsFuncTy (IDX TYPE) (FuncTy a b)
+    WrongTm  : IsFuncTy (IDX _)    type
+    NotATerm : IsFuncTy u          type
+
+  export
+  isFuncTy : (u : Universe) -> (type : TYPE u) -> IsFuncTy u type
+  isFuncTy (IDX TYPE) (FuncTy a b) = Match
+  isFuncTy (IDX _) _ = WrongTm
+  isFuncTy _ _ = NotATerm
 
 namespace IsFunc
   public export

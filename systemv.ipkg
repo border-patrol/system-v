@@ -201,6 +201,7 @@ modules =
 -- ### Types
 
         , SystemV.HigherOrder.Types.Function
+        , SystemV.HigherOrder.Types.Synthesis
         , SystemV.HigherOrder.Types
 
 -- ### Terms
@@ -226,6 +227,20 @@ modules =
 -- ### HigherOrder
 
         , SystemV.HigherOrder
+
+-- ### DSL
+        , SystemV.HigherOrder.DSL.AST
+        , SystemV.HigherOrder.DSL.Parser
+
+        , SystemV.HigherOrder.DSL.Error
+
+        , SystemV.HigherOrder.DSL.Build.Helpers
+        , SystemV.HigherOrder.DSL.Build
+
+        , SystemV.HigherOrder.DSL
+
+-- ### Run
+        , SystemV.HigherOrder.Run
 
 -- ## SystemV 'Annotated'
 

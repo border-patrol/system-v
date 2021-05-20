@@ -6,10 +6,12 @@ import SystemV.Common.Options
 
 import SystemV.Core.Run
 import SystemV.Annotated.Run
+import SystemV.HigherOrder.Run
 
 exec : Mode -> Opts -> IO ()
-exec CORE = Core.run
-exec ANNOTATED = Annotated.run
+exec CORE        = Core.run
+exec ANNOTATED   = Annotated.run
+exec HIGHERORDER = HigherOrder.run
 
 main : IO ()
 main

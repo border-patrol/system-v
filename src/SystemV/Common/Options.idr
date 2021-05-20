@@ -17,7 +17,7 @@ Show Error where
   show (ProcessError err) = "Wrong args\n" ++ show err
 
 public export
-data Mode = CORE | ANNOTATED
+data Mode = CORE | ANNOTATED | HIGHERORDER
 
 public export
 record Opts where
@@ -52,9 +52,10 @@ getRawOpts args
 
     convOpts (Flag x) o
       = case x of
-          "timing"    => Just $ record {timing' = True} o
-          "annotated" => Just $ record {mode'   = ANNOTATED} o
-          "core"      => Just $ record {mode'   = CORE} o
+          "timing"      => Just $ record {timing' = True} o
+          "annotated"   => Just $ record {mode'   = ANNOTATED} o
+          "core"        => Just $ record {mode'   = CORE} o
+          "higherorder" => Just $ record {mode'   = HIGHERORDER} o
           otherwise => Nothing
 
 
