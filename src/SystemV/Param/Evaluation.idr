@@ -16,11 +16,10 @@ import SystemV.Param.Evaluation.Casting
 import SystemV.Param.Evaluation.Sizing
 import SystemV.Param.Evaluation.Slicing
 import SystemV.Param.Evaluation.Reduction
-import SystemV.Param.Evaluation.Progress
+import public SystemV.Param.Evaluation.Progress
 
 %default total
 
-public export
 data Reduces : (this : SystemV ctxt type)
             -> (that : SystemV ctxt type)
             -> Type
@@ -32,7 +31,6 @@ data Reduces : (this : SystemV ctxt type)
          -> Reduces that end
          -> Reduces this end
 
-public export
 data Finished : (term : SystemV ctxt type)
                      -> Type
   where
@@ -46,14 +44,12 @@ data Finished : (term : SystemV ctxt type)
 
     OOF : Finished term
 
-public export
 data Evaluate : (term : SystemV Nil type) -> Type where
   RunEval : {this, that : SystemV Nil type}
          -> (steps      : Inf (Reduces this that))
          -> (result     : Finished that)
                        -> Evaluate this
 
-public export
 total
 compute : forall type
         . (fuel : Fuel)
@@ -68,32 +64,48 @@ compute (More fuel) term with (progress term)
       = RunEval (Trans step steps) result
   compute (More fuel) term | (Halt reason) = RunEval Refl (ErrorFound reason)
 
-public export
-data Error = NoFuel | RunTime Progress.Error
+namespace Param
+  public export
+  data Error = NoFuel | RunTime Progress.Error
 
-public export
-covering
-run : forall type
-    . (this : SystemV Nil type)
-           -> Either Evaluation.Error
-                     (Subset (SystemV Nil type) (Reduces this))
-run this with (compute forever this)
-  run this | (RunEval steps (Normalised {term} x))
-    = Right (Element term steps)
+  export
+  Show Progress.Error where
+    show  VectorCannotBeZero     = "Err"
+    show  (IndexOutOfBounds n w) = "Err"
+    show  (InvalidCast err)      = "Err"
+    show  (InvalidBound err)     = "Err"
+    show  (UnexpectedSeq)        = "Err"
+    show  (ArithOpError err)     = "Err"
 
-  run this | (RunEval steps (ErrorFound err))
-    = Left (RunTime err)
+  export
+  Show Param.Error where
+    show NoFuel = "NoFuel"
+    show (RunTime err) = show err
 
-  run this | (RunEval steps OOF) = Left NoFuel
 
 
-export
-covering
-eval : forall type
-     . (this : SystemV Nil type)
-            -> Either Evaluation.Error (SystemV Nil type)
-eval this with (run this)
-  eval this | Left err = Left err
-  eval this | Right (Element fst snd) = Right fst
+  covering
+  run : forall type
+      . (this : SystemV Nil type)
+             -> Either Param.Error
+                       (DPair (SystemV Nil type) (Reduces this))
+  run this with (compute forever this)
+    run this | (RunEval steps (Normalised {term} x))
+      = Right (term ** steps)
+
+    run this | (RunEval steps (ErrorFound err))
+      = Left (RunTime err)
+
+    run this | (RunEval steps OOF) = Left NoFuel
+
+
+  export
+  covering
+  eval : forall type
+       . (this : SystemV Nil type)
+              -> Either Param.Error (SystemV Nil type)
+  eval this with (run this)
+    eval this | Left err = Left err
+    eval this | Right (fst ** snd) = Right fst
 
 -- --------------------------------------------------------------------- [ EOF ]

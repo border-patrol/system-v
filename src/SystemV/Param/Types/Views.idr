@@ -1,4 +1,4 @@
-module SystemV.Core.Types.Views
+module SystemV.Param.Types.Views
 
 import Decidable.Equality
 
@@ -7,7 +7,8 @@ import Toolkit.Decidable.Equality.Indexed
 
 import SystemV.Common.Utilities
 
-import SystemV.Core.Types
+import SystemV.Param.Types
+import SystemV.Param.Types.TYPE.Equality.Data
 
 %default total
 
@@ -17,7 +18,7 @@ namespace AllDataEqual
   data Error = AB | AC
 
   public export
-  data AllDataEqual : (a,b,c : TYPE (DATA TYPE)) -> Type where
+  data AllDataEqual : (a,b,c : TYPE (DATA TERM)) -> Type where
     ADE : AllDataEqual a a a
 
   abNotEqual : {a,b : _} -> (Equals Universe TYPE a b -> Void) -> AllDataEqual a b c -> Void
@@ -27,9 +28,9 @@ namespace AllDataEqual
   acNotEqual f ADE = f (Same Refl Refl)
 
   export
-  allDataEqual : (a,b,c : TYPE (DATA TYPE)) -> DecInfo AllDataEqual.Error (AllDataEqual a b c)
-  allDataEqual a b c with (DataTypes.decEq a b)
-    allDataEqual a b c | (Yes prfAB) with (DataTypes.decEq b c)
+  allDataEqual : (a,b,c : TYPE (DATA TERM)) -> DecInfo AllDataEqual.Error (AllDataEqual a b c)
+  allDataEqual a b c with (Data.decEq a b)
+    allDataEqual a b c | (Yes prfAB) with (Data.decEq b c)
       allDataEqual a b c | (Yes prfAB) | (Yes prfBC) with (Indexed.trans prfAB prfBC)
         allDataEqual c c c | (Yes (Same Refl Refl)) | (Yes (Same Refl Refl)) | (Same Refl Refl)
           = Yes ADE
@@ -80,15 +81,26 @@ namespace IsUnit
   isUnit (IDX TERM) UnitTy = Match
   isUnit _ _ = Fail
 
+namespace IsDataType
+  public export
+  data IsDataType : (u : Universe) -> (type : TYPE u) -> Type where
+    Match : IsDataType (DATA TYPE) type
+    Fail  : IsDataType u type
+
+  export
+  isDataType : (u : Universe) -> (type : TYPE u) -> IsDataType u type
+  isDataType (DATA TYPE) _ = Match
+  isDataType _ _ = Fail
+
 namespace IsData
   public export
   data IsData : (u : Universe) -> (type : TYPE u) -> Type where
-    Match : IsData (DATA TYPE) type
+    Match : IsData (DATA TERM) type
     Fail  : IsData u type
 
   export
   isData : (u : Universe) -> (type : TYPE u) -> IsData u type
-  isData (DATA TYPE) _ = Match
+  isData (DATA TERM) _ = Match
   isData _ _ = Fail
 
 namespace IsTerm
@@ -127,15 +139,14 @@ namespace IsPortTy
 namespace IsPortVect
   public export
   data IsPortVect : (u : Universe) -> (type : TYPE u) -> Type where
-    Match    : IsPortVect (IDX TERM) (PortTy (VectorTyDesc s ty) dir)
-    Fail     : IsPortVect (IDX TERM) (PortTy ty dir)
-    NotAPort : IsPortVect u          type
+    Match   : IsPortVect (IDX TERM) (PortTy (VectorTy type) dir)
+    Fail  : IsPortVect u type
 
   export
   isPortVect : (u : Universe) -> (type : TYPE u) -> IsPortVect u type
-  isPortVect (IDX TERM) (PortTy (VectorTyDesc size type) dir) = Match
-  isPortVect (IDX TERM) (PortTy LogicTyDesc dir) = Fail
-  isPortVect _ _ = NotAPort
+  isPortVect (IDX TERM) (PortTy (VectorTy type) dir) = Match
+  isPortVect _ _ = Fail
+
 
 namespace IsFuncTy
   public export
@@ -163,5 +174,64 @@ namespace IsFunc
   isFunc (IDX _) _ = WrongTm
   isFunc _ _ = NotATerm
 
+namespace IsFuncParamTy
+  public export
+  data IsFuncParamTy : (u : Universe) -> (type : TYPE u) -> Type where
+    Match    : IsFuncParamTy (IDX TYPE) (FuncParamTy u a b)
+    WrongTm  : IsFuncParamTy (IDX _)    type
+    NotATerm : IsFuncParamTy u          type
+
+  export
+  isFuncParamTy : (u : Universe) -> (type : TYPE u) -> IsFuncParamTy u type
+  isFuncParamTy (IDX TYPE) (FuncParamTy u a b) = Match
+  isFuncParamTy (IDX _) _ = WrongTm
+  isFuncParamTy _ _ = NotATerm
+
+namespace IsFuncParam
+  public export
+  data IsFuncParam : (u : Universe) -> (type : TYPE u) -> Type where
+    Match    : IsFuncParam (IDX TERM) (FuncParamTy u a b)
+    WrongTm  : IsFuncParam (IDX _)    type
+    NotATerm : IsFuncParam u          type
+
+  export
+  isFuncParam : (u : Universe) -> (type : TYPE u) -> IsFuncParam u type
+  isFuncParam (IDX TERM) (FuncParamTy u a b) = Match
+  isFuncParam (IDX _) _ = WrongTm
+  isFuncParam _ _ = NotATerm
+
+
+namespace IsNat
+  public export
+  data IsNat : (u : Universe) -> (type : TYPE u) -> Type where
+    Match : IsNat (IDX TERM) NatTy
+    Fail  : IsNat u type
+
+  export
+  isNat : (u : Universe) -> (type : TYPE u) -> IsNat u type
+  isNat (IDX TERM) (NatTy) = Match
+  isNat _ _ = Fail
+
+namespace IsNatTy
+  public export
+  data IsNatTy : (u : Universe) -> (type : TYPE u) -> Type where
+    Match : IsNatTy (IDX TYPE) NatTyDesc
+    Fail  : IsNatTy u type
+
+  export
+  isNatTy : (u : Universe) -> (type : TYPE u) -> IsNatTy u type
+  isNatTy (IDX TYPE) (NatTyDesc) = Match
+  isNatTy _ _ = Fail
+
+namespace IsBool
+  public export
+  data IsBool : (u : Universe) -> (type : TYPE u) -> Type where
+    Match : IsBool (IDX TERM) BoolTy
+    Fail  : IsBool u type
+
+  export
+  isBool : (u : Universe) -> (type : TYPE u) -> IsBool u type
+  isBool (IDX TERM) (BoolTy) = Match
+  isBool _ _ = Fail
 
 -- [ EoF ]

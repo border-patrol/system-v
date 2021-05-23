@@ -10,7 +10,8 @@ data Filter : (holdsFor : type -> Type)
            -> (input : List type)
            -> Type
   where
-    MkFilter : (kept : List type)
+    MkFilter : {thrown : List type}
+            -> (kept : List type)
             -> (prfOrdering : Interleaving kept thrown input)
             -> (prfKept     : DList type holdsFor kept)
             -> (prfThrown   : DList type (Not . holdsFor) thrown)

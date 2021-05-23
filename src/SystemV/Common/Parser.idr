@@ -115,10 +115,28 @@ gives s ctor
   = do keyword s
        pure ctor
 
+
 export
 inserts : Rule Token a -> (a -> b) -> Rule Token b
 inserts value ctor
   = do v <- value
        pure (ctor v)
+
+namespace WithFileContext
+  export
+  inserts : Rule Token a -> (FileContext -> a -> b) -> Rule Token b
+  inserts value ctor
+    = do s <- location
+         v <- value
+         e <- location
+         pure (ctor (newFC s e) v)
+
+  export
+  gives : String -> (FileContext -> a) -> Rule Token a
+  gives s ctor
+    = do b <- location
+         keyword s
+         e <- location
+         pure (ctor (newFC b e))
 
 -- [ EOF ]

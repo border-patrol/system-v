@@ -15,6 +15,7 @@ keywords : List String
 keywords = [ "input", "output", "inout"
            , "typedef"
            , "module", "endmodule"
+           , "nat", "datatype"
            , "if", "begin", "else", "end"
            , "wire", "parameter"
            , "assign", "drive", "catch", "writeTo", "readFrom", "slice"
@@ -26,6 +27,7 @@ keywords = [ "input", "output", "inout"
            , "for", "index"
            , "high", "low", "rising", "falling", "insensitive"
            , "data", "address", "clock", "reset", "info", "interrupt", "control", "general"
+           , "nat", "datatype"
            ]
 
 public export

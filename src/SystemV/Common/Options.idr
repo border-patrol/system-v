@@ -17,7 +17,7 @@ Show Error where
   show (ProcessError err) = "Wrong args\n" ++ show err
 
 public export
-data Mode = CORE | ANNOTATED | HIGHERORDER
+data Mode = CORE | ANNOTATED | HIGHERORDER | PARAM
 
 public export
 record Opts where
@@ -56,6 +56,7 @@ getRawOpts args
           "annotated"   => Just $ record {mode'   = ANNOTATED} o
           "core"        => Just $ record {mode'   = CORE} o
           "higherorder" => Just $ record {mode'   = HIGHERORDER} o
+          "param"       => Just $ record {mode'   = PARAM} o
           otherwise => Nothing
 
 

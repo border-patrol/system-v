@@ -3,7 +3,10 @@ module SystemV.Common.Parser.Boolean
 import Text.Lexer
 import Text.Parser
 
+import Toolkit.Data.Location
+
 import Toolkit.Text.Parser.Support
+import Toolkit.Text.Parser.Location
 
 import SystemV.Common.Lexer
 import SystemV.Common.Parser
@@ -41,39 +44,48 @@ natOpKind
 
 public export
 data Expr : Type where
-  NatV : Nat -> Expr
-  BoolV : Bool -> Expr
+  NatV : FileContext -> Nat -> Expr
+  BoolV : FileContext -> Bool -> Expr
   R : Ref -> Expr
 
-  Not : Expr -> Expr
-  NatCmp : (kind : CompOp)
+  Not : FileContext -> Expr -> Expr
+  NatCmp : FileContext
+        -> (kind : CompOp)
         -> (l,r  : Expr)
                 -> Expr
-  BoolCmp : (kind : BoolBinOp)
+
+  BoolCmp : FileContext
+         -> (kind : BoolBinOp)
          -> (l,r  : Expr)
                  -> Expr
 
 export
 expr : Rule Token Expr
-expr =  inserts natLit NatV
-    <|> inserts value BoolV
+expr =  WithFileContext.inserts natLit NatV
+    <|> WithFileContext.inserts value BoolV
     <|> inserts rawRef R
-    <|> do symbol "("
+    <|> do s <- location
+           symbol "("
            keyword "not"
            e <- expr
            symbol ")"
-           pure (Not e)
-    <|> do symbol "("
+           f <- location
+           pure (Not (newFC s f) e)
+    <|> do s <- location
+           symbol "("
            k <- natOpKind
            l <- expr
            r <- expr
            symbol ")"
-           pure (NatCmp k l r)
-    <|> do symbol "("
+           e <- location
+           pure (NatCmp (newFC s e) k l r)
+    <|> do s <- location
+           symbol "("
            k <- boolOpKind
            l <- expr
            r <- expr
            symbol ")"
-           pure (BoolCmp k l r)
+           e <- location
+           pure (BoolCmp (newFC s e) k l r)
 
 -- [ EOF ]

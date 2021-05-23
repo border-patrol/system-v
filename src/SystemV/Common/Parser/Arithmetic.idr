@@ -3,7 +3,10 @@ module SystemV.Common.Parser.Arithmetic
 import Text.Lexer
 import Text.Parser
 
+import Toolkit.Data.Location
+
 import Toolkit.Text.Parser.Support
+import Toolkit.Text.Parser.Location
 
 import SystemV.Common.Lexer
 import SystemV.Common.Parser
@@ -22,21 +25,28 @@ arithOpKind
 
 public export
 data Expr : Type where
-  NatV : Nat -> Expr
+  NatV : FileContext -> Nat -> Expr
   R    : Ref -> Expr
-  Op   : (kind : ArithOp)
+  Op   : FileContext
+      -> (kind : ArithOp)
       -> (l,r  : Expr)
               -> Expr
 
 export
+value : Rule Token Expr
+value = WithFileContext.inserts natLit NatV
+
+export
 expr : Rule Token Expr
-expr =  inserts natLit NatV
+expr =  value
     <|> inserts rawRef R
-    <|> do symbol "("
+    <|> do s <- location
+           symbol "("
            k <- arithOpKind
            l <- expr
            r <- expr
            symbol ")"
-           pure (Op k l r)
+           e <- location
+           pure (Op (newFC s e) k l r)
 
 -- [ EOF ]

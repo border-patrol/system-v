@@ -1,0 +1,47 @@
+typedef logic foo;
+
+typedef foo[30] fs;
+
+typedef logic[30] fduip;
+
+module MaybeSwap #( parameter nat how = 2)
+                  ( input  wire logic a
+                  , input  wire logic b
+                  , output wire logic x
+                  , output wire logic y);
+  if (eq how 1)
+  begin
+    assign x = a;
+    assign y = b;
+  end
+  else
+  begin
+    assign y = a;
+    assign x = b;
+  end
+endmodule
+
+
+module Swap ();
+  wire logic a;
+  wire logic b;
+  wire logic x;
+  wire logic y;
+
+  (drive (writeTo a));
+  (drive (writeTo b));
+  (catch (readFrom x));
+  (catch (readFrom y));
+
+  MaybeSwap #(how = 1) ms ((readFrom a)
+                          ,(readFrom b)
+                          ,(writeTo x)
+                          ,(writeTo y)
+                          );
+endmodule
+
+module Top ();
+
+  //
+
+endmodule

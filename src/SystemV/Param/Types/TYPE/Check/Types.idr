@@ -25,15 +25,6 @@ data TyCheck : (type  : TYPE (IDX TYPE))
 
     ChkBool   : TyCheck BoolTyDesc BoolTy
 
---    ChkFuncDef : TyCheck              paramTy                       paramValue
---              -> TyCheck                      returnTy                          returnValue
---              -> TyCheck (FuncParamTy u paramTy returnTy) (FuncParamTy u paramValue returnValue)
---
---
---    ChkFunc : TyCheck         paramTy                   paramValue
---           -> TyCheck                 returnTy                     returnValue
---           -> TyCheck (FuncTy paramTy returnTy) (FuncTy paramValue returnValue)
-
     ChkChan  : (Equals Universe TYPE typeA typeB)
            -> TyCheck (ChanTyDesc typeA) (ChanTy typeB)
 
@@ -66,17 +57,6 @@ funcNoTypeU ChkModule impossible
 
 funcNoTypeB  : TyCheck (FuncTy x y) BoolTy -> Void
 funcNoTypeB ChkModule impossible
-
-
---funcNoTyCheckParam : (contra : TyCheck ty val -> Void)
---                  -> (prf    : TyCheck (FuncTy ty rty) (FuncTy val rval))
---                            -> Void
---funcNoTyCheckParam contra (ChkFunc x y) = contra x
---
---funcNoTyCheckRet : (contra : TyCheck rty rval -> Void)
---                -> (prf    : TyCheck (FuncTy ty rty) (FuncTy val rval))
---                          -> Void
---funcNoTyCheckRet contra (ChkFunc x y) = contra y
 
 funcNoTypeFD : TyCheck (FuncTy x y) (FuncParamTy u a r) -> Void
 funcNoTypeFD ChkModule impossible

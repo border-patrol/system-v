@@ -65,6 +65,7 @@ main
   = runner [ testPaths "core"         Core.tests
            , testPaths "annotated"    Annotated.tests
            , testPaths "higher-order" HigherOrder.tests
+           , testPaths "param"        Param.tests
            ]
 
 

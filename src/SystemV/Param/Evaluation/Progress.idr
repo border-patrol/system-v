@@ -42,7 +42,7 @@ data Progress : (term : SystemV Nil type)
         -> (reason : Progress.Error)
                   -> Progress term
 
-public export
+export
 progress : (term : SystemV Nil type)
         -> Progress term
 

@@ -1,7 +1,7 @@
 package systemv
 
 depends = contrib
-
+opts = "--timing"
 main = Main
 executable = systemv
 
@@ -22,6 +22,10 @@ modules =
 
         , Toolkit.Data.List.DeBruijn
         , Toolkit.Data.DList.DeBruijn
+
+        , Toolkit.Data.List.Filter
+        , Toolkit.Data.List.Interleaving
+        , Toolkit.Data.List.Subset
 
         , Toolkit.Data.DVect
         , Toolkit.Data.DVect.Elem
@@ -176,6 +180,7 @@ modules =
         , SystemV.Param.Types.TYPE.Cast
 
         , SystemV.Param.Types
+        , SystemV.Param.Types.Views
 
 -- ### Terms
 
@@ -195,7 +200,20 @@ modules =
         , SystemV.Param.Evaluation.Progress
         , SystemV.Param.Evaluation
 
+-- ### DSL
 
+        , SystemV.Param.DSL.AST.Raw
+        , SystemV.Param.DSL.AST
+        , SystemV.Param.DSL.AST.Elab
+        , SystemV.Param.DSL.Parser
+        , SystemV.Param.DSL.Error
+        , SystemV.Param.DSL.Build.Helpers
+        , SystemV.Param.DSL.Build
+        , SystemV.Param.DSL
+
+-- ### Main
+
+        , SystemV.Param.Run
 -- ## SystemV 'HigherOrder'
 
 -- ### Types
