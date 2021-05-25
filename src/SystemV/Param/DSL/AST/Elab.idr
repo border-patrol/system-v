@@ -93,6 +93,38 @@ Show Elab.Error where
   show (NotAFunc s) = "Function expected given " ++ show s
   show (ParamErr e) = show e
 
+
+mkArithExpr : Arithmetic.Expr -> Param.AST
+mkArithExpr (NatV fc n)
+  = MkNat fc n
+mkArithExpr (R ref )
+  = Ref ref
+mkArithExpr (Op fc kind l r)
+  = NatOpArith fc kind (mkArithExpr l)
+                       (mkArithExpr r)
+
+
+mkBoolExpr : Boolean.Expr -> Param.AST
+
+mkBoolExpr (NatV fc n)
+  = mkArithExpr n
+
+mkBoolExpr (BoolV fc b)
+  = (MkBool fc b)
+
+mkBoolExpr (R ref)
+  = (Ref ref)
+
+mkBoolExpr (Not fc expr)
+  = BoolNot fc (mkBoolExpr expr)
+
+mkBoolExpr (NatCmp fc kind l r)
+  = NatOpCmp fc kind (mkBoolExpr l)
+                     (mkBoolExpr r)
+
+mkBoolExpr (BoolCmp fc kind l r)
+  = BoolOpBin fc kind (mkBoolExpr l)
+                      (mkBoolExpr r)
 ||| Elab starts here
 elab : (env : List (String, (List String)))
     -> (raw : Raw.AST)
@@ -223,43 +255,9 @@ elab env (Let fc name value body)
 
 elab env (BExpr x)
     = pure (mkBoolExpr x)
-  where
-    mkBoolExpr : Boolean.Expr -> Param.AST
-
-    mkBoolExpr (NatV fc n)
-      = (MkNat fc n)
-
-    mkBoolExpr (BoolV fc b)
-      = (MkBool fc b)
-
-    mkBoolExpr (R ref)
-      = (Ref ref)
-
-    mkBoolExpr (Not fc expr)
-      = BoolNot fc (mkBoolExpr expr)
-
-    mkBoolExpr (NatCmp fc kind l r)
-      = NatOpCmp fc kind (mkBoolExpr l)
-                         (mkBoolExpr r)
-
-    mkBoolExpr (BoolCmp fc kind l r)
-      = BoolOpBin fc kind (mkBoolExpr l)
-                          (mkBoolExpr r)
-
-
 
 elab env (AExpr x)
     = pure (mkArithExpr x)
-  where
-    mkArithExpr : Arithmetic.Expr -> Param.AST
-    mkArithExpr (NatV fc n)
-      = MkNat fc n
-    mkArithExpr (R ref )
-      = Ref ref
-    mkArithExpr (Op fc kind l r)
-      = NatOpArith fc kind (mkArithExpr l)
-                           (mkArithExpr r)
-
 
 elab env (For fc n i body)
   = do i' <- elab env i

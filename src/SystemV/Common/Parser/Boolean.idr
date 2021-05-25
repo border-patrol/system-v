@@ -13,6 +13,9 @@ import SystemV.Common.Parser
 
 import SystemV.Common.Types.Boolean
 import SystemV.Common.Types.Nat.Comparison
+import SystemV.Common.Types.Nat.Arithmetic
+
+import SystemV.Common.Parser.Arithmetic as A
 
 %default total
 
@@ -44,46 +47,46 @@ natOpKind
 
 public export
 data Expr : Type where
-  NatV : FileContext -> Nat -> Expr
+  NatV : FileContext -> A.Expr -> Expr
   BoolV : FileContext -> Bool -> Expr
   R : Ref -> Expr
 
-  Not : FileContext -> Expr -> Expr
+  Not : FileContext -> Boolean.Expr -> Expr
   NatCmp : FileContext
         -> (kind : CompOp)
-        -> (l,r  : Expr)
+        -> (l,r  : Boolean.Expr)
                 -> Expr
 
   BoolCmp : FileContext
          -> (kind : BoolBinOp)
-         -> (l,r  : Expr)
+         -> (l,r  : Boolean.Expr)
                  -> Expr
 
 export
-expr : Rule Token Expr
-expr =  WithFileContext.inserts natLit NatV
+expr : Rule Token Boolean.Expr
+expr =  WithFileContext.inserts A.expr NatV
     <|> WithFileContext.inserts value BoolV
     <|> inserts rawRef R
     <|> do s <- location
            symbol "("
            keyword "not"
-           e <- expr
+           e <- Boolean.expr
            symbol ")"
            f <- location
            pure (Not (newFC s f) e)
     <|> do s <- location
            symbol "("
            k <- natOpKind
-           l <- expr
-           r <- expr
+           l <- Boolean.expr
+           r <- Boolean.expr
            symbol ")"
            e <- location
            pure (NatCmp (newFC s e) k l r)
     <|> do s <- location
            symbol "("
            k <- boolOpKind
-           l <- expr
-           r <- expr
+           l <- Boolean.expr
+           r <- Boolean.expr
            symbol ")"
            e <- location
            pure (BoolCmp (newFC s e) k l r)
