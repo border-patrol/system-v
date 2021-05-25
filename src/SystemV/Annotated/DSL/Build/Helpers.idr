@@ -80,6 +80,16 @@ isData ctxt term with (view isData term)
     isData ctxt (Res u type term) | (HasView Fail) | ty'
       = Left (WrongType (NotADataType ctxt) ty')
 
+export
+isChan : {lvls  : Universes}
+      -> {types : Context lvls}
+      -> (term  : Result TYPE SystemV lvls types)
+               -> TermBuilder (i ** s ** ty ** SystemV types (ChanTy ty s i))
+isChan term with (view (isChan) term)
+  isChan (Res u type term) | (HasView prf) with (type)
+    isChan (Res (IDX TERM) type term) | (HasView Match) | (ChanTy ty s i) = Right (i ** s ** ty ** term)
+    isChan (Res u type term) | (HasView Fail) | type'
+      = Left (WrongType NotAChannel type')
 
 public export
 data Term : {lvls  : Universes}

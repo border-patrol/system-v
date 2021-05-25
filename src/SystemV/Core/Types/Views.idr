@@ -80,6 +80,17 @@ namespace IsUnit
   isUnit (IDX TERM) UnitTy = Match
   isUnit _ _ = Fail
 
+namespace IsChan
+  public export
+  data IsChan : (u : Universe) -> (type : TYPE u) -> Type where
+    Match : IsChan (IDX TERM) (ChanTy type)
+    Fail  : IsChan u type
+
+  export
+  isChan : (u : Universe) -> (type : TYPE u) -> IsChan u type
+  isChan (IDX TERM) (ChanTy type) = Match
+  isChan _ _ = Fail
+
 namespace IsData
   public export
   data IsData : (u : Universe) -> (type : TYPE u) -> Type where

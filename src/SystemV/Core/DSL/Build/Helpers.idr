@@ -157,6 +157,17 @@ isUnit term with (view (isUnit) term)
     isUnit (Res u type term) | (HasView Fail) | type'
       = Left (WrongType NotAUnit type')
 
+export
+isChan : {lvls  : Universes}
+      -> {types : Context lvls}
+      -> (term  : Result TYPE SystemV lvls types)
+               -> TermBuilder (ty ** SystemV types (ChanTy ty))
+isChan term with (view (isChan) term)
+  isChan (Res u type term) | (HasView prf) with (type)
+    isChan (Res (IDX TERM) type term) | (HasView Match) | (ChanTy ty) = Right (ty ** term)
+    isChan (Res u type term) | (HasView Fail) | type'
+      = Left (WrongType NotAChannel type')
+
 public export
 data PortVect : {lvls  : Universes}
              -> (types : Context lvls)

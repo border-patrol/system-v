@@ -72,6 +72,17 @@ namespace IsPort
   isPort (IDX TERM) (PortTy type dir s i) = Match
   isPort _ _ = Fail
 
+namespace IsChan
+  public export
+  data IsChan : (u : Universe) -> (type : TYPE u) -> Type where
+    Match : IsChan (IDX TERM) (ChanTy type s i)
+    Fail  : IsChan u type
+
+  export
+  isChan : (u : Universe) -> (type : TYPE u) -> IsChan u type
+  isChan (IDX TERM) (ChanTy type s i) = Match
+  isChan _ _ = Fail
+
 namespace IsUnit
   public export
   data IsUnit : (u : Universe) -> (type : TYPE u) -> Type where
