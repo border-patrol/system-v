@@ -35,11 +35,7 @@ ref : Rule Token AST
 ref = inserts rawRef Ref
 
 logic : Rule Token AST
-logic = do
-  s <- location
-  keyword "logic"
-  e <- location
-  pure (TyLogic (newFC s e))
+logic = WithFileContext.gives "logic" TyLogic
 
 array : Rule Token AST
 array = do
@@ -52,82 +48,8 @@ array = do
   e <- location
   pure (TyVect (newFC s e) idx ty)
 
-
 type_ : Rule Token AST
 type_ = array <|> logic <|> ref
-
-proj : Rule Token AST
-    -> String
-    -> (FileContext -> AST -> AST)
-    -> Rule Token AST
-proj p s ctor
-  = do st <- location
-       symbol "("
-       keyword s
-       commit
-       n <- p
-       symbol ")"
-       e <- location
-       pure (ctor (newFC st e) n)
-
-writeTo : Rule Token AST
-writeTo = (proj ref "writeTo" WriteTo)
-
-readFrom : Rule Token AST
-readFrom = (proj ref "readFrom" ReadFrom)
-
-projChan : Rule Token AST
-projChan = readFrom
-       <|> writeTo
-
-drive : Rule Token AST
-drive
-  = do st <- location
-       symbol "("
-       keyword "drive"
-       commit
-       p <- writeTo
-       s <- option Insensitive sensitivity
-       i <- option General     intention
-       symbol ")"
-       e <- location
-       pure (Drive (newFC st e) s i p)
-
-
-driveCatch : Rule Token AST
-driveCatch = drive
-         <|> (proj (readFrom) "catch"    Catch)
-
-mutual
-  index : Rule Token AST
-  index
-    = do s <- location
-         symbol "("
-         keyword "index"
-         n <- natLit
-         p <- (ref <|> projChan <|> slidx)
-         symbol ")"
-         e <- location
-         pure (Index (newFC s e) n p)
-
-  slice : Rule Token AST
-  slice
-    = do s <- location
-         symbol "("
-         keyword "slice"
-         r <- (ref <|> projChan <|> slidx)
-         alpha <- natLit
-         omega <- natLit
-         symbol ")"
-         e <- location
-         pure (Slice (newFC s e) r alpha omega)
-
-  slidx : Rule Token AST
-  slidx = slice <|> index
-
-
-portP : Rule Token AST
-portP = ref <|> slidx <|> projChan
 
 chanDef : Rule Token (FileContext, String, AST)
 chanDef
@@ -151,45 +73,147 @@ typeDef = do
   e <- location
   pure (newFC s e, n, decl)
 
-port : Rule Token (String, AST)
-port
-  = do st <- location
-       i <- option General     intention
-       s <- option Insensitive sensitivity
-       d <- direction
-       keyword "wire"
-       t <- type_
-       label <- name
-       e <- location
-       pure (label, TyPort (newFC st e) t d s i)
-
 ports : Rule Token (List (String, AST))
-ports =  do {p <- parens (commaSepBy1 port); pure (forget p)}
-     <|> symbol "(" *> symbol ")" *> pure Nil
+ports
+    = do {p <- parens (commaSepBy1 port); pure (forget p)}
+   <|> symbol "(" *> symbol ")" *> pure Nil
+
+  where
+    port : Rule Token (String, AST)
+    port
+      = do st <- location
+           i <- option General     intention
+           s <- option Insensitive sensitivity
+           d <- direction
+           keyword "wire"
+           t <- type_
+           label <- name
+           e <- location
+           pure (label, TyPort (newFC st e) t d s i)
+
+writeTo : Rule Token AST
+writeTo = sexpr "writeTo" ref WriteTo
+
+readFrom : Rule Token AST
+readFrom = sexpr "readFrom" ref ReadFrom
+
+portArg : Rule Token AST
+portArg =   ref
+        <|> writeTo
+        <|> readFrom
+        <|> cast
+        <|> index
+  where
+    index : Rule Token AST
+    index
+      = do s <- location
+           symbol "("
+           keyword "index"
+           n <- natLit
+           p <- portArg
+           symbol ")"
+           e <- location
+           pure (Index (newFC s e) n p)
+
+    slice : Rule Token AST
+    slice
+      = do s <- location
+           symbol "("
+           keyword "slice"
+           p <- portArg
+           a <- natLit
+           o <- natLit
+           symbol ")"
+           e <- location
+           pure (Slice (newFC s e) p a o)
+
+    cast : Rule Token AST
+    cast
+      = do st <- location
+           keyword "cast"
+           p <- portArg
+           t <- type_
+           d <- direction
+           s <- sensitivity
+           i <- intention
+           e <- location
+           pure (Cast (newFC st e) p t d s i)
+
+driveCatch : Rule Token AST
+driveCatch
+    =  drive
+   <|> inserts (keyword "catch" *> (ref <|> readFrom)) Catch
+  where
+    drive : Rule Token AST
+    drive
+      = do st <- location
+           keyword "drive"
+           commit
+           p <- (ref <|> writeTo)
+           s <- option Insensitive sensitivity
+           i <- option General     intention
+           e <- location
+           pure (Drive (newFC st e) s i p)
+
 
 assign : Rule Token AST
 assign
   = do st <- location
        keyword "assign"
        commit
-       r <- (ref <|> slidx)
+       r <- portArg
        symbol "="
-       l <- (ref <|> slidx)
+       l <- portArg
        e <- location
        pure (Connect (newFC st e) r l)
 
+gateNot : Rule Token AST
+gateNot = do s <- location
+             keyword "not"
+             symbol "("
+             commit
+             o <- portArg
+             symbol ","
+             i <- portArg
+             symbol ")"
+             e <- location
+             pure (NotGate (newFC s e) o i)
 
-cast : Rule Token AST
-cast
-  = do st <- location
-       keyword "cast"
-       p <- (ref <|> slidx)
-       t <- type_
-       d <- direction
-       s <- sensitivity
-       i <- intention
+gate : Rule Token AST
+gate
+  = do s <- location
+       ki <- gateKind
+       symbol "("
+       commit
+       o <- portArg
+       symbol ","
+       ia <- portArg
+       symbol ","
+       ib <- portArg
+       symbol ")"
        e <- location
-       pure (Cast (newFC st e) p t d s i)
+       pure (Gate (newFC s e) ki o ia ib)
+
+gates : Rule Token AST
+gates = gateNot <|> gate
+
+expr : Rule Token AST
+expr = driveCatch <|> assign <|> gates
+
+moduleInst : Rule Token (FileContext, String, AST)
+moduleInst
+    = do s <- location
+         f <- ref
+         n <- name
+         as <- parens (commaSepBy1 portArg)
+         e <- location
+         pure ((newFC s e), n, mkApp f as)
+  where
+    mkApp : AST
+         -> List1 AST
+         -> AST
+    mkApp f (a:::as)
+      = foldl App (App f a) as
 
 mutual
   cond : Rule Token AST
@@ -197,7 +221,7 @@ mutual
     = do s <- location
          keyword "if"
          commit
-         c <- ref
+         c <- portArg
          keyword "begin"
          t <- entries False
          keyword "end"
@@ -207,57 +231,6 @@ mutual
          keyword "end"
          e <- location
          pure (IfThenElse (newFC s e) c t f)
-
-  gateNot : Rule Token AST
-  gateNot = do s <- location
-               keyword "not"
-               symbol "("
-               commit
-               o <- portP
-               symbol ","
-               i <- portP
-               symbol ")"
-               e <- location
-               pure (NotGate (newFC s e) o i)
-
-  gate : Rule Token AST
-  gate
-    = do s <- location
-         ki <- gateKind
-         symbol "("
-         commit
-         o <- portP
-         symbol ","
-         ia <- portP
-         symbol ","
-         ib <- portP
-         symbol ")"
-         e <- location
-         pure (Gate (newFC s e) ki o ia ib)
-
-  gates : Rule Token AST
-  gates = gateNot <|> gate
-
-  expr : Rule Token AST
-  expr = driveCatch <|> assign <|> gates
-
-  appArg : Rule Token AST
-  appArg = ref <|> projChan <|> parens cast <|> slidx
-
-  moduleInst : Rule Token (FileContext, String, AST)
-  moduleInst
-      = do s <- location
-           f <- ref
-           n <- name
-           as <- parens (commaSepBy1 appArg)
-           e <- location
-           pure ((newFC s e), n, mkApp f as)
-    where
-      mkApp : AST
-           -> List1 AST
-           -> AST
-      mkApp f (a:::as)
-        = foldl App (App f a) as
 
   data MBody = Expr AST
              | TDef (FileContext, String, AST)

@@ -35,7 +35,7 @@ import        SystemV.Common.Parser.Boolean
 
 import        SystemV.Param.DSL.AST.Raw
 
-%default total
+%default total -- is actually covering but portArg cannot pass.
 
 ref : Rule Token AST
 ref = inserts rawRef Ref
@@ -63,65 +63,6 @@ array = do
 
 type_ : Rule Token AST
 type_ = array <|> logic <|> ref
-
-proj : Rule Token AST
-    -> String
-    -> (FileContext -> AST -> AST)
-    -> Rule Token AST
-proj p s ctor
-  = do st <- location
-       symbol "("
-       keyword s
-       commit
-       n <- p
-       symbol ")"
-       e <- location
-       pure (ctor (newFC st e) n)
-
-writeTo : Rule Token AST
-writeTo = (proj ref "writeTo" WriteTo)
-
-readFrom : Rule Token AST
-readFrom = (proj ref "readFrom" ReadFrom)
-
-projChan : Rule Token AST
-projChan = readFrom
-       <|> writeTo
-
-driveCatch : Rule Token AST
-driveCatch = (proj (writeTo)  "drive"    Drive)
-         <|> (proj (readFrom) "catch"    Catch)
-
-mutual
-  index : Rule Token AST
-  index
-    = do s <- location
-         symbol "("
-         keyword "index"
-         n <- number
-         p <- (ref <|> projChan <|> slidx)
-         symbol ")"
-         e <- location
-         pure (Index (newFC s e) n p)
-
-  slice : Rule Token AST
-  slice
-    = do s <- location
-         symbol "("
-         keyword "slice"
-         r <- (ref <|> projChan <|> slidx)
-         alpha <- number
-         omega <- number
-         symbol ")"
-         e <- location
-         pure (Slice (newFC s e) r alpha omega)
-
-  slidx : Rule Token AST
-  slidx = slice <|> index
-
-
-portP : Rule Token AST
-portP = ref <|> slidx <|> projChan
 
 chanDef : Rule Token (FileContext, String, AST)
 chanDef
@@ -182,27 +123,132 @@ params
                e <- location
                pure (l, ty, v)
 
+writeTo : Rule Token AST
+writeTo = sexpr "writeTo" ref WriteTo
+
+readFrom : Rule Token AST
+readFrom = sexpr "readFrom" ref ReadFrom
+
+
+portArg : Rule Token AST
+portArg =   ref
+        <|> writeTo
+        <|> readFrom
+        <|> cast
+        <|> index
+  where
+    index : Rule Token AST
+    index
+      = do s <- location
+           symbol "("
+           keyword "index"
+           n <- number
+           p <- portArg
+           symbol ")"
+           e <- location
+           pure (Index (newFC s e) n p)
+
+    slice : Rule Token AST
+    slice
+      = do s <- location
+           symbol "("
+           keyword "slice"
+           p <- portArg
+           a <- number
+           o <- number
+           symbol ")"
+           e <- location
+           pure (Slice (newFC s e) p a o)
+
+    cast : Rule Token AST
+    cast
+      = do s <- location
+           symbol "("
+           keyword "cast"
+           p <- portArg
+           t <- type_
+           d <- direction
+           symbol ")"
+           e <- location
+           pure (Cast (newFC s e) p t d)
+
+portArgs : Rule Token (List1 AST)
+portArgs = parens (commaSepBy1 portArg)
+
+
+paramArgs : Rule Token (List1 (String, AST))
+paramArgs
+    = do symbol "#"
+         parens (commaSepBy1 paramArg)
+  where
+    paramArg : Rule Token (String, AST)
+    paramArg
+      = do n <- name
+           symbol "="
+           v <- (number <|> type_)
+           pure (n,v)
+
+
+driveCatch : Rule Token AST
+driveCatch = inserts (keyword "drive" *> (ref <|> writeTo))  Drive
+         <|> inserts (keyword "catch" *> (ref <|> readFrom)) Catch
+
+
 assign : Rule Token AST
 assign
   = do st <- location
        keyword "assign"
        commit
-       r <- (ref <|> slidx)
+       r <- portArg
        symbol "="
-       l <- (ref <|> slidx)
+       l <- portArg
        e <- location
        pure (Connect (newFC st e) r l)
 
 
-cast : Rule Token AST
-cast
-  = do st <- location
-       keyword "cast"
-       p <- (ref <|> slidx)
-       t <- type_
-       d <- direction
+
+moduleInst : Rule Token (FileContext, String, AST)
+moduleInst
+    = do s <- location
+         f <- portArg
+         ps <- optional paramArgs
+         n <- name
+         as <- portArgs
+         e <- location
+         pure ((newFC s e), n, App (newFC s e) f ps as)
+
+gateNot : Rule Token AST
+gateNot = do s <- location
+             keyword "not"
+             symbol "("
+             commit
+             o <- portArg
+             symbol ","
+             i <- portArg
+             symbol ")"
+             e <- location
+             pure (NotGate (newFC s e) o i)
+
+gate : Rule Token AST
+gate
+  = do s <- location
+       ki <- gateKind
+       symbol "("
+       commit
+       o <- portArg
+       symbol ","
+       ia <- portArg
+       symbol ","
+       ib <- portArg
+       symbol ")"
        e <- location
-       pure (Cast (newFC st e) p t d)
+       pure (Gate (newFC s e) ki o ia ib)
+
+gates : Rule Token AST
+gates = gateNot <|> gate
+
+expr : Rule Token AST
+expr = driveCatch <|> assign <|> gates
 
 mutual
   cond : Rule Token AST
@@ -210,7 +256,7 @@ mutual
     = do s <- location
          keyword "if"
          commit
-         c <- (ref <|> boolean)
+         c <- (portArg <|> boolean)
          keyword "begin"
          t <- entries False
          keyword "end"
@@ -220,36 +266,6 @@ mutual
          keyword "end"
          e <- location
          pure (IfThenElse (newFC s e) c t f)
-
-  gateNot : Rule Token AST
-  gateNot = do s <- location
-               keyword "not"
-               symbol "("
-               commit
-               o <- portP
-               symbol ","
-               i <- portP
-               symbol ")"
-               e <- location
-               pure (NotGate (newFC s e) o i)
-
-  gate : Rule Token AST
-  gate
-    = do s <- location
-         ki <- gateKind
-         symbol "("
-         commit
-         o <- portP
-         symbol ","
-         ia <- portP
-         symbol ","
-         ib <- portP
-         symbol ")"
-         e <- location
-         pure (Gate (newFC s e) ki o ia ib)
-
-  gates : Rule Token AST
-  gates = gateNot <|> gate
 
   for : Rule Token AST
   for
@@ -262,43 +278,11 @@ mutual
          e <- location
          pure (For (newFC s e) (fst n) (snd n) b)
 
-  expr : Rule Token AST
-  expr = driveCatch <|> assign <|> gates
-
-
-  portArgs : Rule Token (List1 AST)
-  portArgs = parens (commaSepBy1 appArg)
-    where
-      appArg : Rule Token AST
-      appArg = ref <|> projChan <|> parens cast <|> slidx
-
-
-  paramArgs : Rule Token (List1 (String, AST))
-  paramArgs
-      = do symbol "#"
-           parens (commaSepBy1 paramArg)
-    where
-      paramArg : Rule Token (String, AST)
-      paramArg
-        = do n <- name
-             symbol "="
-             v <- (number <|> type_)
-             pure (n,v)
-
-  moduleInst : Rule Token (FileContext, String, AST)
-  moduleInst
-      = do s <- location
-           f <- ref
-           ps <- optional paramArgs
-           n <- name
-           as <- portArgs
-           e <- location
-           pure ((newFC s e), n, App (newFC s e) f ps as)
-
 
   data MBody = Expr AST
              | TDef (FileContext, String, AST)
              | Bindable (FileContext, String, AST)
+
 
 
   entry : Rule Token MBody

@@ -19,10 +19,10 @@ module DoSwap ();
   general insensitive wire logic x;
   general insensitive wire logic y;
 
-  (drive (writeTo a)  insensitive general);
-  (drive (writeTo b)  insensitive general);
-  (catch (readFrom x));
-  (catch (readFrom y));
+  drive (writeTo a)  insensitive general;
+  drive (writeTo b)  insensitive general;
+  catch (readFrom x);
+  catch (readFrom y);
 
   Swap ms ((readFrom a)
           ,(readFrom b)

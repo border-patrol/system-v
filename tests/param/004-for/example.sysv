@@ -4,7 +4,7 @@ module Top ();
 
   wire logic[2] chanOut;
 
-  (drive (writeTo chanIn));
+  drive (writeTo chanIn);
 
   for (i = 1)
   begin
@@ -12,7 +12,7 @@ module Top ();
   end
 
 
-  (catch (readFrom chanOut));
+  catch (readFrom chanOut);
 
 
 endmodule

@@ -18,10 +18,10 @@ module DoSwap ();
   wire logic x;
   wire logic y;
 
-  (drive (writeTo a));
-  (drive (writeTo b));
-  (catch (readFrom x));
-  (catch (readFrom y));
+  drive (writeTo a);
+  drive (writeTo b);
+  catch (readFrom x);
+  catch (readFrom y);
 
   Swap ms ((readFrom a)
                     ,(readFrom b)

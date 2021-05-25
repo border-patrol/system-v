@@ -29,10 +29,10 @@ module Swap ();
   wire logic x;
   wire logic y;
 
-  (drive (writeTo a));
-  (drive (writeTo b));
-  (catch (readFrom x));
-  (catch (readFrom y));
+  drive (writeTo a);
+  drive (writeTo b);
+  catch (readFrom x);
+  catch (readFrom y);
 
   MaybeSwap #( how = 1
              , type = logic[2]

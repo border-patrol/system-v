@@ -93,15 +93,6 @@ commaSepBy1 : Rule Token a -> Rule Token (List1 a)
 commaSepBy1 = sepBy1 (symbol ",")
 
 export
-sexpr : Rule Token a
-     -> Rule Token b
-     -> Rule Token (a,b)
-sexpr pHead pBody
-  = parens $ do h <- pHead
-                b <- pBody
-                pure (h,b)
-
-export
 rawRef : Rule Token Ref
 rawRef =
   do s <- location
@@ -122,6 +113,47 @@ inserts value ctor
   = do v <- value
        pure (ctor v)
 
+export
+sexpr : String
+     -> Rule Token a
+     -> (a -> b)
+     -> Rule Token b
+sexpr s value ctor
+  = parens (inserts (keyword s *> value) ctor)
+
+
+export
+sexpr2 : String
+      -> Rule Token a
+      -> Rule Token b
+      -> (a -> b -> c)
+      -> Rule Token c
+sexpr2 s pa pb ctor
+    = sexpr s body build
+  where
+    body : Rule Token (a,b)
+    body = (do {v <- pa; w <- pb; pure (v,w)})
+
+    build : (a,b) -> c
+    build (a,b) = ctor a b
+
+
+export
+sexpr3 : String
+      -> Rule Token a
+      -> Rule Token b
+      -> Rule Token c
+      -> (a -> b -> c -> d)
+      -> Rule Token d
+sexpr3 s pa pb pc ctor
+    = sexpr s body build
+  where
+    body : Rule Token (a,b,c)
+    body = (do {v <- pa; w <- pb; x <- pc; pure (v,w,x)})
+
+    build : (a,b,c) -> d
+    build (a,b,c) = ctor a b c
+
 namespace WithFileContext
   export
   inserts : Rule Token a -> (FileContext -> a -> b) -> Rule Token b
@@ -139,4 +171,42 @@ namespace WithFileContext
          e <- location
          pure (ctor (newFC b e))
 
+  export
+  sexpr : String
+       -> Rule Token a
+       -> (FileContext -> a -> b)
+       -> Rule Token b
+  sexpr s value ctor = parens (inserts (keyword s *> value) ctor)
+
+
+  export
+  sexpr2 : String
+        -> Rule Token a
+        -> Rule Token b
+        -> (FileContext -> a -> b -> c)
+        -> Rule Token c
+  sexpr2 s pa pb ctor
+      = sexpr s body build
+    where
+      body : Rule Token (a,b)
+      body = (do {v <- pa; w <- pb; pure (v,w)})
+
+      build : FileContext -> (a,b) -> c
+      build fc (a,b) = ctor fc a b
+
+  export
+  sexpr3 : String
+        -> Rule Token a
+        -> Rule Token b
+        -> Rule Token c
+        -> (FileContext -> a -> b -> c -> d)
+        -> Rule Token d
+  sexpr3 s pa pb pc ctor
+      = sexpr s body build
+    where
+      body : Rule Token (a,b,c)
+      body = (do {v <- pa; w <- pb; x <- pc; pure (v,w,x)})
+
+      build : FileContext -> (a,b,c) -> d
+      build fc (a,b,c) = ctor fc a b c
 -- [ EOF ]

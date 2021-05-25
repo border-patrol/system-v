@@ -22,15 +22,15 @@ module Top ();
   wire logic[16] chanSCa;
   wire logic[16] chanSCb;
 
-  (drive (writeTo chanDS));
+  drive (writeTo chanDS);
 
   Split s ( (readFrom chanDS)
           , (writeTo  chanSCa)
           , (writeTo  chanSCb)
           );
 
-  (catch (readFrom chanSCa));
-  (catch (readFrom chanSCb));
+  catch (readFrom chanSCa);
+  catch (readFrom chanSCb);
 
 
 endmodule

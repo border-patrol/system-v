@@ -3,27 +3,27 @@ module Top ();
   wire logic chanNotIN;
   wire logic chanNotOUT;
 
-  (drive (writeTo chanNotIN) high control);
+  drive (writeTo chanNotIN) high control;
 
   not ( (writeTo chanNotOUT)
       , (readFrom chanNotIN)
       );
 
-  (catch (readFrom chanNotOUT));
+  catch (readFrom chanNotOUT);
 
 
   wire logic chanAndOUT;
   wire logic chanAndINA;
   wire logic chanAndINB;
 
-  (drive (writeTo chanAndINA));
-  (drive (writeTo chanAndINB));
+  drive (writeTo chanAndINA);
+  drive (writeTo chanAndINB);
 
   and ( (writeTo  chanAndOUT)
       , (readFrom chanAndINA)
       , (readFrom chanAndINB)
       );
 
-  (catch (readFrom chanAndOUT));
+  catch (readFrom chanAndOUT);
 
 endmodule

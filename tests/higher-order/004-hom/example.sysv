@@ -37,8 +37,8 @@ module Top ();
   wire logic[32] chanSCa;
   wire logic[32] chanSCb;
 
-  (drive (writeTo chanSCa));
-  (drive (writeTo chanSCb));
+  drive (writeTo chanSCa);
+  drive (writeTo chanSCb);
 
   Apply myAnd (MyAnd, (writeTo  chanDS)
                     , (readFrom chanSCa)
@@ -50,7 +50,7 @@ module Top ();
                          , (readFrom chanSCb)
                );
 
-  (catch (readFrom chanDS));
+  catch (readFrom chanDS);
 
 
 endmodule
