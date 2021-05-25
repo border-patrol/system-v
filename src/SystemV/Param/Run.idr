@@ -24,10 +24,10 @@ namespace Param
                                 "LOG : Static Typing Complete "
                                 Param.build
                                 ast
---         v <- timeToTryOrDie (timing opts)
---                             "LOG : Evaluating "
---                             Param.eval
---                             term
+         v <- timeToTryOrDie (timing opts)
+                             "LOG : Evaluating "
+                             Param.eval
+                             term
          putStrLn "LOG : Exiting Param"
 
 

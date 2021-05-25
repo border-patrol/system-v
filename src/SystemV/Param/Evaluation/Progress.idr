@@ -105,7 +105,7 @@ progress (TyVect s typeE) with (progress s)
 -- [ Terms ]
 
 -- ### STLC
-progress (Var _) impossible
+
 
 progress (Func x body prf vld) = Done Func
 
@@ -624,4 +624,5 @@ progress (For cnt body) with (progress cnt)
   progress (For cnt body) | Halt reason
     = Halt reason
 
+--progress (Var _) impossible
 -- [ EOF ]

@@ -238,6 +238,16 @@ isNat term with (view (isNat) term)
     isNat (Res u type term) | (HasView Fail) | type'
       = Left (WrongType NotANat type')
 
+export
+isChan : {lvls  : Universes}
+      -> {types : Context lvls}
+      -> (term  : Result TYPE SystemV lvls types)
+               -> TermBuilder (ty ** SystemV types (ChanTy ty))
+isChan term with (view (isChan) term)
+  isChan (Res u type term) | (HasView prf) with (type)
+    isChan (Res (IDX TERM) type term) | (HasView Match) | (ChanTy ty) = Right (ty ** term)
+    isChan (Res u type term) | (HasView Fail) | type'
+      = Left (WrongType NotAChannel type')
 
 
 -- @TODO Clean
@@ -540,12 +550,12 @@ data For : {lvls    : Universes}
           -> For types
 
 export
-index : {lvls  : Universes}
-     -> {types : Context lvls}
-     -> (c : Result TYPE SystemV lvls types)
-     -> (b : Result TYPE SystemV lvls types)
-          -> TermBuilder (For types)
-index ires bres
+foreach : {lvls  : Universes}
+       -> {types : Context lvls}
+       -> (c : Result TYPE SystemV lvls types)
+       -> (b : Result TYPE SystemV lvls types)
+            -> TermBuilder (For types)
+foreach ires bres
   = do i <- isNat ires
        (FDef u a b term) <- isFuncDef bres
        case Equality.decEq (FuncParamTy (IDX TERM) NatTy UnitTy)
