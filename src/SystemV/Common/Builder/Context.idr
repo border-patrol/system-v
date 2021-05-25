@@ -49,15 +49,9 @@ namespace Name
   listEmpty (MkDPair fst snd) impossible
 
 
-  notInLater : (contra : (level ** Elem Universe Name (MkName (Just name) level) xs) -> Void)
-            -> (prf    : (level ** Elem Universe Name (MkName (Just name) level) (MkName Nothing level'::xs)))
-                      -> Void
-  notInLater _ (MkDPair _ (H (Same Refl Refl))) impossible
-  notInLater contra (MkDPair fst (T later)) = contra (MkDPair fst later)
-
-  nameNotInRest : (contraE : HasName name x (MkName (Just y) x) -> Void)
+  nameNotInRest : (contraE : HasName name x (MkName s x) -> Void)
                -> (contraR : (level : Universe ** Elem Universe Name (MkName (Just name) level) rest) -> Void)
-               -> (prf     : (level : Universe ** Elem Universe Name (MkName (Just name) level) (MkName (Just y) x :: rest)) )
+               -> (prf     : (level : Universe ** Elem Universe Name (MkName (Just name) level) (MkName s x :: rest)) )
                           -> Void
   nameNotInRest contraE contraR (MkDPair x (H (Same Refl Refl))) = contraE (YesHasName Refl)
   nameNotInRest contraE contraR (MkDPair fst (T later)) = contraR (MkDPair fst later)
@@ -68,14 +62,14 @@ namespace Name
          -> (names : Names lvls)
          -> Dec (level ** Elem Universe Name (MkName (Just name) level) names)
   isName name [] = No listEmpty
-  isName name ((MkName Nothing x) :: rest) with (isName name rest)
-    isName name ((MkName Nothing x) :: rest) | (Yes (MkDPair fst snd)) = Yes (MkDPair fst (T snd))
-    isName name ((MkName Nothing x) :: rest) | (No contra) = No (notInLater contra)
-  isName name ((MkName (Just y) x) :: rest) with (hasName name x (MkName (Just y) x))
-    isName y ((MkName (Just y) x) :: rest) | (Yes (YesHasName Refl)) = Yes (MkDPair x (H (Same Refl Refl)))
-    isName name ((MkName (Just y) x) :: rest) | (No contra) with (isName name rest)
-      isName name ((MkName (Just y) x) :: rest) | (No contra) | (Yes (MkDPair fst snd)) = Yes (MkDPair fst (T snd))
-      isName name ((MkName (Just y) x) :: rest) | (No contra) | (No f) = No (nameNotInRest contra f)
+  isName name ((MkName s x) :: rest) with (hasName name x (MkName s x))
+    isName n ((MkName (Just n) x) :: rest) | (Yes (YesHasName Refl))
+      = Yes (MkDPair x (H (Same Refl Refl)))
+    isName name ((MkName s x) :: rest) | (No contra) with (isName name rest)
+      isName name ((MkName s x) :: rest) | (No contra) | (Yes (MkDPair fst snd))
+        = Yes (MkDPair fst (T snd))
+      isName name ((MkName s x) :: rest) | (No contra) | (No f)
+        = No (nameNotInRest contra f)
 
 export
 mkVar : {names : Names lvls}

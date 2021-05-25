@@ -20,10 +20,10 @@ namespace Param
                                Param.elab
                                rawast
 
---         term <- timeToTryOrDie (timing opts)
---                                "LOG : Typing Complete "
---                                Param.build
---                                ast
+         term <- timeToTryOrDie (timing opts)
+                                "LOG : Static Typing Complete "
+                                Param.build
+                                ast
 --         v <- timeToTryOrDie (timing opts)
 --                             "LOG : Evaluating "
 --                             Param.eval

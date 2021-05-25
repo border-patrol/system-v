@@ -11,6 +11,7 @@
 ||| be used as it requires all elements to have the same type.
 module Toolkit.Data.DVect
 
+import Data.Nat
 import Data.Strings
 
 import public Data.Vect

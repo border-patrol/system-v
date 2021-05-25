@@ -200,7 +200,7 @@ elab env (App fc (Ref ref) params ports)
 
     mkApps : Env -> Param.AST -> List1 Raw.AST -> Either Elab.Error Param.AST
     mkApps env start (head ::: tail)
-        = foldlM (mkApp env) start tail
+        = foldlM (mkApp env) start (head::tail)
       where
         mkApp : Env -> Param.AST -> Raw.AST -> Either Elab.Error Param.AST
         mkApp env p rest
