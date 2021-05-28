@@ -352,6 +352,10 @@ Show Raw.AST where
              , unwords ["\t", show w]
              , "}"
              ]
+
+  show (Size fc chan)
+    = unwords ["(size", show chan <+> ")"]
+
 export
 Show Param.AST where
   show (Ref x)
@@ -462,6 +466,8 @@ Show Param.AST where
   show (NatOpArith x op l r)
     = unwords ["(" <+> show op, show l, show r <+> ")"]
 
+  show (Size fc chan)
+    = unwords ["(size", show chan <+> ")"]
 
 export
 Show (SystemV ctxt type) where
@@ -588,5 +594,4 @@ Show (SystemV ctxt type) where
              , unwords ["\t", show body]
              , "}"
              ]
-
 -- [ EOF ]

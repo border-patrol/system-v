@@ -146,6 +146,8 @@ namespace Param
              -> (l,r : AST)
                     -> AST
 
+    Size : FileContext -> AST -> AST
+
 export
 getFC : AST -> FileContext
 getFC (Ref x)                         = span x
@@ -183,7 +185,7 @@ getFC (BoolNot x y)                   = x
 getFC (NatOpCmp x op l r)             = x
 getFC (BoolOpBin x op l r)            = x
 getFC (NatOpArith x op l r)           = x
-
+getFC (Size fc s)                     = fc
 
 export
 setFileName : (fname : String)
@@ -351,5 +353,7 @@ setFileName fname (For fc n i b)
         (setFileName fname i)
         (setFileName fname b)
 
-
+setFileName fname (Size fc s)
+   = Size (setSource fname fc)
+          (setFileName fname s)
 -- [ EOF ]

@@ -115,6 +115,7 @@ data AST : Type where
 
   For : FileContext -> String -> AST -> AST -> AST
 
+  Size : FileContext -> AST -> AST
 
 export
 getFC : AST -> FileContext
@@ -146,6 +147,7 @@ getFC (Index fc y z)                   = fc
 getFC (BExpr fc y)                     = fc
 getFC (AExpr fc y)                     = fc
 getFC (For fc y z w)                   = fc
+getFC (Size fc s)                      = fc
 
 mutual
   setFileNamesParams' : String -> List (FileContext, String, AST, AST)
@@ -305,4 +307,7 @@ mutual
            (setFileName fname i)
            (setFileName fname b)
 
+  setFileName fname (Size fc s)
+     = Size (setSource fname fc)
+            (setFileName fname s)
 -- [ EOF ]

@@ -129,73 +129,84 @@ writeTo = sexpr "writeTo" ref WriteTo
 readFrom : Rule Token AST
 readFrom = sexpr "readFrom" ref ReadFrom
 
+mutual
+  portArg : Rule Token (FileContext, AST)
+  portArg =   ref'
+          <|> writeTo'
+          <|> readFrom'
+          <|> cast
+          <|> slice
+          <|> index
+    where
+      ref' : Rule Token (FileContext, AST)
+      ref'
+        = do s <- location
+             r <- ref
+             e <- location
+             pure (newFC s e, r)
 
-portArg : Rule Token (FileContext, AST)
-portArg =   ref'
-        <|> writeTo'
-        <|> readFrom'
-        <|> cast
-        <|> slice
-        <|> index
-  where
-    ref' : Rule Token (FileContext, AST)
-    ref'
-      = do s <- location
-           r <- ref
-           e <- location
-           pure (newFC s e, r)
+      writeTo' : Rule Token (FileContext, AST)
+      writeTo'
+        = do s <- location
+             w <- writeTo
+             e <- location
+             pure (newFC s e, w)
 
-    writeTo' : Rule Token (FileContext, AST)
-    writeTo'
-      = do s <- location
-           w <- writeTo
-           e <- location
-           pure (newFC s e, w)
+      readFrom' : Rule Token (FileContext, AST)
+      readFrom'
+        = do s <- location
+             w <- readFrom
+             e <- location
+             pure (newFC s e, w)
 
-    readFrom' : Rule Token (FileContext, AST)
-    readFrom'
-      = do s <- location
-           w <- readFrom
-           e <- location
-           pure (newFC s e, w)
+      index : Rule Token (FileContext, AST)
+      index
+        = do s <- location
+             symbol "("
+             keyword "index"
+             n <- (number <|> size)
+             p <- portArg
+             symbol ")"
+             e <- location
+             pure (newFC s e, Index (newFC s e) n (snd p))
 
-    index : Rule Token (FileContext, AST)
-    index
-      = do s <- location
-           symbol "("
-           keyword "index"
-           n <- number
-           p <- portArg
-           symbol ")"
-           e <- location
-           pure (newFC s e, Index (newFC s e) n (snd p))
+      slice : Rule Token (FileContext, AST)
+      slice
+        = do s <- location
+             symbol "("
+             keyword "slice"
+             p <- portArg
+             a <- (number <|> size)
+             o <- (number <|> size)
+             symbol ")"
+             e <- location
+             pure (newFC s e, Slice (newFC s e) (snd p) a o)
 
-    slice : Rule Token (FileContext, AST)
-    slice
-      = do s <- location
-           symbol "("
-           keyword "slice"
-           p <- portArg
-           a <- number
-           o <- number
-           symbol ")"
-           e <- location
-           pure (newFC s e, Slice (newFC s e) (snd p) a o)
+      cast : Rule Token (FileContext, AST)
+      cast
+        = do s <- location
+             symbol "("
+             keyword "cast"
+             p <- portArg
+             t <- type_
+             d <- direction
+             symbol ")"
+             e <- location
+             pure (newFC s e, Cast (newFC s e) (snd p) t d)
 
-    cast : Rule Token (FileContext, AST)
-    cast
-      = do s <- location
-           symbol "("
-           keyword "cast"
-           p <- portArg
-           t <- type_
-           d <- direction
-           symbol ")"
-           e <- location
-           pure (newFC s e, Cast (newFC s e) (snd p) t d)
+  size : Rule Token AST
+  size
+      = inserts body Size
+    where
+      body : Rule Token AST
+      body
+        = do keyword "size"
+             p <- portArg
+             pure (snd p)
 
 portArgs : Rule Token (List1 (FileContext, AST))
 portArgs = parens (commaSepBy1 portArg)
+
 
 
 paramArgs : Rule Token (List1 (FileContext, (String, AST)))
@@ -208,7 +219,7 @@ paramArgs
       = do l <- location
            n <- name
            symbol "="
-           v <- (number <|> type_)
+           v <- (number <|> size <|> type_)
            e <- location
            pure (newFC l e, n,v)
 
@@ -216,7 +227,6 @@ paramArgs
 driveCatch : Rule Token AST
 driveCatch = inserts (keyword "drive" *> (ref <|> writeTo))  Drive
          <|> inserts (keyword "catch" *> (ref <|> readFrom)) Catch
-
 
 assign : Rule Token AST
 assign
@@ -307,7 +317,7 @@ mutual
   for
     = do s <- location
          keyword "for"
-         n <- parens (do {i <- name; symbol "="; n <- number; pure (i,n)})
+         n <- parens (do {i <- name; symbol "="; n <- (number <|> size); pure (i,n)})
          keyword "begin"
          b <- (entries False)
          keyword "end"

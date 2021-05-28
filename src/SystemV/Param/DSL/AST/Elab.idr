@@ -347,6 +347,9 @@ elab env (Index fc i p)
  = pure (Index fc !(elab env i)
                   !(elab env p))
 
+elab env (Size fc s)
+ = pure (Size fc !(elab env s))
+
 namespace Param
   export
   elab : (raw : Raw.AST)

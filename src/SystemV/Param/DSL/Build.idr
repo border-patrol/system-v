@@ -410,6 +410,11 @@ termBuilder (Ctxt lvls names types) (NatOpArith fc k l r)
        rop <- isNat (getFC r) rres
        pure (Res _ _ (NatOpArith k lop rop))
 
+termBuilder (Ctxt lvls names types) (Size fc s)
+  = do pres <- termBuilder (Ctxt lvls names types) s
+       (P d p) <- isPort (getFC s) pres
+       pure (Res _ _ (Size p))
+
 -- [ End of Build ]
 
 
