@@ -201,19 +201,26 @@ data Redux : (this : SystemV ctxt type)
 
     -- ### Casting
 
-    SimplifyCast : Redux this that
-                -> Redux (Cast this dir prf)
-                         (Cast that dir prf)
+    SimplifyCastPort : Redux this that
+                    -> Redux (Cast this type dir prf)
+                             (Cast that type dir prf)
 
-    RewriteCast : Redux (Cast (Seq left port) dir prf)
-                        (Seq left (Cast port dir prf))
+    RewriteCastPort : Redux (Cast (Seq left port) type dir prf)
+                            (Seq left (Cast port type dir prf))
 
-    ReduceCast : {port : SystemV ctxt (PortTy dirA)}
+    SimplifyCastType : Redux this that
+                    -> Redux (Cast port this dir prf)
+                             (Cast port that dir prf)
+
+    ReduceCast : {port : SystemV Nil (PortTy dirA)}
+              -> {type : SystemV Nil DATATERM}
               -> {prf  : ValidCast (PortTy dirA)
                                    (PortTy dirB)}
-              -> (val : Value port)
-                     -> Redux (Cast port dirB prf)
-                              (cast prf port val)
+              -> (val  : Value port)
+              -> (valt : Value type)
+              -> (prfC : CheckCast prf port val type valt)
+                     -> Redux (Cast port type dirB prf)
+                              (cast prf port val type valt prfC)
 
     -- ### Slicing
 

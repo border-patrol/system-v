@@ -142,6 +142,7 @@ namespace Param
     Cast : {dirA  : Direction}
 
         -> (portA : SystemV ctxt (PortTy dirA))
+        -> (type  : SystemV ctxt DATATERM)
 
         -> (dirB  : Direction)
         -> (prf   : ValidCast (PortTy dirA)

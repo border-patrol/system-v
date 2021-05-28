@@ -305,17 +305,27 @@ progress (Connect portL portR prf) with (progress portL)
     = Halt err
 
 -- ### Casting & Slicing
-progress (Cast portA dir prf) with (progress portA)
-  progress (Cast (MkPort ty dirA) dir prf) | (Done (MkPort x dirA))
-    = Step (ReduceCast (MkPort x dirA))
+progress (Cast portA type dir prf) with (progress portA)
+  progress (Cast (MkPort ty dirA) type dir prf) | (Done (MkPort x dirA)) with (progress type)
+    progress (Cast (MkPort ty dirA) type dir prf) | (Done (MkPort x dirA)) | (Done value)
+      = case checkCast prf (MkPort ty dirA) (MkPort x dirA) type value of
+          Left err =>
+             case err of
+               UnexpectedSeq => Halt UnexpectedSeq
+               TypeMismatch a b => Halt (TypeMismatch a b)
+          Right prfC => Step (ReduceCast (MkPort x dirA) value prfC)
+    progress (Cast (MkPort ty dirA) type dir prf) | (Done (MkPort x dirA)) | (Step step)
+      = Step (SimplifyCastType step)
+    progress (Cast (MkPort ty dirA) type dir prf) | (Done (MkPort x dirA)) | (Halt reason)
+      = Halt reason
 
-  progress (Cast (Seq left right) dir prf) | (Done (Seq x y))
-    = Step RewriteCast
+  progress (Cast (Seq left right) type dir prf) | (Done (Seq x y))
+    = Step RewriteCastPort
 
-  progress (Cast portA dir prf) | (Step step)
-    = Step (SimplifyCast step)
+  progress (Cast portA type dir prf) | (Step step)
+    = Step (SimplifyCastPort step)
 
-  progress (Cast portA dir prf) | (Halt err)
+  progress (Cast portA type dir prf) | (Halt err)
     = Halt err
 
 -- #### Slicing
@@ -347,9 +357,6 @@ progress (Slice port alpha omega) with (progress port)
       = Step (SimplifySliceAlpha step)
     progress (Slice (MkPort tyP dir) alpha omega) | (Done (MkPort x dir)) | (Halt reason)
       = Halt reason
-
-
-  -- Step (ReduceSlice (MkPort x dir))
 
   progress (Slice (Seq left right) alpha omega) | (Done (Seq x y))
     = Step RewriteSlicePort

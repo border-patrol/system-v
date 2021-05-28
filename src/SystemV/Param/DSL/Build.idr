@@ -240,12 +240,14 @@ termBuilder (Ctxt lvls names types) (Cast fc port type toDir)
 
        (P fromDir from) <- isPort (getFC port) pres
 
+       t <- isData (getFC type) InCast tres
+
        let fromP = PortTy fromDir
        let toP   = PortTy toDir
 
        case validCast (PortTy fromDir) (PortTy toDir) of
          (Yes prfWhy) =>
-           Right (Res _ _ (Cast from toDir prfWhy))
+           Right (Res _ _ (Cast from t toDir prfWhy))
          (No msgWhyNot prfWhyNot) =>
            Left (Err fc (InvalidCast msgWhyNot fromP toP))
 

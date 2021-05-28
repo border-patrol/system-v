@@ -125,8 +125,9 @@ rename f (Connect portL portR prf)
             prf
 
 
-rename f (Cast portA dir prf)
+rename f (Cast portA type dir prf)
   = Cast (rename f portA)
+         (rename f type)
          dir
          prf
 

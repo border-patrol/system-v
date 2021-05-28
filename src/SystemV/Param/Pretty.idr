@@ -544,8 +544,8 @@ Show (SystemV ctxt type) where
   show (Connect portL portR prf)
     = unwords ["(connect", show portL, show portR <+> ")"]
 
-  show (Cast port dir prf)
-    = unwords ["(cast", show port, show dir <+> ")"]
+  show (Cast port t dir prf)
+    = unwords ["(cast", show port, show t, show dir <+> ")"]
 
   show (Index idx port)
     = unwords ["(index", show idx, show port <+> ")"]

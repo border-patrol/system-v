@@ -126,8 +126,9 @@ namespace General
               (subst f portR)
               prf
 
-  subst f (Cast portA dir prf)
+  subst f (Cast portA type dir prf)
     = Cast (subst f portA)
+           (subst f type)
            dir
            prf
 
