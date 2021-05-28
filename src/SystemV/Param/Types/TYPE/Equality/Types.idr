@@ -88,10 +88,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncTy param return) | ModuleTy
         = No (TypeMismatch a b) (funcTypeTyNotModuleTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncTy param return) | (ChanTy type)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncTy param return) | ChanTy
         = No (TypeMismatch a b) (funcTypeTyNotChanTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncTy param return) | (PortTy type dir)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncTy param return) | (PortTy dir)
         = No (TypeMismatch a b) (funcTypeTyNotPortTy)
 
       decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncTy param return) | UnitTy
@@ -140,10 +140,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | ModuleTy
         = No (TypeMismatch a b) (negEqSym moduleNotFuncParam)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | (ChanTy type)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | ChanTy
         = No (TypeMismatch a b) (negEqSym chanNotFuncParam)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | (PortTy type dir)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | (PortTy dir)
         = No (TypeMismatch a b) (negEqSym portNotFuncParam)
 
       decEq a b {level = TERM} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | UnitTy
@@ -166,10 +166,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TERM} | (IdxSame a b Refl) | ModuleTy | ModuleTy
         = Yes (Same Refl Refl)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | ModuleTy | (ChanTy type)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | ModuleTy | ChanTy
         = No (TypeMismatch a b) moduleTyNotChanTy
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | ModuleTy | (PortTy type dir)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | ModuleTy | (PortTy dir)
         = No (TypeMismatch a b) moduleTyNotPortTy
 
       decEq a b {level = TERM} | (IdxSame a b Refl) | ModuleTy | UnitTy
@@ -182,74 +182,60 @@ decEq a b {level} with (byIndex a b)
         = No (TypeMismatch a b) moduleTyNotBoolTy
 
 -- ### Channels
-    decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) with (b)
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | (FuncTy param return)
+    decEq a b {level = TERM} | (IdxSame a b Refl) | ChanTy with (b)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | ChanTy | (FuncTy param return)
         = No (TypeMismatch a b) (negEqSym funcTypeTyNotChanTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | (FuncParamTy u param return)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | ChanTy | (FuncParamTy u param return)
         = No (TypeMismatch a b) chanNotFuncParam
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | ModuleTy
+      decEq a b {level = TERM} | (IdxSame a b Refl) | ChanTy | ModuleTy
         = No (TypeMismatch a b) (negEqSym moduleTyNotChanTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | (ChanTy type') with (DataTerms.decEq type type')
+      decEq a b {level = TERM} | (IdxSame a b Refl) | ChanTy | ChanTy
+        = Yes (Same Refl Refl)
 
-        decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | (ChanTy type') | (Yes prfWhy) with (prfWhy)
-
-          decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | (ChanTy type) | (Yes prfWhy) | (Same Refl Refl)
-            = Yes (Same Refl Refl)
-
-        decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | (ChanTy type') | (No msgWhyNot prfWhyNot)
-          = No (TypeMismatch a b) (chanTyDiffTypes prfWhyNot)
-
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | (PortTy x dir)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | ChanTy | (PortTy dir)
         = No (TypeMismatch a b) chanTyNotPortTy
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | UnitTy
+      decEq a b {level = TERM} | (IdxSame a b Refl) | ChanTy | UnitTy
         = No (TypeMismatch a b) chanTyNotUnitTy
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | NatTy
+      decEq a b {level = TERM} | (IdxSame a b Refl) | ChanTy | NatTy
         = No (TypeMismatch a b) chanTyNotNatTy
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (ChanTy type) | BoolTy
+      decEq a b {level = TERM} | (IdxSame a b Refl) | ChanTy | BoolTy
         = No (TypeMismatch a b) chanTyNotBoolTy
 
 -- ### Ports
 
-    decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) with (b)
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | (FuncTy param return)
+    decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir) with (b)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir) | (FuncTy param return)
         = No (TypeMismatch a b) (negEqSym funcTypeTyNotPortTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | (FuncParamTy u param return)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir) | (FuncParamTy u param return)
         = No (TypeMismatch a b) portNotFuncParam
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | ModuleTy
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir) | ModuleTy
         = No (TypeMismatch a b) (negEqSym moduleTyNotPortTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | (ChanTy x)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir) | ChanTy
         = No (TypeMismatch a b) (negEqSym chanTyNotPortTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | (PortTy type' dir') with (DataTerms.decEq type type')
-
-        decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | (PortTy type' dir') | (Yes prfWhy) with (prfWhy)
-
-          decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | (PortTy type dir') | (Yes prfWhy) | (Same Refl Refl) with (Direction.decEq dir dir')
-            decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir') | (PortTy type dir') | (Yes prfWhy) | (Same Refl Refl) | (Yes Refl)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir) | (PortTy  dir') with (Direction.decEq dir dir')
+            decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir') | (PortTy dir') | (Yes Refl)
               =  Yes (Same Refl Refl)
 
-            decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | (PortTy type dir') | (Yes prfWhy) | (Same Refl Refl) | (No contra)
+            decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir) | (PortTy dir') | (No contra)
               = No (TypeMismatch a b) (portTyDiffDirs contra)
 
-        decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | (PortTy type' dir') | (No msgWhyNot prfWhyNot)
-          = No (TypeMismatch a b) (portTyDiffTypes prfWhyNot)
-
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | UnitTy
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir) | UnitTy
         = No (TypeMismatch a b) portTyNotUnitTy
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | NatTy
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir) | NatTy
         = No (TypeMismatch a b) portTyNotNatTy
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy type dir) | BoolTy
+      decEq a b {level = TERM} | (IdxSame a b Refl) | (PortTy dir) | BoolTy
         = No (TypeMismatch a b) portTyNotBoolTy
 
 -- ### Unit
@@ -263,10 +249,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TERM} | (IdxSame a b Refl) | UnitTy | ModuleTy
         = No (TypeMismatch a b) (negEqSym moduleTyNotUnitTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | UnitTy | (ChanTy type)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | UnitTy | ChanTy
         = No (TypeMismatch a b) (negEqSym chanTyNotUnitTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | UnitTy | (PortTy type dir)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | UnitTy | (PortTy dir)
         = No (TypeMismatch a b) (negEqSym portTyNotUnitTy)
 
       decEq a b {level = TERM} | (IdxSame a b Refl) | UnitTy | UnitTy
@@ -289,10 +275,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TERM} | (IdxSame a b Refl) | NatTy | ModuleTy
         = No (TypeMismatch a b) (negEqSym moduleTyNotNatTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | NatTy | (ChanTy type)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | NatTy | ChanTy
         = No (TypeMismatch a b) (negEqSym chanTyNotNatTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | NatTy | (PortTy type dir)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | NatTy | (PortTy dir)
         = No (TypeMismatch a b) (negEqSym portTyNotNatTy)
 
       decEq a b {level = TERM} | (IdxSame a b Refl) | NatTy | UnitTy
@@ -315,10 +301,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TERM} | (IdxSame a b Refl) | BoolTy | ModuleTy
         = No (TypeMismatch a b) (negEqSym moduleTyNotBoolTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | BoolTy | (ChanTy type)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | BoolTy | ChanTy
         = No (TypeMismatch a b) (negEqSym chanTyNotBoolTy)
 
-      decEq a b {level = TERM} | (IdxSame a b Refl) | BoolTy | (PortTy type dir)
+      decEq a b {level = TERM} | (IdxSame a b Refl) | BoolTy | (PortTy dir)
         = No (TypeMismatch a b) (negEqSym portTyNotBoolTy)
 
       decEq a b {level = TERM} | (IdxSame a b Refl) | BoolTy | UnitTy
@@ -358,10 +344,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncTy param return) | ModuleTyDesc
         = No (TypeMismatch a b) (funcTypeTyDescNotModuleTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncTy param return) | (ChanTyDesc type)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncTy param return) | ChanTyDesc
         = No (TypeMismatch a b) (funcTypeTyDescNotChanTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncTy param return) | (PortTyDesc type dir)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncTy param return) | (PortTyDesc dir)
         = No (TypeMismatch a b) (funcTypeTyDescNotPortTyDesc)
 
       decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncTy param return) | UnitTyDesc
@@ -411,10 +397,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | ModuleTyDesc
         = No (TypeMismatch a b) (negEqSym moduleTyDescNotFuncParamTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | (ChanTyDesc type)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | ChanTyDesc
         = No (TypeMismatch a b) (negEqSym chanTyDescNotFuncParamTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | (PortTyDesc type dir)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | (PortTyDesc dir)
         = No (TypeMismatch a b) (negEqSym portTyDescNotFuncParamTyDesc)
 
       decEq a b {level = TYPE} | (IdxSame a b Refl) | (FuncParamTy u pA rA) | UnitTyDesc
@@ -437,10 +423,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TYPE} | (IdxSame a b Refl) | ModuleTyDesc | ModuleTyDesc
         = Yes (Same Refl Refl)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | ModuleTyDesc | (ChanTyDesc type)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | ModuleTyDesc | ChanTyDesc
         = No (TypeMismatch a b) moduleTyDescNotChanTyDesc
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | ModuleTyDesc | (PortTyDesc type dir)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | ModuleTyDesc | (PortTyDesc dir)
         = No (TypeMismatch a b) moduleTyDescNotPortTyDesc
 
       decEq a b {level = TYPE} | (IdxSame a b Refl) | ModuleTyDesc | UnitTyDesc
@@ -453,74 +439,60 @@ decEq a b {level} with (byIndex a b)
         = No (TypeMismatch a b) moduleTyDescNotBoolTyDesc
 
 -- ### Channels
-    decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) with (b)
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | (FuncTy param return)
+    decEq a b {level = TYPE} | (IdxSame a b Refl) | ChanTyDesc with (b)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | ChanTyDesc | (FuncTy param return)
         = No (TypeMismatch a b) (negEqSym funcTypeTyDescNotChanTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | (FuncParamTy u param return)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | ChanTyDesc | (FuncParamTy u param return)
         = No (TypeMismatch a b) chanTyDescNotFuncParamTyDesc
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | ModuleTyDesc
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | ChanTyDesc | ModuleTyDesc
         = No (TypeMismatch a b) (negEqSym moduleTyDescNotChanTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | (ChanTyDesc type') with (DataTerms.decEq type type')
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | ChanTyDesc | ChanTyDesc
+        = Yes (Same Refl Refl)
 
-        decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | (ChanTyDesc type') | (Yes prfWhy) with (prfWhy)
-
-          decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | (ChanTyDesc type) | (Yes prfWhy) | (Same Refl Refl)
-            = Yes (Same Refl Refl)
-
-        decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | (ChanTyDesc type') | (No msgWhyNot prfWhyNot)
-          = No (TypeMismatch a b) (chanTyDescDiffTypes prfWhyNot)
-
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | (PortTyDesc x dir)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | ChanTyDesc | (PortTyDesc dir)
         = No (TypeMismatch a b) chanTyDescNotPortTyDesc
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | UnitTyDesc
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | ChanTyDesc | UnitTyDesc
         = No (TypeMismatch a b) chanTyDescNotUnitTyDesc
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | NatTyDesc
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | ChanTyDesc | NatTyDesc
         = No (TypeMismatch a b) chanTyDescNotNatTyDesc
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (ChanTyDesc type) | BoolTyDesc
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | ChanTyDesc | BoolTyDesc
         = No (TypeMismatch a b) chanTyDescNotBoolTyDesc
 
 -- ### Ports
 
-    decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) with (b)
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | (FuncTy param return)
+    decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir) with (b)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir) | (FuncTy param return)
         = No (TypeMismatch a b) (negEqSym funcTypeTyDescNotPortTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | (FuncParamTy u param return)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir) | (FuncParamTy u param return)
         = No (TypeMismatch a b) portTyDescNotFuncParamTyDesc
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | ModuleTyDesc
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir) | ModuleTyDesc
         = No (TypeMismatch a b) (negEqSym moduleTyDescNotPortTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | (ChanTyDesc x)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir) | ChanTyDesc
         = No (TypeMismatch a b) (negEqSym chanTyDescNotPortTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | (PortTyDesc type' dir') with (DataTerms.decEq type type')
-
-        decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | (PortTyDesc type' dir') | (Yes prfWhy) with (prfWhy)
-
-          decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | (PortTyDesc type dir') | (Yes prfWhy) | (Same Refl Refl) with (Direction.decEq dir dir')
-            decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir') | (PortTyDesc type dir') | (Yes prfWhy) | (Same Refl Refl) | (Yes Refl)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir) | (PortTyDesc  dir') with (Direction.decEq dir dir')
+            decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir') | (PortTyDesc dir') | (Yes Refl)
               =  Yes (Same Refl Refl)
 
-            decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | (PortTyDesc type dir') | (Yes prfWhy) | (Same Refl Refl) | (No contra)
+            decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir) | (PortTyDesc dir') | (No contra)
               = No (TypeMismatch a b) (portTyDescDiffDirs contra)
 
-        decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | (PortTyDesc type' dir') | (No msgWhyNot prfWhyNot)
-          = No (TypeMismatch a b) (portTyDescDiffTypes prfWhyNot)
-
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | UnitTyDesc
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir) | UnitTyDesc
         = No (TypeMismatch a b) portTyDescNotUnitTyDesc
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | NatTyDesc
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir) | NatTyDesc
         = No (TypeMismatch a b) portTyDescNotNatTyDesc
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc type dir) | BoolTyDesc
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | (PortTyDesc dir) | BoolTyDesc
         = No (TypeMismatch a b) portTyDescNotBoolTyDesc
 
 -- ### Unit
@@ -534,10 +506,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TYPE} | (IdxSame a b Refl) | UnitTyDesc | ModuleTyDesc
         = No (TypeMismatch a b) (negEqSym moduleTyDescNotUnitTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | UnitTyDesc | (ChanTyDesc type)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | UnitTyDesc | ChanTyDesc
         = No (TypeMismatch a b) (negEqSym chanTyDescNotUnitTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | UnitTyDesc | (PortTyDesc type dir)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | UnitTyDesc | (PortTyDesc dir)
         = No (TypeMismatch a b) (negEqSym portTyDescNotUnitTyDesc)
 
       decEq a b {level = TYPE} | (IdxSame a b Refl) | UnitTyDesc | UnitTyDesc
@@ -560,10 +532,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TYPE} | (IdxSame a b Refl) | NatTyDesc | ModuleTyDesc
         = No (TypeMismatch a b) (negEqSym moduleTyDescNotNatTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | NatTyDesc | (ChanTyDesc type)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | NatTyDesc | ChanTyDesc
         = No (TypeMismatch a b) (negEqSym chanTyDescNotNatTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | NatTyDesc | (PortTyDesc type dir)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | NatTyDesc | (PortTyDesc dir)
         = No (TypeMismatch a b) (negEqSym portTyDescNotNatTyDesc)
 
       decEq a b {level = TYPE} | (IdxSame a b Refl) | NatTyDesc | UnitTyDesc
@@ -586,10 +558,10 @@ decEq a b {level} with (byIndex a b)
       decEq a b {level = TYPE} | (IdxSame a b Refl) | BoolTyDesc | ModuleTyDesc
         = No (TypeMismatch a b) (negEqSym moduleTyDescNotBoolTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | BoolTyDesc | (ChanTyDesc type)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | BoolTyDesc | ChanTyDesc
         = No (TypeMismatch a b) (negEqSym chanTyDescNotBoolTyDesc)
 
-      decEq a b {level = TYPE} | (IdxSame a b Refl) | BoolTyDesc | (PortTyDesc type dir)
+      decEq a b {level = TYPE} | (IdxSame a b Refl) | BoolTyDesc | (PortTyDesc dir)
         = No (TypeMismatch a b) (negEqSym portTyDescNotBoolTyDesc)
 
       decEq a b {level = TYPE} | (IdxSame a b Refl) | BoolTyDesc | UnitTyDesc

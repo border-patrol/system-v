@@ -24,22 +24,6 @@ data Redux : (this : SystemV ctxt type)
 
     -- ## Types
 
-    -- ### Functions
-
-    SimplifyTyFuncParam : Redux this that
-                       -> Redux (TyFunc this return prf)
-                                (TyFunc that return prf)
-
-    RewriteTyFuncParam : Redux (TyFunc (Seq left param) return prf)
-                               (Seq left (TyFunc param return prf))
-
-    SimplifyTyFuncReturn : Redux this that
-                        -> Redux (TyFunc param this prf)
-                                 (TyFunc param that prf)
-
-    RewriteTyFuncReturn : Redux (TyFunc param (Seq left return) prf)
-                                (Seq left (TyFunc param return prf))
-
     -- ### Channels
 
     SimplifyTyChan : Redux this that

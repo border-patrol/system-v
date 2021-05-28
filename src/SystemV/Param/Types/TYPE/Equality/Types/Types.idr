@@ -17,12 +17,12 @@ funcTypeTyDescNotModuleTyDesc : (Equals Universe TYPE (FuncTy x y) ModuleTyDesc)
 funcTypeTyDescNotModuleTyDesc (Same Refl Refl) impossible
 
 export
-funcTypeTyDescNotChanTyDesc : (Equals Universe TYPE (FuncTy x y) (ChanTyDesc t))
+funcTypeTyDescNotChanTyDesc : (Equals Universe TYPE (FuncTy x y) (ChanTyDesc))
                            -> Void
 funcTypeTyDescNotChanTyDesc (Same Refl Refl) impossible
 
 export
-funcTypeTyDescNotPortTyDesc : (Equals Universe TYPE (FuncTy x y) (PortTyDesc t d))
+funcTypeTyDescNotPortTyDesc : (Equals Universe TYPE (FuncTy x y) (PortTyDesc d))
                            -> Void
 funcTypeTyDescNotPortTyDesc (Same Refl Refl) impossible
 
@@ -63,11 +63,11 @@ moduleTyDescNotFuncParamTyDesc : Equals Universe TYPE (ModuleTyDesc) (FuncParamT
 moduleTyDescNotFuncParamTyDesc (Same Refl Refl) impossible
 
 export
-moduleTyDescNotChanTyDesc : Equals Universe TYPE (ModuleTyDesc) (ChanTyDesc type) -> Void
+moduleTyDescNotChanTyDesc : Equals Universe TYPE (ModuleTyDesc) ChanTyDesc -> Void
 moduleTyDescNotChanTyDesc (Same Refl Refl) impossible
 
 export
-moduleTyDescNotPortTyDesc : Equals Universe TYPE (ModuleTyDesc) (PortTyDesc type dir) -> Void
+moduleTyDescNotPortTyDesc : Equals Universe TYPE (ModuleTyDesc) (PortTyDesc dir) -> Void
 moduleTyDescNotPortTyDesc (Same Refl Refl) impossible
 
 export
@@ -83,57 +83,45 @@ moduleTyDescNotBoolTyDesc : Equals Universe TYPE (ModuleTyDesc) BoolTyDesc -> Vo
 moduleTyDescNotBoolTyDesc (Same Refl Refl) impossible
 
 export
-chanTyDescNotPortTyDesc : Equals Universe TYPE (ChanTyDesc type) (PortTyDesc t d) -> Void
+chanTyDescNotPortTyDesc : Equals Universe TYPE ChanTyDesc (PortTyDesc d) -> Void
 chanTyDescNotPortTyDesc (Same Refl Refl) impossible
 
 export
-chanTyDescNotUnitTyDesc : Equals Universe TYPE (ChanTyDesc type) UnitTyDesc -> Void
+chanTyDescNotUnitTyDesc : Equals Universe TYPE ChanTyDesc UnitTyDesc -> Void
 chanTyDescNotUnitTyDesc (Same Refl Refl) impossible
 
 export
-chanTyDescNotNatTyDesc : Equals Universe TYPE (ChanTyDesc type) NatTyDesc -> Void
+chanTyDescNotNatTyDesc : Equals Universe TYPE ChanTyDesc NatTyDesc -> Void
 chanTyDescNotNatTyDesc (Same Refl Refl) impossible
 
 export
-chanTyDescDiffTypes : (contra : Equals Universe TYPE x y -> Void)
-                   -> (prf    : Equals Universe TYPE (ChanTyDesc x) (ChanTyDesc y))
-                             -> Void
-chanTyDescDiffTypes contra (Same Refl Refl) = contra (Same Refl Refl)
-
-export
-chanTyDescNotFuncParamTyDesc : Equals Universe TYPE (ChanTyDesc type) (FuncParamTy u t d) -> Void
+chanTyDescNotFuncParamTyDesc : Equals Universe TYPE ChanTyDesc (FuncParamTy u t d) -> Void
 chanTyDescNotFuncParamTyDesc (Same Refl Refl) impossible
 
 export
-chanTyDescNotBoolTyDesc : Equals Universe TYPE (ChanTyDesc type) BoolTyDesc -> Void
+chanTyDescNotBoolTyDesc : Equals Universe TYPE ChanTyDesc BoolTyDesc -> Void
 chanTyDescNotBoolTyDesc (Same Refl Refl) impossible
 
 export
-portTyDescNotUnitTyDesc : Equals Universe TYPE (PortTyDesc type dir) UnitTyDesc -> Void
+portTyDescNotUnitTyDesc : Equals Universe TYPE (PortTyDesc dir) UnitTyDesc -> Void
 portTyDescNotUnitTyDesc (Same Refl Refl) impossible
 
 export
-portTyDescNotNatTyDesc : Equals Universe TYPE (PortTyDesc type dir) NatTyDesc -> Void
+portTyDescNotNatTyDesc : Equals Universe TYPE (PortTyDesc dir) NatTyDesc -> Void
 portTyDescNotNatTyDesc (Same Refl Refl) impossible
 
 export
-portTyDescDiffTypes : (contra : Equals Universe TYPE x y -> Void)
-                   -> (prf    : Equals Universe TYPE (PortTyDesc x a) (PortTyDesc y b))
-                             -> Void
-portTyDescDiffTypes contra (Same Refl Refl) = contra (Same Refl Refl)
-
-export
 portTyDescDiffDirs : (contra : a === b -> Void)
-                  -> (prf    : Equals Universe TYPE (PortTyDesc x a) (PortTyDesc x b))
+                  -> (prf    : Equals Universe TYPE (PortTyDesc a) (PortTyDesc b))
                             -> Void
 portTyDescDiffDirs contra (Same Refl Refl) = contra Refl
 
 export
-portTyDescNotFuncParamTyDesc : Equals Universe TYPE (PortTyDesc type dir) (FuncParamTy u x y) -> Void
+portTyDescNotFuncParamTyDesc : Equals Universe TYPE (PortTyDesc dir) (FuncParamTy u x y) -> Void
 portTyDescNotFuncParamTyDesc (Same Refl Refl) impossible
 
 export
-portTyDescNotBoolTyDesc : Equals Universe TYPE (PortTyDesc type dir) BoolTyDesc -> Void
+portTyDescNotBoolTyDesc : Equals Universe TYPE (PortTyDesc dir) BoolTyDesc -> Void
 portTyDescNotBoolTyDesc (Same Refl Refl) impossible
 
 export

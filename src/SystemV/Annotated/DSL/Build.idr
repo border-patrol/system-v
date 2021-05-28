@@ -16,6 +16,7 @@ import public Toolkit.Data.DList.Elem
 
 import public Toolkit.Decidable.Informative
 import public Toolkit.Decidable.Equality.Indexed
+import        Toolkit.Decidable.Equality.Views
 
 import        SystemV.Common.Utilities
 
@@ -41,7 +42,7 @@ termBuilder : (ctxt : Context TYPE lvls types)
 -- ## Types
 
 -- ### Unit
-termBuilder (Ctxt lvls names types) TyUnit
+termBuilder (Ctxt lvls names types) (TyUnit _)
   = pure (Res _ _ TyUnit)
 
 -- ### Logic
@@ -55,7 +56,7 @@ termBuilder (Ctxt lvls names types) (TyVect fc size type) with (isWhole size)
   termBuilder (Ctxt lvls names types) (TyVect fc (S n) type) | (Yes YesIsWhole) =
     do tres <- termBuilder (Ctxt lvls names types) type
 
-       (D ty t) <- isData InVector tres
+       (D ty t) <- isData (getFC type) InVector tres
 
        pure (Res _ _ (TyVect (W (S n) ItIsSucc) t))
 
@@ -66,7 +67,7 @@ termBuilder (Ctxt lvls names types) (TyVect fc size type) with (isWhole size)
 -- ### Ports
 termBuilder (Ctxt lvls names types) (TyPort fc type dir s i)
   = do tres <- termBuilder (Ctxt lvls names types) type
-       (D ty t) <- isData InVector tres
+       (D ty t) <- isData (getFC type) InVector tres
        pure (Res _ _ (TyPort t dir s i))
 
 -- ## STLC
@@ -83,29 +84,50 @@ termBuilder (Ctxt lvls names types) (Ref name) with (isName (get name) names)
 termBuilder (Ctxt lvls names types) (Func fc name type body)
   = do tres <- termBuilder (Ctxt lvls names types) type
 
-       ANN meta t termPa chk <- annotation tres
+       (TT tyType termType) <- isType (getFC type) tres
+       case synthesis tyType of
 
-       bres <- termBuilder (Ctxt (IDX TERM :: lvls) (MkName (Just name) (IDX TERM) :: names) (termPa :: types)) body
+         Yes (MkDPair argty (Synth argty prfarg prfret chk)) =>
 
-       B b vld <- Helpers.body termPa bres
+           do bres <- termBuilder (Ctxt (IDX TERM :: lvls)
+                                        (MkName (Just name) (IDX TERM) :: names)
+                                        (argty :: types)) body
 
-       pure (Res _ _ (Func t b chk vld))
+              (TTerm tyBody termBody) <- isTermTerm (getFC body) bres
+
+              case Function.validTerm (IDX TERM) (FuncTy argty tyBody) of
+                Yes prfWhy =>
+                  Right (Res _ _ (Func termType termBody chk prfWhy))
+
+                No msgWhyNot prfWhyNot =>
+                  Left (Err fc (InvalidFunc msgWhyNot argty tyBody))
+
+
+         No msgWhyNot prfWhyNot =>
+           Left (Err fc (InvalidFuncSynth msgWhyNot tyType))
+
 
 -- ### Application
-termBuilder (Ctxt lvls names types) (App func param)
+termBuilder (Ctxt lvls names types) (App fc func param)
   = do fres <- termBuilder (Ctxt lvls names types) func
        pres <- termBuilder (Ctxt lvls names types) param
 
-       APP f a <- application fres pres
+       (F     tyA  tyB f) <- isFunc     (getFC func)  fres
+       (TTerm tyA'     a) <- isTermTerm (getFC param) pres
 
-       pure (Res _ _ (App f a))
+       case TypeTerms.decEq tyA tyA' of
+         (Yes (Same Refl Refl)) =>
+           Right (Res _ _ (App f a))
+
+         (No msgWhyNot prfWhyNot) =>
+           Left (Err (getFC param) (TypeMismatch tyA tyA'))
 
 -- ## Modules \& Units \& Nats
 
-termBuilder (Ctxt lvls names types) EndModule
+termBuilder (Ctxt lvls names types) (EndModule _)
   = pure (Res _ _ EndModule)
 
-termBuilder (Ctxt lvls names types) UnitVal
+termBuilder (Ctxt lvls names types) (UnitVal _)
   = pure (Res _ _ MkUnit)
 
 -- ## Channels
@@ -114,7 +136,7 @@ termBuilder (Ctxt lvls names types) UnitVal
 
 termBuilder  (Ctxt lvls names types) (MkChan fc type s i)
   = do tres <- termBuilder (Ctxt lvls names types) type
-       (D ty t) <- isData InChan tres
+       (D ty t) <- isData (getFC type) InChan tres
        pure (Res _ _ (MkChan t s i))
 
 -- ### Projection
@@ -122,13 +144,13 @@ termBuilder  (Ctxt lvls names types) (MkChan fc type s i)
 -- #### Write To
 termBuilder  (Ctxt lvls names types) (WriteTo fc chan)
   = do cres <- termBuilder (Ctxt lvls names types) chan
-       (s ** i ** ty ** c) <- isChan cres
+       (s ** i ** ty ** c) <- isChan (getFC chan) cres
        pure (Res _ _ (WriteTo c))
 
 -- #### Read To
 termBuilder  (Ctxt lvls names types) (ReadFrom fc chan)
   = do cres <- termBuilder (Ctxt lvls names types) chan
-       (s ** i ** ty ** c) <- isChan cres
+       (s ** i ** ty ** c) <- isChan (getFC chan) cres
        pure (Res _ _ (ReadFrom c))
 
 -- ### Driving
@@ -137,31 +159,56 @@ termBuilder  (Ctxt lvls names types) (ReadFrom fc chan)
 
 termBuilder (Ctxt lvls names types) (Drive fc s i port)
   = do pres <- termBuilder (Ctxt lvls names types) port
-       (i ** s ** ty ** p) <- isPortWithDir pres OUT
-       pure (Res _ _ (Drive s i p))
+       (i' ** s' ** ty ** p) <- isPortWithDir (getFC port) pres OUT
+
+       let pg = PortTy ty OUT s' i'
+       let pe = PortTy ty OUT s  i
+
+       let err = Err (getFC port) (TypeMismatch pe pg)
+
+       case decEq i' i of
+         Yes Refl =>
+           case decEq s' s of
+             Yes Refl =>
+                Right (Res _ _ (Drive s' i' p))
+
+             No contra =>
+               Left err
+         No contra =>
+           Left err
 
 -- #### Catch
 termBuilder (Ctxt lvls names types) (Catch fc port)
   = do pres <- termBuilder (Ctxt lvls names types) port
-       (i ** s ** ty ** p) <- isPortWithDir pres IN
+       (i ** s ** ty ** p) <- isPortWithDir (getFC port) pres IN
        pure (Res _ _ (Catch p))
 
 -- ## Operations on Ports
 
 
 -- ### Casting
-termBuilder (Ctxt lvls names types) (Cast fc port type dir s i)
+termBuilder (Ctxt lvls names types) (Cast fc port type toDir toS toI)
   = do pres <- termBuilder (Ctxt lvls names types) port
        tres <- termBuilder (Ctxt lvls names types) type
-       canCast pres tres dir s i
+
+       (P fromI fromS fromDir fromTy from) <- isPort (getFC port) pres
+       (D toDTy data_) <- isData (getFC type) InCast tres
+
+       let fromP = PortTy fromTy fromDir fromS fromI
+       let toP   = PortTy toDTy  toDir   toS   toI
+
+       case cast (PortTy fromTy fromDir fromS fromI) (PortTy toDTy toDir toS toI) of
+         (Yes prfWhy)             => Right (Res _ _ (Cast from prfWhy))
+         (No msgWhyNot prfWhyNot) => Left (Err fc (InvalidCast msgWhyNot fromP toP))
 
 -- ### Slicing
 termBuilder (Ctxt lvls names types) (Slice fc port a o)
   = do pres <- termBuilder (Ctxt lvls names types) port
-       (PV s p)  <- isPortVect pres
+       (PV s p)  <- isPortVect (getFC port) pres
 
        case validBound a o s of
           Yes prfWhy => pure (Res _ _ (Slice p a o prfWhy))
+
           No msgWhyNot prfWhyNot => Left (Err fc (InvalidBound msgWhyNot))
 
 -- ### Conditionals
@@ -170,17 +217,45 @@ termBuilder (Ctxt lvls names types) (IfThenElse fc test true false)
   = do cres <- termBuilder (Ctxt lvls names types) test
        tres <- termBuilder (Ctxt lvls names types) true
        fres <- termBuilder (Ctxt lvls names types) false
-       IF c t f <- conditionals cres tres fres
 
-       pure (Res _ _ (IfThenElseR c t f))
+       (i ** s ** tyD ** cc) <- isPortWithDir (getFC test) cres IN
+       t  <- isUnit (getFC true) tres
+       f  <- isUnit (getFC false) fres
+
+       pure (Res _ _ (IfThenElseR cc t f))
 
 -- ### Connecting Ports
 termBuilder (Ctxt lvls names types) (Connect fc portL portR)
   = do lres <- termBuilder (Ctxt lvls names types) portL
        rres <- termBuilder (Ctxt lvls names types) portR
 
-       CP l r prf <- connectPorts lres rres
-       pure (Res _ _ (Connect l r prf))
+       (P ia sa da ta pa) <- isPort (getFC portL) lres
+       (P ib sb db tb pb) <- isPort (getFC portR) rres
+
+       let ptA = PortTy ta da sa ia
+       let ptB = PortTy tb db sb ib
+
+       let errMsg = Err fc (TypeMismatch ptA ptB)
+
+       case DataTypes.decEq ta tb of
+         (Yes (Same Refl Refl)) =>
+           case decEq sa sb of
+             Yes Refl =>
+               case decEq ia ib of
+                 Yes Refl =>
+                   case validFlow da db of
+                     Yes prfFlow => Right (Res _ _ (Connect pa pb prfFlow))
+                     No msgWhyNot prfWhyNot =>
+                       Left (InvalidFlow msgWhyNot)
+                 No contra =>
+                  Left errMsg
+
+             No contra =>
+               Left errMsg
+
+         (No msgWhyNot prfWhyNot) =>
+           Left errMsg
+
 
 -- ## Gates
 -- ### Not
@@ -188,19 +263,56 @@ termBuilder (Ctxt lvls names types) (NotGate fc portOut portIn)
   = do ores <- termBuilder (Ctxt lvls names types) portOut
        ires <- termBuilder (Ctxt lvls names types) portIn
 
-       NP pout pin <- notGatePorts ores ires
-       pure (Res _ _ (Not pout pin))
+       (io ** so ** to ** output) <- isPortWithDir (getFC portOut) ores OUT
+       (ii ** si ** ti ** input)  <- isPortWithDir (getFC portIn)  ires  IN
+
+       let po = PortTy to OUT so io
+       let pi = PortTy ti IN  si ii
+
+       let errMsg = Err fc (TypeMismatch po pi)
+
+       case DataTypes.decEq to ti of
+         Yes (Same Refl Refl) =>
+           case decEq so si of
+             Yes Refl =>
+               case decEq io ii of
+                 Yes Refl => Right (Res _ _ (Not output input))
+                 No contra =>
+                   Left errMsg
+             No contra =>
+                 Left errMsg
+         No msgWhyNot prfWhyNot =>
+           Left errMsg
 
 -- ### Bin Gate
 
 termBuilder (Ctxt lvls names types) (Gate fc kind portOut portInA portInB)
-  = do po  <- termBuilder (Ctxt lvls names types) portOut
-       pia <- termBuilder (Ctxt lvls names types) portInA
-       pib <- termBuilder (Ctxt lvls names types) portInB
+  = do o <- termBuilder (Ctxt lvls names types) portOut
+       a <- termBuilder (Ctxt lvls names types) portInA
+       b <- termBuilder (Ctxt lvls names types) portInB
 
-       BP pout pinA pinB <- binGatePorts po pia pib
+       (io ** so ** to ** output) <- isPortWithDir (getFC portOut) o OUT
+       (ia ** sa ** ta ** inputA) <- isPortWithDir (getFC portInA) a IN
+       (ib ** sb ** tb ** inputB) <- isPortWithDir (getFC portInB) b IN
 
-       pure (Res _ _ (Gate kind pout pinA pinB))
+       let po = PortTy to OUT so io
+       let pa = PortTy ta IN sa ia
+       let pb = PortTy tb IN sb ib
+
+       let errMsg = Err fc (TypeMismatch po pa)
+
+       case allDataEqual to ta tb of
+         No AB contra => Left errMsg
+         No AC contra => Left (Err fc (TypeMismatch po pb))
+         Yes ADE =>
+           case allEqual so sa sb of
+             No AB prfWhyNot => Left errMsg
+             No AC prfWhyNot => Left (Err fc (TypeMismatch po pb))
+             Yes AE =>
+               case allEqual io ia ib of
+                 No AB prfWhyNot => Left errMsg
+                 No AC prfWhyNot => Left (Err fc (TypeMismatch po pb))
+                 Yes AE => pure (Res _ _ (Gate kind output inputA inputB))
 
 -- ### Let binding
 termBuilder (Ctxt lvls names types) (Let fc name value body)
@@ -209,17 +321,19 @@ termBuilder (Ctxt lvls names types) (Let fc name value body)
        pure (Res _ _ (Let v b))
 
 -- ### Sequencing
-termBuilder (Ctxt lvls names types) (Seq left right)
+termBuilder (Ctxt lvls names types) (Seq fc left right)
   = do lres <- termBuilder (Ctxt lvls names types) left
-       l    <- isUnit lres
+       l    <- isUnit (getFC left) lres
+
        rres <- termBuilder (Ctxt lvls names types) right
-       (T ty r) <- isTerm rres
+       (T ty r) <- isTerm (getFC right) rres
+
        pure (Res _ _ (Seq l r))
 
 -- ## Indicies
 termBuilder (Ctxt lvls names types) (Index fc i port)
   = do tres <- termBuilder (Ctxt lvls names types) port
-       (PV s t) <- isPortVect tres
+       (PV s t) <- isPortVect (getFC port) tres
        case isLTE (S i) s of
          Yes prf => Right (Res _ _ (Index i t prf))
          No contra => Left (Err fc (IndexOutOfBounds i s))

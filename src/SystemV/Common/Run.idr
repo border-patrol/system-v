@@ -20,6 +20,28 @@ printLog True  t m = do putStr m
                         printLn t
 printLog False t m = putStrLn m
 
+namespace IO
+  export
+  timeToTryOrDie : Show err
+                => Bool
+                -> String
+                -> (a -> IO (Either err type))
+                -> a
+                -> IO type
+  timeToTryOrDie timing msg f a
+      = do start <- clockTime UTC
+           res <- f a
+           case res of
+             Left err => do stop <- clockTime UTC
+                            putStrLn "Error Happened"
+                            printLn err
+                            let diff = timeDifference stop start
+                            printLog timing diff msg
+                            exitFailure
+             Right res => do stop <- clockTime UTC
+                             let diff =  timeDifference stop start
+                             printLog timing diff msg
+                             pure res
 export
 timeToTryOrDie : Show err
               => Bool
@@ -40,6 +62,16 @@ timeToTryOrDie timing msg f a
                            let diff =  timeDifference stop start
                            printLog timing diff msg
                            pure res
+
+
+export
+debug : Show a => Bool -> a -> IO ()
+debug b e = when b (printLn e)
+
+export
+dump : Bool -> IO () -> IO ()
+dump b e = when b e
+
 
 export
 Show (Run.ParseError a) where

@@ -27,21 +27,19 @@ namespace Param
     -- Hardware Specific Constructs
     TyModule : SystemV ctxt ModuleTyDesc
 
-    TyChan : {type  : TYPE (DATA TERM)}
-          -> (typeD : SystemV ctxt type)
-                   -> SystemV ctxt (ChanTyDesc type)
+    TyChan : (typeD : SystemV ctxt DATATERM)
+                   -> SystemV ctxt ChanTyDesc
 
-    TyPort : {type : TYPE (DATA TERM)}
-          -> (desc : SystemV ctxt         type)
+    TyPort : (desc : SystemV ctxt DATATERM)
           -> (dir  : Direction)
-                  -> SystemV ctxt (PortTyDesc type dir)
+                  -> SystemV ctxt (PortTyDesc dir)
 
     -- Data types
-    TyLogic : SystemV ctxt LogicTy
+    TyLogic : SystemV ctxt DATATERM
 
     TyVect : (size : SystemV ctxt NatTy)
-          -> (typeE : SystemV ctxt type)
-          -> SystemV ctxt (VectorTy type)
+          -> (typeE : SystemV ctxt DATATERM)
+          -> SystemV ctxt DATATERM
 
     -- [ Terms ]
 
@@ -106,95 +104,76 @@ namespace Param
 
     EndModule : SystemV ctxt ModuleTy
 
-    MkPort : {type  : TYPE (DATA TERM)}
-
-          -> (typeD : SystemV ctxt type)
+    MkPort : (typeD : SystemV ctxt DATATERM)
 
           -> (dir   : Direction)
-                   -> SystemV ctxt (PortTy type dir)
+                   -> SystemV ctxt (PortTy dir)
 
-    MkChan : {type  : TYPE (DATA TERM)}
+    MkChan : (typeD : SystemV ctxt DATATERM)
+                   -> SystemV ctxt ChanTy
 
-          -> (typeD : SystemV ctxt type)
-                   -> SystemV ctxt (ChanTy type)
+    WriteTo : (chan : SystemV ctxt ChanTy)
+                   -> SystemV ctxt (PortTy OUT)
 
-    WriteTo : (chan : SystemV ctxt (ChanTy type))
-                   -> SystemV ctxt (PortTy type OUT)
+    ReadFrom : (chan : SystemV ctxt ChanTy)
+                    -> SystemV ctxt (PortTy IN)
 
-    ReadFrom : (chan : SystemV ctxt (ChanTy type))
-                    -> SystemV ctxt (PortTy type IN)
+    Drive : (chan : SystemV ctxt (PortTy OUT))
+                 -> SystemV ctxt UnitTy
 
-    Drive : {type    : TYPE (DATA TERM)}
-
-         -> (chan    : SystemV ctxt (PortTy type OUT))
-                    -> SystemV ctxt UnitTy
-
-    Catch : {type  : TYPE (DATA TERM)}
-
-         -> (chan : SystemV ctxt (PortTy type IN))
+    Catch : (chan : SystemV ctxt (PortTy IN))
                  -> SystemV ctxt UnitTy
 
     -- Runtime wiring decisions
-    IfThenElseR : {type     : TYPE (DATA TERM)}
-
-               -> (test     : SystemV ctxt (PortTy type IN))
+    IfThenElseR : (test     : SystemV ctxt (PortTy IN))
                -> (whenIsZ  : SystemV ctxt UnitTy)
                -> (whenNotZ : SystemV ctxt UnitTy)
                            -> SystemV ctxt UnitTy
 
     -- Connect two ports together.
-    Connect : {type : TYPE (DATA TERM)}
-           -> {dirL, dirR : Direction}
+    Connect : {dirL, dirR : Direction}
 
-           -> (portL : SystemV ctxt (PortTy type dirL))
-           -> (portR : SystemV ctxt (PortTy type dirR))
-           -> (prf    : ValidFlow dirL dirR)
+           -> (portL : SystemV ctxt (PortTy dirL))
+           -> (portR : SystemV ctxt (PortTy dirR))
+           -> (prf   : ValidFlow dirL dirR)
                     -> SystemV ctxt UnitTy
 
     -- Casts
-    Cast : {ty    : TYPE (DATA TERM)}
-        -> {dirA  : Direction}
+    Cast : {dirA  : Direction}
 
-        -> (portA : SystemV ctxt (PortTy ty dirA))
+        -> (portA : SystemV ctxt (PortTy dirA))
 
         -> (dirB  : Direction)
-        -> (prf   : ValidCast (PortTy ty dirA)
-                              (PortTy ty dirB))
-                 -> SystemV ctxt (PortTy ty dirB)
+        -> (prf   : ValidCast (PortTy dirA)
+                              (PortTy dirB))
+                 -> SystemV ctxt (PortTy dirB)
 
 
     -- Operations on Data.
-    Slice : {type  : TYPE (DATA TERM)}
-
-         -> (port  : SystemV ctxt (PortTy (VectorTy type) dir))
+    Slice : (port  : SystemV ctxt (PortTy dir))
          -> (alpha : SystemV ctxt (NatTy))
          -> (omega : SystemV ctxt (NatTy))
-                  -> SystemV ctxt (PortTy (VectorTy type) dir)
+                  -> SystemV ctxt (PortTy dir)
 
-    Index : {type  : TYPE (DATA TERM)}
-         -> {dir   : Direction}
+    Index : {dir   : Direction}
 
          -> (idx  : SystemV ctxt (NatTy))
-         -> (port : SystemV ctxt (PortTy (VectorTy type) dir))
-                 -> SystemV ctxt (PortTy type dir)
+         -> (port : SystemV ctxt (PortTy dir))
+                 -> SystemV ctxt (PortTy dir)
 
-    Size : {type  : TYPE (DATA TERM)}
-        -> {dir   : Direction}
+    Size : {dir   : Direction}
 
-        -> (port : SystemV ctxt (PortTy (VectorTy type) dir))
+        -> (port : SystemV ctxt (PortTy dir))
                 -> SystemV ctxt (NatTy)
 
     -- Gates
-    Not : {type : TYPE (DATA TERM)}
-       -> (portO : SystemV ctxt (PortTy type OUT))
-       -> (portI : SystemV ctxt (PortTy type IN))
+    Not : (portO : SystemV ctxt (PortTy OUT))
+       -> (portI : SystemV ctxt (PortTy IN))
                 -> SystemV ctxt UnitTy
 
-    Gate : {type : TYPE (DATA TERM)}
-
-        -> (kind          : GateKind)
-        -> (portO         : SystemV ctxt (PortTy type OUT))
-        -> (portIA,portIB : SystemV ctxt (PortTy type IN))
+    Gate : (kind          : GateKind)
+        -> (portO         : SystemV ctxt (PortTy OUT))
+        -> (portIA,portIB : SystemV ctxt (PortTy IN))
                          -> SystemV ctxt UnitTy
 
 

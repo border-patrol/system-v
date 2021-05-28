@@ -9,7 +9,8 @@ sourcedir = "src"
 
 modules =
 -- ## Vendored Utilities
-          Toolkit.Decidable.Equality.Indexed
+          Toolkit.Decidable.Do
+        , Toolkit.Decidable.Equality.Indexed
 
         , Toolkit.Decidable.Informative
 
@@ -116,6 +117,7 @@ modules =
 -- ### Terms
 
         , SystemV.Core.Terms
+        , SystemV.Core.Terms.NormalForm
 
         , SystemV.Core.Terms.Renaming
         , SystemV.Core.Terms.Substitution
@@ -194,7 +196,9 @@ modules =
 
         , SystemV.Param.Evaluation.Casting
         , SystemV.Param.Evaluation.Slicing
-        , SystemV.Param.Evaluation.Sizing
+
+        , SystemV.Param.Evaluation.Equality
+        , SystemV.Param.Evaluation.Check
 
         , SystemV.Param.Evaluation.Reduction
         , SystemV.Param.Evaluation.Progress
@@ -212,8 +216,9 @@ modules =
         , SystemV.Param.DSL
 
 -- ### Main
-
+        , SystemV.Param.Pretty
         , SystemV.Param.Run
+
 -- ## SystemV 'HigherOrder'
 
 -- ### Types

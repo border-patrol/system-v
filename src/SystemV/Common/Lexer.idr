@@ -15,19 +15,23 @@ keywords : List String
 keywords = [ "input", "output", "inout"
            , "typedef"
            , "module", "endmodule"
-           , "nat", "datatype"
            , "if", "begin", "else", "end"
            , "wire", "parameter"
            , "assign", "drive", "catch", "writeTo", "readFrom", "slice"
            , "logic"
            , "Top"
-           , "and", "not", "or", "eq", "lt", "gt"
-           , "add", "mul", "sub", "div"
            , "xor", "nor", "nand", "nxor"
-           , "for", "index"
+           , "index"
+
+           -- annotated
            , "high", "low", "rising", "falling", "insensitive"
            , "data", "address", "clock", "reset", "info", "interrupt", "control", "general"
+
+           -- params
+           , "and", "not", "or", "eq", "lt", "gt"
+           , "add", "mul", "sub", "div"
            , "nat", "datatype"
+           , "for"
            ]
 
 public export

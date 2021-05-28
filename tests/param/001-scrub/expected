@@ -3,6 +3,6 @@ LOG : Running SystemV Param
 LOG : Parsing Complete
 LOG : Elaboration 
 LOG : Static Typing Complete 
-LOG : Evaluating 
+LOG : Runtime Checking Complete 
 LOG : Exiting Param
 LOG : Bye

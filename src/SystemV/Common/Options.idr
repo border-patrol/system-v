@@ -24,6 +24,7 @@ record Opts where
  constructor MkOpts
  timing : Bool
  files  : List1 String
+ debug  : Bool
 
 
 
@@ -32,9 +33,10 @@ record RawOpts where
   timing' : Bool
   files'  : List String
   mode'   : Mode
+  debug'  : Bool
 
 defOpts : RawOpts
-defOpts = MkRawOpts False Nil CORE
+defOpts = MkRawOpts False Nil CORE False
 
 getRawOpts : List String -> Either Options.Error RawOpts
 getRawOpts args
@@ -57,14 +59,15 @@ getRawOpts args
           "core"        => Just $ record {mode'   = CORE} o
           "higherorder" => Just $ record {mode'   = HIGHERORDER} o
           "param"       => Just $ record {mode'   = PARAM} o
+          "debug"       => Just $ record {debug'  = True} o
           otherwise => Nothing
 
 
 processRawOpts : RawOpts -> Either Options.Error (Mode, Opts)
-processRawOpts (MkRawOpts timing [] m)
+processRawOpts (MkRawOpts timing [] m b)
   = Left MissingFile
-processRawOpts (MkRawOpts timing (x :: xs) m)
-  = Right (m, MkOpts timing (x ::: xs))
+processRawOpts (MkRawOpts timing (x :: xs) m b)
+  = Right (m, MkOpts timing (x ::: xs) b)
 
 export
 processArgs : IO (Either Options.Error

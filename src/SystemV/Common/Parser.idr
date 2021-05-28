@@ -164,6 +164,20 @@ namespace WithFileContext
          pure (ctor (newFC s e) v)
 
   export
+  inserts2 : Rule Token a
+          -> Rule Token b
+          -> (FileContext -> a -> b -> c)
+          -> Rule Token c
+  inserts2 pa pb ctor
+      = inserts body build
+    where
+      body : Rule Token (a,b)
+      body = (do {z <- pa; y <- pb; pure (z,y)})
+
+      build : FileContext -> (a,b) -> c
+      build fc (a,b) = ctor fc a b
+
+  export
   gives : String -> (FileContext -> a) -> Rule Token a
   gives s ctor
     = do b <- location

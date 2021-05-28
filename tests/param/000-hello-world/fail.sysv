@@ -23,7 +23,7 @@ module MaybeSwap #( parameter nat how = 2
 endmodule
 
 
-module Swap ();
+module Top ();
   wire logic a;
   wire logic b;
   wire logic x;
@@ -35,17 +35,11 @@ module Swap ();
   catch (readFrom y);
 
   MaybeSwap #( how = 1
-             , type = logic[2]
+             , type = logic[30]
              )
              ms ( (readFrom a)
                 , (readFrom b)
                 , (writeTo x)
                 , (writeTo y)
                 );
-endmodule
-
-module Top ();
-
-  //
-
 endmodule

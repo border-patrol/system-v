@@ -24,10 +24,8 @@ namespace Param
 
     -- Primitive Types
     DATATYPE : TYPE (DATA TYPE)
-    LogicTy  : TYPE (DATA TERM)
+    DATATERM : TYPE (DATA TERM)
 
-    VectorTy : (type : TYPE (DATA TERM))
-                    -> TYPE (DATA TERM)
 
     -- [ Function types ]
     FuncTy : (param  : TYPE (IDX level))
@@ -46,18 +44,14 @@ namespace Param
     ModuleTy     : TYPE (IDX TERM)
 
     -- Channels
-    ChanTyDesc : (type : TYPE (DATA TERM))
-                      -> TYPE (IDX TYPE)
+    ChanTyDesc : TYPE (IDX TYPE)
 
-    ChanTy     : (type : TYPE (DATA TERM))
-                      -> TYPE (IDX TERM)
+    ChanTy :  TYPE (IDX TERM)
 
-    PortTyDesc  : (type : TYPE (DATA TERM))
-               -> (dir  : Direction)
+    PortTyDesc  : (dir  : Direction)
                        -> TYPE (IDX TYPE)
 
-    PortTy : (type : TYPE (DATA TERM))
-          -> (dir  : Direction)
+    PortTy : (dir  : Direction)
                   -> TYPE (IDX TERM)
 
     -- [ Misc ]

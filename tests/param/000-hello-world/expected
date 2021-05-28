@@ -2,5 +2,23 @@ LOG : Starting SystemV
 LOG : Running SystemV Param
 LOG : Parsing Complete
 LOG : Elaboration 
+LOG : Static Typing Complete 
+LOG : Runtime Checking Complete 
 LOG : Exiting Param
 LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Param
+LOG : Parsing Complete
+LOG : Elaboration 
+LOG : Static Typing Complete 
+LOG : Runtime Checking Complete 
+LOG : Exiting Param
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Param
+LOG : Parsing Complete
+LOG : Elaboration 
+LOG : Static Typing Complete 
+Error Happened
+Type mismatch
+LOG : Runtime Checking Complete 

@@ -2,13 +2,10 @@ LOG : Starting SystemV
 LOG : Running SystemV Annotated
 LOG : Parsing Complete
 Error Happened
-example.sysv:0:11-0:
-example.sysv:2:2-22:
-example.sysv:3:2-23:
-example.sysv:5:2-42:
+example.sysv:5:9-26:
 Type Mismatch:
 Expected:
 	Port(Logic,OUT,High,Control)
 Given:
 	Port(Logic,OUT,Insensitive,General)
-LOG: Typing Complete 
+LOG : Typing Complete 

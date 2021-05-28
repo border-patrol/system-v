@@ -16,11 +16,11 @@ namespace Annotated
          putStrLn "LOG : Parsing Complete"
 
          term <- timeToTryOrDie (timing opts)
-                                "LOG: Typing Complete "
+                                "LOG : Typing Complete "
                                 Annotated.build
                                 ast
          v <- timeToTryOrDie (timing opts)
-                             "LOG: Evaluating "
+                             "LOG : Evaluating "
                              Annotated.eval
                              term
          putStrLn "LOG : Exiting Annotated"

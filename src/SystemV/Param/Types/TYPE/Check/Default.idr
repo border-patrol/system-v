@@ -41,9 +41,6 @@ mustBeNat ChkNat f (IsNat ChkNat) = f IsCheckedNat
 typeMismatch : (TyCheck type value -> Void) -> TyCheck (IDX TYPE) (IDX TERM) type value -> Void
 typeMismatch f (IsNat x) = f x
 
-dataMismatch : (TyCheckData type value -> Void) -> TyCheck (DATA TYPE) (DATA TERM) type value -> Void
-dataMismatch f (IsData x) = f x
-
 export
 tyCheck : (typeLevel, valueLevel : Universe)
        -> (type  : TYPE typeLevel)
@@ -61,12 +58,7 @@ tyCheck typeLevel valueLevel type value with (validLevels typeLevel valueLevel)
     tyCheck (IDX TYPE) (IDX TERM) type value | (Yes ForNat) | (No msgWhyNot prfWhyNot)
       = No (WrongType type value) (typeMismatch prfWhyNot)
 
-  tyCheck (DATA TYPE) (DATA TERM) type value | (Yes ForData) with (Data.typeCheck type value)
-    tyCheck (DATA TYPE) (DATA TERM) type value | (Yes ForData) | (Yes prfWhy)
-      = Yes (IsData prfWhy)
-
-    tyCheck (DATA TYPE) (DATA TERM) type value | (Yes ForData) | (No msgWhyNot prfWhyNot)
-      = No (WrongType type value) (dataMismatch prfWhyNot)
+  tyCheck (DATA TYPE) (DATA TERM) DATATYPE DATATERM | (Yes ForData) = Yes (IsData ChkData)
 
   tyCheck typeLevel valueLevel type value | (No msgWhyNot prfWhyNot)
     = No (UError msgWhyNot) (wrongTypes prfWhyNot)

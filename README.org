@@ -39,8 +39,9 @@ Doing so supports:
 3. designing new and interesting language features (expanding/exciting);
 
 * Languages presented
-** SystemV Base
-   SystemV-Base is the core formalism upon which all things are based.
+** SystemV.Core
+   =SystemV.Core= is the core formalism upon which all things are based.
+
    These base constructs are:
 
 + Modules as functions;
@@ -48,20 +49,43 @@ Doing so supports:
 + Logic and Vectors
 + Vector slicing, indexing, and sizing
 + Driving and catching
-+ Compile-time decisions using Conditional statements
++ Runtime decisions using Conditional statements
 + Connecting ports together
 + Casting ports
 + Primitive binary gates (and not)
 
+** SystemV.Annotated
 
-** SystemV Params
+=SystemV.Annotated= is an extension of =SystemV.Base= that adds behavioural annotations.
 
-   SystemV-Params is an extension of SystemV-Base that adds:
-+ Arithmetic on Natural Numbers
-+ Parameterised (with Defaults) Modules
-+ Division-by-Zero checking---run-time and compile-time
++ Wire sensitivity
++ Intended usage
+
+** SystemV.HigherOrder
+
+=SystemV.HigherOrder= is an extension of =SystemV.Base= that adds:
+
++ Higher Order module descriptions.
+
+The interesting thing with this language is that we dropped the constraint on prohibiting higher-order functions.
+An interesting question is: How to best represent higher-order modules in the language design?
+Should these higher-order designs be parameters or treated as ports?
 
 
+** SystemV.Params
+
+   =SystemV.Params= is an extension of =SystemV.Base= that adds:
+
++ Parameterised (with Defaults) Modules supporting Datatype and natural numbers
++ Boolean and Natural number arithmetic
++ Compile time wiring decisions (from parameterised modules)
+
+To support parameterisation of modules and numerical expressions we turn various compile time checks into runtime checks.
+Thus supporting:
+
++ index out of bounds checking
++ datatype mismatch
++ division-by-Zero checking
 
 * Note
 
@@ -69,10 +93,18 @@ This is a constant work in progress.
 Many of the ideas are currently scribbled on scraps of paper, or lost in the depths of complicated TeX for type-setting.
 We are currently mechanising them for demonstrable, reproducible proofs of correctness.
 
+The code is not polished.
+
 * Nominal and Structural Typing.
 
-We provide a 'meta' type-system to provide intrinsic typing of terms in SystemV.
-Certain terms in SystemV are typed using nominal types: Where they are defined matters.
+We provide a 'meta' type-system to provide intrinsic static typing of terms in SystemV.
+Certain terms in SystemVerilog are typed using nominal types: Where they are defined matters.
+
+We want to investigate how to type nominally typed data values in this setting.
+This is ongoing work.
+
+
+#+begin_comment
 We use the meta-type system to ensure that nominally typed values can be typed intrinsically against their nominal types.
 
 We treat type 'aliases' and 'newtypes' as term level constructs,
@@ -84,3 +116,4 @@ Standard constructions are used to represent the language as an
 EDSL, together with proof of progress taken from PLFA Part 2.
 
 We are yet to investigate nominal typing of data types when it comes to equivalence and compatibility.
+#+end_comment

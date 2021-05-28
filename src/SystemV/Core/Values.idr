@@ -13,14 +13,6 @@ public export
 data Value : SystemV ctxt type -> Type where
   -- [ Types ]
 
-  -- STLC
-  TyFunc : {param  : SystemV ctxt pty}
-        -> {return : SystemV ctxt rty}
-
-        -> Value param
-        -> Value return
-        -> Value (TyFunc param return prf)
-
   -- Hardware Specific
 
   TyPort : Value type -> (dir : Direction) -> Value (TyPort type dir)

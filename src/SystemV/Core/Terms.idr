@@ -14,14 +14,6 @@ namespace Core
   data SystemV : Context lvls -> TYPE level -> Type where
     -- [ Types ]
 
-    -- STLC
-    TyFunc : {paramTYPE, returnTYPE : TYPE (IDX TYPE)}
-
-          -> (paramTy  : SystemV ctxt         paramTYPE)
-          -> (returnTy : SystemV ctxt                   returnTYPE)
-          -> (vld      : Function.ValidType (IDX TYPE) (FuncTy paramTYPE returnTYPE))
-                      -> SystemV ctxt (FuncTy paramTYPE returnTYPE)
-
     -- Unit
     TyUnit : SystemV ctxt UnitTyDesc
 
@@ -40,7 +32,8 @@ namespace Core
     -- Data types
     TyLogic : SystemV ctxt LogicTyDesc
 
-    TyVect : (s     : Whole)
+    TyVect : {type : TYPE (DATA TYPE)}
+          -> (s     : Whole)
           -> (typeE : SystemV ctxt type)
                    -> SystemV ctxt (VectorTyDesc s type)
 

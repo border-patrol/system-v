@@ -51,7 +51,8 @@ data AST : Type where
   |||
   ||| App... (App <func> <param>) <chan>...
   ||| ```
-  App : (func  : AST)
+  App : FileContext
+     -> (func  : AST)
      -> (param : AST)
               -> AST
 
@@ -63,7 +64,7 @@ data AST : Type where
   TyLogic : (fc : FileContext)
                -> AST
 
-  TyModule : AST
+  TyModule : FileContext -> AST
   ||| Vectors
   |||
   ||| ```
@@ -236,17 +237,45 @@ data AST : Type where
      -> (body  : AST)
               -> AST
 
-  Seq : AST -> AST -> AST
-  EndModule : AST
-  UnitVal : AST
-  TyUnit : AST
+  Seq : FileContext -> AST -> AST -> AST
+  EndModule : FileContext -> AST
+  UnitVal   : FileContext -> AST
+  TyUnit    : FileContext -> AST
 
   NotGate : FileContext -> AST -> AST -> AST
   Gate : FileContext -> GateKind -> AST -> AST -> AST -> AST
 
   Index : FileContext -> Nat -> AST -> AST
 
-public export
+export
+getFC : AST -> FileContext
+getFC (Ref x) = span x
+getFC (TyFunc fc x y z) = fc
+getFC (Func fc name type body) = fc
+getFC (App x func param) = x
+getFC (TyLogic fc) = fc
+getFC (TyModule x) = x
+getFC (TyVect fc s type) = fc
+getFC (TyPort fc type dir) = fc
+getFC (MkChan fc type) = fc
+getFC (WriteTo fc chan) = fc
+getFC (ReadFrom fc chan) = fc
+getFC (Drive fc chan) = fc
+getFC (Catch fc chan) = fc
+getFC (Slice fc port s e) = fc
+getFC (IfThenElse fc test true false) = fc
+getFC (Connect fc portL portR) = fc
+getFC (Cast fc port type dir) = fc
+getFC (Let fc name value body) = fc
+getFC (Seq x y z) = x
+getFC (EndModule x) = x
+getFC (UnitVal x) = x
+getFC (TyUnit x) = x
+getFC (NotGate x y z) = x
+getFC (Gate x y z w v) = x
+getFC (Index x k y) = x
+
+export
 setFileName : (fname : String)
            -> (ast   : AST)
                     -> AST
@@ -259,8 +288,9 @@ setFileName fname (Func fc name type body)
          (setFileName fname type)
          (setFileName fname body)
 
-setFileName fname (App func param)
-  = App (setFileName fname func)
+setFileName fname (App fc func param)
+  = App (setSource fname fc)
+        (setFileName fname func)
         (setFileName fname param)
 
 setFileName fname (TyLogic fc)
@@ -326,20 +356,23 @@ setFileName fname (Let fc name value body)
         (setFileName fname value)
         (setFileName fname body)
 
-setFileName fname (Seq x y)
-  = Seq (setFileName fname x)
+setFileName fname (Seq fc x y)
+  = Seq (setSource fname fc)
+        (setFileName fname x)
         (setFileName fname y)
 
-setFileName fname EndModule
-  = EndModule
+setFileName fname (EndModule fc)
+  = EndModule (setSource fname fc)
 
-setFileName fname UnitVal
-  = UnitVal
-setFileName fname TyUnit
-  = TyUnit
+setFileName fname (UnitVal fc)
+  = UnitVal (setSource fname fc)
 
-setFileName fname TyModule
-  = TyModule
+setFileName fname (TyUnit fc)
+  = TyUnit (setSource fname fc)
+
+setFileName fname (TyModule fc)
+  = TyModule (setSource fname fc)
+
 setFileName fname (NotGate fc out input)
   = NotGate (setSource fname fc)
             (setFileName fname out)

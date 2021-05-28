@@ -43,11 +43,11 @@ synthesis : (type : TYPE (IDX TYPE))
          -> DecInfo Synthesis.Error
                     (term : TYPE (IDX TERM) ** Synthesis type term)
 synthesis type with (validType (IDX TYPE) type)
-  synthesis (PortTyDesc type dir) | (Yes IsPortTyDesc)
-    = Yes (PortTy type dir ** Synth (PortTy type dir)
+  synthesis (PortTyDesc dir) | (Yes IsPortTyDesc)
+    = Yes (PortTy dir ** Synth (PortTy dir)
                                     IsPortTyDesc
                                     IsPortTy
-                                    (ChkPort (Same Refl Refl) Refl)
+                                    (ChkPort Refl)
                                     )
 
   synthesis UnitTyDesc | (Yes IsUnitTyDesc)

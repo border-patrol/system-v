@@ -28,7 +28,7 @@ data Value : SystemV ctxt type -> Type where
   -- Data
   DATATYPE : Value DATATYPE
   TyLogic : Value TyLogic
-  TyVect : {type : SystemV ctxt typeD}
+  TyVect : {type : SystemV ctxt DATATERM}
         -> Value type
         -> IsSucc s
         -> Value (TyVect (MkNat s) type)
@@ -74,21 +74,21 @@ data Value : SystemV ctxt type -> Type where
         -> (dir : Direction)
         -> Value (MkPort type dir)
 
-  Not : {out : SystemV ctxt (PortTy type OUT)}
-     -> {i   : SystemV ctxt (PortTy type IN)}
+  Not : {out : SystemV ctxt (PortTy OUT)}
+     -> {i   : SystemV ctxt (PortTy IN)}
             -> Value out
             -> Value i
             -> Value (Not out i)
 
-  Gate : {out   : SystemV ctxt (PortTy type OUT)}
-      -> {ia,ib : SystemV ctxt (PortTy type IN)}
+  Gate : {out   : SystemV ctxt (PortTy OUT)}
+      -> {ia,ib : SystemV ctxt (PortTy IN)}
                -> Value out
                -> Value ia
                -> Value ib
                -> Value (Gate kind out ia ib)
 
-  Connect : {portL : SystemV ctxt (PortTy type dirL)}
-         -> {portR : SystemV ctxt (PortTy type dirR)}
+  Connect : {portL : SystemV ctxt (PortTy dirL)}
+         -> {portR : SystemV ctxt (PortTy dirR)}
          -> Value portL
          -> Value portR
          -> Value (Connect portL portR prf)

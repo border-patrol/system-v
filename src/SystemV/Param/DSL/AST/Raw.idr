@@ -22,15 +22,15 @@ data AST : Type where
   Ref : Ref -> AST
 
   Func : (fc     : FileContext)
-      -> (params : List (String, AST, AST))
-      -> (ports  : List (String, AST))
+      -> (params : List (FileContext, String, AST, AST))
+      -> (ports  : List (FileContext, String, AST))
       -> (body : AST)
               -> AST
 
   App : (fc : FileContext)
      -> (func   : AST)
-     -> (params : Maybe (List1 (String, AST)))
-     -> (ports  : List1 AST)
+     -> (params : Maybe (List1 (FileContext, String, AST)))
+     -> (ports  : List1 (FileContext, AST))
               -> AST
 
   TyNat  : (fc : FileContext) -> AST
@@ -99,42 +99,73 @@ data AST : Type where
      -> (body  : AST)
               -> AST
 
-  Seq : AST -> AST -> AST
-  EndModule : AST
-  UnitVal : AST
-  TyUnit : AST
+  Seq : FileContext -> AST -> AST -> AST
+  EndModule : FileContext -> AST
+  UnitVal   : FileContext -> AST
+  TyUnit    : FileContext -> AST
 
   NotGate : FileContext -> AST -> AST -> AST
   Gate : FileContext -> GateKind -> AST -> AST -> AST -> AST
 
   Index : FileContext -> AST -> AST -> AST
 
-  BExpr : Boolean.Expr -> AST
+  BExpr : FileContext -> Boolean.Expr -> AST
 
-  AExpr : Arithmetic.Expr -> AST
+  AExpr : FileContext -> Arithmetic.Expr -> AST
 
   For : FileContext -> String -> AST -> AST -> AST
 
 
+export
+getFC : AST -> FileContext
+getFC (Ref x)                         = span x
+getFC (Func fc params ports body)     = fc
+getFC (App fc func params ports)      = fc
+getFC (TyNat fc)                      = fc
+getFC (TyDATA fc)                     = fc
+getFC (TyLogic fc)                    = fc
+getFC (TyVect fc s type)              = fc
+getFC (TyPort fc type dir)            = fc
+getFC (MkChan fc type)                = fc
+getFC (WriteTo fc chan)               = fc
+getFC (ReadFrom fc chan)              = fc
+getFC (Drive fc chan)                 = fc
+getFC (Catch fc chan)                 = fc
+getFC (Slice fc port s e)             = fc
+getFC (IfThenElse fc test true false) = fc
+getFC (Connect fc portL portR)        = fc
+getFC (Cast fc port type dir)         = fc
+getFC (Let fc name value body)        = fc
+getFC (Seq fc y z)                     = fc
+getFC (EndModule fc)                   = fc
+getFC (UnitVal fc)                     = fc
+getFC (TyUnit fc)                      = fc
+getFC (NotGate fc y z)                 = fc
+getFC (Gate fc y z w v)                = fc
+getFC (Index fc y z)                   = fc
+getFC (BExpr fc y)                     = fc
+getFC (AExpr fc y)                     = fc
+getFC (For fc y z w)                   = fc
+
 mutual
-  setFileNamesParams' : String -> List (String, AST, AST)
-                               -> List (String, AST, AST)
+  setFileNamesParams' : String -> List (FileContext, String, AST, AST)
+                               -> List (FileContext, String, AST, AST)
   setFileNamesParams' f [] = []
-  setFileNamesParams' f ((p,x,y) :: xs)
-    = (p, setFileName f x, setFileName f y) :: setFileNamesParams' f xs
+  setFileNamesParams' f ((fc, p,x,y) :: xs)
+    = ((setSource f fc), p, setFileName f x, setFileName f y) :: setFileNamesParams' f xs
 
 
-  setFileNamesParams : String -> List (String, AST)
-                              -> List (String, AST)
+  setFileNamesParams : String -> List (FileContext, String, AST)
+                              -> List (FileContext, String, AST)
   setFileNamesParams f [] = []
-  setFileNamesParams f ((p,x) :: xs)
-    = (p, setFileName f x) :: setFileNamesParams f xs
+  setFileNamesParams f ((fc, p,x) :: xs)
+    = (setSource f fc, p, setFileName f x) :: setFileNamesParams f xs
 
-  setFileNamesPorts : String -> List AST
-                             -> List AST
+  setFileNamesPorts : String -> List (FileContext, AST)
+                             -> List (FileContext, AST)
   setFileNamesPorts f [] = []
-  setFileNamesPorts f (x :: xs)
-    = setFileName f x :: setFileNamesPorts f xs
+  setFileNamesPorts f ((fc,x) :: xs)
+    = (setSource f fc, setFileName f x) :: setFileNamesPorts f xs
 
 
   export
@@ -150,15 +181,15 @@ mutual
            (setFileNamesParams  fname ports)
            (setFileName fname body)
 
-  setFileName fname (App fc func params (port:::ports))
+  setFileName fname (App fc func params ((f, port):::ports))
     = let ps = case params of
                  Nothing => Nothing
-                 Just ((p,value):::ps')
-                   => Just ((p, setFileName fname value) ::: setFileNamesParams fname ps')
+                 Just ((f, p,value):::ps')
+                   => Just ((setSource fname f, p, setFileName fname value) ::: setFileNamesParams fname ps')
       in App (setSource fname fc)
              (setFileName fname func)
              ps
-             (setFileName fname port ::: setFileNamesPorts  fname ports)
+             ((setSource fname f, setFileName fname port) ::: setFileNamesPorts  fname ports)
 
   setFileName fname (TyNat fc)
     = TyNat (setSource fname fc)
@@ -231,18 +262,19 @@ mutual
           (setFileName fname value)
           (setFileName fname body)
 
-  setFileName fname (Seq x y)
-    = Seq (setFileName fname x)
+  setFileName fname (Seq fc x y)
+    = Seq (setSource fname fc)
+          (setFileName fname x)
           (setFileName fname y)
 
-  setFileName fname EndModule
-    = EndModule
+  setFileName fname (EndModule fc)
+    = EndModule (setSource fname fc)
 
-  setFileName fname UnitVal
-    = UnitVal
+  setFileName fname (UnitVal fc)
+    = UnitVal (setSource fname fc)
 
-  setFileName fname TyUnit
-    = TyUnit
+  setFileName fname (TyUnit fc )
+    = TyUnit (setSource fname fc)
 
   setFileName fname (NotGate fc out input)
     = NotGate (setSource fname fc)
@@ -261,11 +293,11 @@ mutual
             (setFileName fname i)
             (setFileName fname p)
 
-  setFileName fname (BExpr x)
-    = BExpr x
+  setFileName fname (BExpr fc x)
+    = BExpr (setSource fname fc) x
 
-  setFileName fname (AExpr x)
-    = AExpr x
+  setFileName fname (AExpr fc x)
+    = AExpr (setSource fname fc) x
 
   setFileName fname (For fc n i b)
      = For (setSource fname fc)

@@ -84,12 +84,12 @@ typeDef = do
   e <- location
   pure (newFC s e, n, decl)
 
-ports : Rule Token (List (String, AST))
+ports : Rule Token (List (FileContext, String, AST))
 ports =  symbol "(" *> symbol ")" *> pure Nil
      <|> do {p <- parens (commaSepBy1 port); pure (forget p)}
 
   where
-    port : Rule Token (String, AST)
+    port : Rule Token (FileContext, String, AST)
     port
       = do st <- location
            d <- direction
@@ -97,9 +97,9 @@ ports =  symbol "(" *> symbol ")" *> pure Nil
            t <- type_
            label <- name
            e <- location
-           pure (label, TyPort (newFC st e) t d)
+           pure (newFC st e, label, TyPort (newFC st e) t d)
 
-params : Rule Token (List (String, AST, AST))
+params : Rule Token (List (FileContext, String, AST, AST))
 params
     = do symbol "#"
          ps <- parens (commaSepBy1 param)
@@ -112,7 +112,7 @@ params
       paramTy =  WithFileContext.gives "nat"      TyNat
              <|> WithFileContext.gives "datatype" TyDATA
 
-      param : Rule Token (String, AST, AST)
+      param : Rule Token (FileContext, String, AST, AST)
       param
           = do s <- location
                keyword "parameter"
@@ -121,7 +121,7 @@ params
                symbol "="
                v <- paramVal
                e <- location
-               pure (l, ty, v)
+               pure (newFC s e, l, ty, v)
 
 writeTo : Rule Token AST
 writeTo = sexpr "writeTo" ref WriteTo
@@ -130,14 +130,36 @@ readFrom : Rule Token AST
 readFrom = sexpr "readFrom" ref ReadFrom
 
 
-portArg : Rule Token AST
-portArg =   ref
-        <|> writeTo
-        <|> readFrom
+portArg : Rule Token (FileContext, AST)
+portArg =   ref'
+        <|> writeTo'
+        <|> readFrom'
         <|> cast
+        <|> slice
         <|> index
   where
-    index : Rule Token AST
+    ref' : Rule Token (FileContext, AST)
+    ref'
+      = do s <- location
+           r <- ref
+           e <- location
+           pure (newFC s e, r)
+
+    writeTo' : Rule Token (FileContext, AST)
+    writeTo'
+      = do s <- location
+           w <- writeTo
+           e <- location
+           pure (newFC s e, w)
+
+    readFrom' : Rule Token (FileContext, AST)
+    readFrom'
+      = do s <- location
+           w <- readFrom
+           e <- location
+           pure (newFC s e, w)
+
+    index : Rule Token (FileContext, AST)
     index
       = do s <- location
            symbol "("
@@ -146,9 +168,9 @@ portArg =   ref
            p <- portArg
            symbol ")"
            e <- location
-           pure (Index (newFC s e) n p)
+           pure (newFC s e, Index (newFC s e) n (snd p))
 
-    slice : Rule Token AST
+    slice : Rule Token (FileContext, AST)
     slice
       = do s <- location
            symbol "("
@@ -158,9 +180,9 @@ portArg =   ref
            o <- number
            symbol ")"
            e <- location
-           pure (Slice (newFC s e) p a o)
+           pure (newFC s e, Slice (newFC s e) (snd p) a o)
 
-    cast : Rule Token AST
+    cast : Rule Token (FileContext, AST)
     cast
       = do s <- location
            symbol "("
@@ -170,23 +192,25 @@ portArg =   ref
            d <- direction
            symbol ")"
            e <- location
-           pure (Cast (newFC s e) p t d)
+           pure (newFC s e, Cast (newFC s e) (snd p) t d)
 
-portArgs : Rule Token (List1 AST)
+portArgs : Rule Token (List1 (FileContext, AST))
 portArgs = parens (commaSepBy1 portArg)
 
 
-paramArgs : Rule Token (List1 (String, AST))
+paramArgs : Rule Token (List1 (FileContext, (String, AST)))
 paramArgs
     = do symbol "#"
          parens (commaSepBy1 paramArg)
   where
-    paramArg : Rule Token (String, AST)
+    paramArg : Rule Token (FileContext, String, AST)
     paramArg
-      = do n <- name
+      = do l <- location
+           n <- name
            symbol "="
            v <- (number <|> type_)
-           pure (n,v)
+           e <- location
+           pure (newFC l e, n,v)
 
 
 driveCatch : Rule Token AST
@@ -203,7 +227,7 @@ assign
        symbol "="
        l <- portArg
        e <- location
-       pure (Connect (newFC st e) r l)
+       pure (Connect (newFC st e) (snd r) (snd l))
 
 
 
@@ -215,7 +239,7 @@ moduleInst
          n <- name
          as <- portArgs
          e <- location
-         pure ((newFC s e), n, App (newFC s e) f ps as)
+         pure ((newFC s e), n, App (newFC s e) (snd f) ps as)
 
 gateNot : Rule Token AST
 gateNot = do s <- location
@@ -227,7 +251,7 @@ gateNot = do s <- location
              i <- portArg
              symbol ")"
              e <- location
-             pure (NotGate (newFC s e) o i)
+             pure (NotGate (newFC s e) (snd o) (snd i))
 
 gate : Rule Token AST
 gate
@@ -242,7 +266,7 @@ gate
        ib <- portArg
        symbol ")"
        e <- location
-       pure (Gate (newFC s e) ki o ia ib)
+       pure (Gate (newFC s e) ki (snd o) (snd ia) (snd ib))
 
 gates : Rule Token AST
 gates = gateNot <|> gate
@@ -250,22 +274,34 @@ gates = gateNot <|> gate
 expr : Rule Token AST
 expr = driveCatch <|> assign <|> gates
 
+endModule : Rule Token AST
+endModule
+   = do s <- location
+        keyword "endmodule"
+        e <- location
+        pure (EndModule (newFC s e))
+
 mutual
   cond : Rule Token AST
   cond
-    = do s <- location
-         keyword "if"
-         commit
-         c <- (portArg <|> boolean)
-         keyword "begin"
-         t <- entries False
-         keyword "end"
-         keyword "else"
-         keyword "begin"
-         f <- entries False
-         keyword "end"
-         e <- location
-         pure (IfThenElse (newFC s e) c t f)
+      = do s <- location
+           keyword "if"
+           commit
+           c <- (pArg <|> boolean)
+           keyword "begin"
+           t <- entries False
+           keyword "end"
+           keyword "else"
+           keyword "begin"
+           f <- entries False
+           keyword "end"
+           e <- location
+           pure (IfThenElse (newFC s e) c t f)
+    where
+      pArg : Rule Token AST
+      pArg
+        = do p <- portArg
+             pure (snd p)
 
   for : Rule Token AST
   for
@@ -295,27 +331,28 @@ mutual
            <|> (do { d <- typeDef;                  pure (TDef     d)})
            <|> (do { c <- (chanDef <|> moduleInst); pure (Bindable c)})
 
-  entries : Bool -> Rule Token AST
-  entries howEnd
-      = do es <- some' entry
-           pure (collapse howEnd es)
+  collapse : AST -> List1 MBody -> AST
+  collapse l (x:::xs)
+      = foldr foldEntry l (x::xs)
     where
-
       foldEntry : MBody -> AST -> AST
       foldEntry (Expr expr) body
-        = Seq expr body
+        = Seq (getFC expr) expr body
       foldEntry (Bindable (fc, n, e)) body
         = Let fc n e body
       foldEntry (TDef (fc, n, e)) body
         = Let fc n e body
 
-      lastTerm : Bool -> AST
-      lastTerm True = EndModule
-      lastTerm False = UnitVal
+  entries : Bool -> Rule Token AST
+  entries True
+      = do es <- some entry
+           m <- endModule
+           pure (collapse m es)
+  entries False
+      = do es <- some entry
+           l <- location
+           pure (collapse (UnitVal (newFC l l)) es)
 
-      collapse : Bool -> (es : List MBody ** NonEmpty es) -> AST
-      collapse b (x::xs ** IsNonEmpty)
-        = foldr foldEntry (lastTerm b) (x::xs)
 
   moduleDefGen : Rule Token String -> Rule Token (FileContext, String, AST)
   moduleDefGen p
@@ -332,8 +369,7 @@ mutual
                       as <- option Nil params
                       ps <- ports
                       symbol ";"
-                      body <- option EndModule (entries True)
-                      keyword "endmodule"
+                      body <- ((entries True) <|> endModule)
                       e <- location
                       pure (Func (newFC s e) as ps body)
 

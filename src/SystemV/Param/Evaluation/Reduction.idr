@@ -11,7 +11,8 @@ import SystemV.Param.Terms.Substitution
 import SystemV.Param.Evaluation.Values
 import SystemV.Param.Evaluation.Slicing
 import SystemV.Param.Evaluation.Casting
-import SystemV.Param.Evaluation.Sizing
+
+import SystemV.Param.Evaluation.Check
 
 %default total
 
@@ -62,6 +63,15 @@ data Redux : (this : SystemV ctxt type)
                       -> Redux (App func this)
                                (App func that)
 
+    SimplifyFuncAppType : {param, return : TYPE (IDX TERM)}
+                       -> {body          : SystemV (ctxt += param) return}
+                       -> {var           : SystemV  ctxt    param}
+                       -> {this,that     : SystemV  ctxt    paramTyDesc}
+                       -> {prfTyCheck    : TyCheck paramTyDesc param}
+                       -> {prfValid      : Function.ValidTerm (IDX TERM) (FuncTy param return)}
+                       -> Redux this that
+                       -> Redux (App (Func this body prfTyCheck prfValid) var)
+                                (App (Func that body prfTyCheck prfValid) var)
 
     ReduceFunc : {param, return : TYPE (IDX TERM)}
               -> {body          : SystemV (ctxt += param) return}
@@ -69,8 +79,9 @@ data Redux : (this : SystemV ctxt type)
               -> {type          : SystemV  ctxt    paramTyDesc}
               -> {prfTyCheck    : TyCheck paramTyDesc param}
               -> {prfValid      : Function.ValidTerm (IDX TERM) (FuncTy param return)}
-
-              -> Value var
+              -> (typeV         : Value type)
+              -> (varV          : Value var)
+              -> Check type typeV var varV
               -> Redux (App (Func type body prfTyCheck prfValid) var)
                             (subst var body)
 
@@ -186,7 +197,7 @@ data Redux : (this : SystemV ctxt type)
                                  (Connect portL that prf)
 
     RewriteConnectRight : Redux (Connect portL (Seq left portR) prf)
-                               (Seq left (Connect portL portR prf))
+                                (Seq left (Connect portL portR prf))
 
     -- ### Casting
 
@@ -197,10 +208,9 @@ data Redux : (this : SystemV ctxt type)
     RewriteCast : Redux (Cast (Seq left port) dir prf)
                         (Seq left (Cast port dir prf))
 
-    ReduceCast : {ty : TYPE (DATA TERM)}
-              -> {port : SystemV ctxt (PortTy ty dirA)}
-              -> {prf  : ValidCast (PortTy ty dirA)
-                                   (PortTy ty dirB)}
+    ReduceCast : {port : SystemV ctxt (PortTy dirA)}
+              -> {prf  : ValidCast (PortTy dirA)
+                                   (PortTy dirB)}
               -> (val : Value port)
                      -> Redux (Cast port dirB prf)
                               (cast prf port val)
@@ -228,8 +238,7 @@ data Redux : (this : SystemV ctxt type)
     RewriteSliceOmega : Redux (Slice port alpha (Seq left omega))
                               (Seq left (Slice port alpha omega))
 
-    ReduceSlice : {ty       : TYPE (DATA TERM)}
-               -> {type     : SystemV ctxt ty}
+    ReduceSlice : {type : SystemV ctxt DATATERM}
                -> (prfWhole : IsSucc s)
                -> (prf      : ValidBound a o (W s prfWhole))
                            -> Redux (Slice (MkPort (TyVect (MkNat s) type) dir) (MkNat a) (MkNat o))
@@ -250,8 +259,7 @@ data Redux : (this : SystemV ctxt type)
     RewriteIndexPort : Redux (Index (n) (Seq left port))
                              (Seq left (Index (n) port))
 
-    ReduceIndex : {ty   : TYPE (DATA TERM)}
-               -> {type : SystemV ctxt ty}
+    ReduceIndex : {type : SystemV ctxt DATATERM}
                -> (prf  : LTE (S i) s)
                        -> Redux (Index (MkNat i) (MkPort (TyVect (MkNat s) type) dir))
                                 (MkPort type dir)
@@ -264,9 +272,8 @@ data Redux : (this : SystemV ctxt type)
                         (Seq left (Size port))
 
 
-    ReduceSize : (val : Value ty)
-                     -> Redux (Size (MkPort ty dir))
-                              (size ty val)
+    ReduceSize : Redux (Size (MkPort (TyVect (MkNat w) ty) dir))
+                       (MkNat w)
     -- ### Gates
 
     -- #### Not

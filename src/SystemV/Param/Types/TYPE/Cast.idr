@@ -63,7 +63,7 @@ namespace Direction
   validCastDir INOUT OUT = No (CannotCast INOUT OUT) boNotCastable
 
 data Castable : (typeA : TYPE (IDX TERM)) -> Type where
-  IsCastable : Castable (PortTy type dir)
+  IsCastable : Castable (PortTy dir)
 
 funcParamNotCastable : Castable (FuncParamTy u x y) -> Void
 funcParamNotCastable IsCastable impossible
@@ -74,7 +74,7 @@ funcNotCastable IsCastable impossible
 moduleNotCastable : Castable (ModuleTy) -> Void
 moduleNotCastable IsCastable impossible
 
-chanNotCastable : Castable (ChanTy type) -> Void
+chanNotCastable : Castable ChanTy  -> Void
 chanNotCastable IsCastable impossible
 
 unitNotCastable : Castable (UnitTy) -> Void
@@ -90,8 +90,8 @@ castable : (type : TYPE (IDX TERM)) -> Dec (Castable type)
 castable (FuncTy x y) = No funcNotCastable
 castable (FuncParamTy u x y) = No funcParamNotCastable
 castable ModuleTy = No moduleNotCastable
-castable (ChanTy type) = No chanNotCastable
-castable (PortTy type dir) = Yes IsCastable
+castable ChanTy  = No chanNotCastable
+castable (PortTy dir) = Yes IsCastable
 castable UnitTy = No unitNotCastable
 castable NatTy = No natNotCastable
 castable BoolTy = No boolNotCastable
@@ -108,39 +108,39 @@ data ValidCast : (typeA, typeB : TYPE (IDX TERM))
               -> Type
   where
    CanCast : (castDir : ValidDirCast           dirA               dirB)
-          -> (castTy  : EquivTypes         tyA                tyB)
-                     -> ValidCast (PortTy tyA dirA) (PortTy tyB dirB)
+          -> ValidCast (PortTy dirA) (PortTy dirB)
 
 cannotCastFrom : (Castable type -> Void)
           -> ValidCast type typeB
           -> Void
-cannotCastFrom contra (CanCast castDir castTy) = contra IsCastable
+cannotCastFrom contra (CanCast castDir) = contra IsCastable
 
 cannotCastTo : (Castable typeB -> Void)
           -> ValidCast type typeB
           -> Void
-cannotCastTo contra (CanCast castDir castTy) = contra IsCastable
+cannotCastTo contra (CanCast castDir) = contra IsCastable
 
 dirNotCastable : (contra : ValidDirCast dirA dirB -> Void)
-              -> (prf    : ValidCast (PortTy typeA dirA) (PortTy typeB dirB))
+              -> (prf    : ValidCast (PortTy dirA) (PortTy dirB))
                         -> Void
-dirNotCastable contra (CanCast castDir castTy) = contra castDir
-
-typeNotEquiv : (contra : EquivTypes a b -> Void)
-            -> (prf    : ValidCast (PortTy a dirA) (PortTy b dirB))
-                      -> Void
-typeNotEquiv contra (CanCast castDir castTy) = contra castTy
+dirNotCastable contra (CanCast castDir) = contra castDir
 
 export
 validCast : (typeA, typeB : TYPE (IDX TERM))
                          -> DecInfo Cast.Error
                                     (ValidCast typeA typeB)
 validCast typeA typeB with (castable typeA)
-  validCast (PortTy typeA dirA) typeB | (Yes IsCastable) with (castable typeB)
-    validCast (PortTy typeA dirA) (PortTy typeB dirB) | (Yes IsCastable) | (Yes IsCastable) with (validCastDir dirA dirB)
-      validCast (PortTy typeA dirA) (PortTy typeB dirB) | (Yes IsCastable) | (Yes IsCastable) | (Yes prfWhy) with (equivDataTypes typeA typeB)
-        validCast (PortTy typeA dirA) (PortTy typeB dirB) | (Yes IsCastable) | (Yes IsCastable) | (Yes prfWhy) | (Yes prfTy) = Yes (CanCast prfWhy prfTy)
-        validCast (PortTy typeA dirA) (PortTy typeB dirB) | (Yes IsCastable) | (Yes IsCastable) | (Yes prfWhy) | (No msgWhyNot prfWhyNot) = No (TypesNotEquiv msgWhyNot) (typeNotEquiv prfWhyNot)
-      validCast (PortTy typeA dirA) (PortTy typeB dirB) | (Yes IsCastable) | (Yes IsCastable) | (No msgWhyNot prfWhyNot) = No (DirNotCast msgWhyNot) (dirNotCastable prfWhyNot)
-    validCast (PortTy type dir) typeB | (Yes IsCastable) | (No contra) = No (NotCastableTo typeB) (cannotCastTo contra)
-  validCast typeA typeB | (No contra) = No (NotCastableFrom typeA) (cannotCastFrom contra)
+  validCast (PortTy a) typeB | (Yes IsCastable) with (castable typeB)
+    validCast (PortTy a) (PortTy b) | (Yes IsCastable) | (Yes IsCastable) with (validCastDir a b)
+      validCast (PortTy a) (PortTy b) | (Yes IsCastable) | (Yes IsCastable) | (Yes prfWhy)
+        = Yes (CanCast prfWhy)
+      validCast (PortTy a) (PortTy b) | (Yes IsCastable) | (Yes IsCastable) | (No msgWhyNot prfWhyNot)
+        = No (DirNotCast msgWhyNot) (dirNotCastable prfWhyNot)
+
+    validCast (PortTy a) typeB | (Yes IsCastable) | (No contra)
+      = No (NotCastableTo typeB) (cannotCastTo contra)
+
+  validCast typeA typeB | (No contra)
+    = No (NotCastableFrom typeA) (cannotCastFrom contra)
+
+-- [ EOF ]

@@ -25,12 +25,10 @@ data TyCheck : (type  : TYPE (IDX TYPE))
 
     ChkBool   : TyCheck BoolTyDesc BoolTy
 
-    ChkChan  : (Equals Universe TYPE typeA typeB)
-           -> TyCheck (ChanTyDesc typeA) (ChanTy typeB)
+    ChkChan  : TyCheck ChanTyDesc ChanTy
 
-    ChkPort : (Equals Universe TYPE typeA typeB)
-           -> (dirA === dirB)
-           -> TyCheck (PortTyDesc typeA dirA) (PortTy typeB dirB)
+    ChkPort : (dirA === dirB)
+           -> TyCheck (PortTyDesc dirA) (PortTy dirB)
 
 public export
 data Error = WrongType (TYPE (IDX TYPE)) (TYPE (IDX TERM))
@@ -40,11 +38,11 @@ data Error = WrongType (TYPE (IDX TYPE)) (TYPE (IDX TERM))
 funcNoTypeM  : TyCheck (FuncTy x y) ModuleTy -> Void
 funcNoTypeM ChkModule impossible
 
-funcNoTypeC  : TyCheck (FuncTy x y) (ChanTy z) -> Void
+funcNoTypeC  : TyCheck (FuncTy x y) ChanTy -> Void
 funcNoTypeC ChkModule impossible
 
 
-funcNoTypePo : TyCheck (FuncTy x y) (PortTy z dir) -> Void
+funcNoTypePo : TyCheck (FuncTy x y) (PortTy dir) -> Void
 funcNoTypePo ChkModule impossible
 
 funcNoTypeN : TyCheck (FuncTy x y) (NatTy) -> Void
@@ -67,11 +65,11 @@ funcDefNoTypeM  : TyCheck (FuncParamTy u x y) ModuleTy -> Void
 funcDefNoTypeM ChkModule impossible
 
 
-funcDefNoTypeC  : TyCheck (FuncParamTy u x y) (ChanTy z) -> Void
+funcDefNoTypeC  : TyCheck (FuncParamTy u x y) ChanTy -> Void
 funcDefNoTypeC ChkModule impossible
 
 
-funcDefNoTypePo : TyCheck (FuncParamTy u x y) (PortTy z dir) -> Void
+funcDefNoTypePo : TyCheck (FuncParamTy u x y) (PortTy dir) -> Void
 funcDefNoTypePo ChkModule impossible
 
 
@@ -85,17 +83,6 @@ funcDefNoTypeU ChkModule impossible
 funcDefNoTypeB  : TyCheck (FuncParamTy u x y) BoolTy -> Void
 funcDefNoTypeB ChkModule impossible
 
-
---funcDefNoTyCheckParam : (contra : TyCheck ty val -> Void)
---                     -> (prf    : TyCheck (FuncParamTy ty rty) (FuncParamTy val rval))
---                               -> Void
---funcDefNoTyCheckParam contra (ChkFuncDef x y) = contra x
---
---funcDefNoTyCheckRet : (contra : TyCheck rty rval -> Void)
---                   -> (prf    : TyCheck (FuncParamTy ty rty) (FuncParamTy val rval))
---                             -> Void
---funcDefNoTyCheckRet contra (ChkFuncDef x y) = contra y
-
 funcDefNoTypeF : TyCheck (FuncParamTy u x y) (FuncTy a r) -> Void
 funcDefNoTypeF ChkModule impossible
 
@@ -107,10 +94,10 @@ modeNoTypeF ChkModule impossible
 modeNoTypeFD : TyCheck ModuleTyDesc (FuncParamTy u x y) -> Void
 modeNoTypeFD ChkModule impossible
 
-modeNoTypeC : TyCheck ModuleTyDesc (ChanTy ty) -> Void
+modeNoTypeC : TyCheck ModuleTyDesc ChanTy -> Void
 modeNoTypeC ChkModule impossible
 
-modeNoTypePo : TyCheck ModuleTyDesc (PortTy ty dir) -> Void
+modeNoTypePo : TyCheck ModuleTyDesc (PortTy dir) -> Void
 modeNoTypePo ChkModule impossible
 
 modeNoTypeN : TyCheck ModuleTyDesc (NatTy) -> Void
@@ -127,72 +114,60 @@ modeNoTypeB ChkModule impossible
 
 -- ## Channels
 
-chanNotypeF : TyCheck (ChanTyDesc type) (FuncTy x y) -> Void
+chanNotypeF : TyCheck ChanTyDesc (FuncTy x y) -> Void
 chanNotypeF ChkModule impossible
 
 
-chanNotypeFD : TyCheck (ChanTyDesc type) (FuncParamTy u x y) -> Void
+chanNotypeFD : TyCheck ChanTyDesc (FuncParamTy u x y) -> Void
 chanNotypeFD ChkModule impossible
 
-chanNotypeM  : TyCheck (ChanTyDesc type) ModuleTy -> Void
+chanNotypeM  : TyCheck ChanTyDesc ModuleTy -> Void
 chanNotypeM ChkModule impossible
 
-chanNotypePo : TyCheck (ChanTyDesc type) (PortTy ty dir) -> Void
+chanNotypePo : TyCheck ChanTyDesc (PortTy dir) -> Void
 chanNotypePo ChkModule impossible
 
-chanNotypeN : TyCheck (ChanTyDesc x) (NatTy) -> Void
+chanNotypeN : TyCheck ChanTyDesc (NatTy) -> Void
 chanNotypeN ChkModule impossible
 
-chanNotypeU  : TyCheck (ChanTyDesc type) UnitTy -> Void
+chanNotypeU  : TyCheck ChanTyDesc UnitTy -> Void
 chanNotypeU ChkModule impossible
 
 
-chanNotypeB  : TyCheck (ChanTyDesc type) BoolTy -> Void
+chanNotypeB  : TyCheck ChanTyDesc BoolTy -> Void
 chanNotypeB ChkModule impossible
-
-
-chanHasWrongType : (contra : Equals Universe TYPE x y -> Void)
-                -> (prf    : TyCheck (ChanTyDesc x) (ChanTy y))
-                          -> Void
-chanHasWrongType contra (ChkChan (Same Refl Refl)) = contra (Same Refl Refl)
-
 
 -- ## Ports
 
-portNoTypeF : TyCheck (PortTyDesc type dir) (FuncTy x y) -> Void
+portNoTypeF : TyCheck (PortTyDesc dir) (FuncTy x y) -> Void
 portNoTypeF ChkModule impossible
 
-portNoTypeFD : TyCheck (PortTyDesc type dir) (FuncParamTy u x y) -> Void
+portNoTypeFD : TyCheck (PortTyDesc dir) (FuncParamTy u x y) -> Void
 portNoTypeFD ChkModule impossible
 
-portNoTypeM : TyCheck (PortTyDesc type dir) ModuleTy -> Void
+portNoTypeM : TyCheck (PortTyDesc dir) ModuleTy -> Void
 portNoTypeM ChkModule impossible
 
 
-portNoTypeC : TyCheck (PortTyDesc type dir) (ChanTy ty) -> Void
+portNoTypeC : TyCheck (PortTyDesc dir) ChanTy -> Void
 portNoTypeC ChkModule impossible
 
 
-portNoTypeN : TyCheck (PortTyDesc x dir) NatTy -> Void
+portNoTypeN : TyCheck (PortTyDesc dir) NatTy -> Void
 portNoTypeN ChkModule impossible
 
 
-portNoTypeU : TyCheck (PortTyDesc type dir) UnitTy -> Void
+portNoTypeU : TyCheck (PortTyDesc dir) UnitTy -> Void
 portNoTypeU ChkModule impossible
 
 
-portNoTypeB : TyCheck (PortTyDesc type dir) BoolTy -> Void
+portNoTypeB : TyCheck (PortTyDesc dir) BoolTy -> Void
 portNoTypeB ChkModule impossible
 
-portWrongType : (contra : Equals Universe TYPE ty val -> Void)
-             -> (prf    : TyCheck (PortTyDesc ty dirT) (PortTy val dirV))
-                       -> Void
-portWrongType contra (ChkPort (Same Refl Refl) _) = contra (Same Refl Refl)
-
 portWrongDir : (contra : dirT === dirV -> Void)
-            -> (prf    : TyCheck (PortTyDesc ty dirT) (PortTy val dirV))
+            -> (prf    : TyCheck (PortTyDesc dirT) (PortTy dirV))
                       -> Void
-portWrongDir contra (ChkPort _ Refl) = contra Refl
+portWrongDir contra (ChkPort Refl) = contra Refl
 
 -- ## Nats
 
@@ -203,7 +178,7 @@ natNoTypeFD : TyCheck (NatTyDesc) (FuncParamTy u param return) -> Void
 natNoTypeFD ChkModule impossible
 
 
-natNoTypeC : TyCheck (NatTyDesc) (ChanTy x) -> Void
+natNoTypeC : TyCheck (NatTyDesc) ChanTy -> Void
 natNoTypeC ChkModule impossible
 
 
@@ -211,7 +186,7 @@ natNoTypeM : TyCheck (NatTyDesc) ModuleTy -> Void
 natNoTypeM ChkModule impossible
 
 
-natNoTypeP : TyCheck (NatTyDesc) (PortTy x dir) -> Void
+natNoTypeP : TyCheck (NatTyDesc) (PortTy dir) -> Void
 natNoTypeP ChkModule impossible
 
 
@@ -236,10 +211,10 @@ unitNoTypeM : TyCheck UnitTyDesc ModuleTy -> Void
 unitNoTypeM ChkModule impossible
 
 
-unitNoTypeC : TyCheck UnitTyDesc (ChanTy t) -> Void
+unitNoTypeC : TyCheck UnitTyDesc ChanTy -> Void
 unitNoTypeC ChkModule impossible
 
-unitNoTypePo : TyCheck UnitTyDesc (PortTy x dir) -> Void
+unitNoTypePo : TyCheck UnitTyDesc (PortTy dir) -> Void
 unitNoTypePo ChkModule impossible
 
 unitNoTypeN : TyCheck UnitTyDesc NatTy -> Void
@@ -265,10 +240,10 @@ boolNoTypeU : TyCheck BoolTyDesc UnitTy -> Void
 boolNoTypeU ChkModule impossible
 
 
-boolNoTypeC : TyCheck BoolTyDesc (ChanTy t) -> Void
+boolNoTypeC : TyCheck BoolTyDesc ChanTy -> Void
 boolNoTypeC ChkModule impossible
 
-boolNoTypePo : TyCheck BoolTyDesc (PortTy x dir) -> Void
+boolNoTypePo : TyCheck BoolTyDesc (PortTy dir) -> Void
 boolNoTypePo ChkModule impossible
 
 
@@ -295,9 +270,9 @@ typeCheck type value with (type)
       = No (WrongType type value) func
     typeCheck type value | (FuncTy x y) | ModuleTy
       = No (WrongType type value) (funcNoTypeM)
-    typeCheck type value | (FuncTy x y) | (ChanTy z)
+    typeCheck type value | (FuncTy x y) | ChanTy
       = No (WrongType type value) (funcNoTypeC)
-    typeCheck type value | (FuncTy x y) | (PortTy z dir)
+    typeCheck type value | (FuncTy x y) | (PortTy dir)
       = No (WrongType type value) (funcNoTypePo)
     typeCheck type value | (FuncTy x y) | NatTy
       = No (WrongType type value) (funcNoTypeN)
@@ -315,9 +290,9 @@ typeCheck type value with (type)
       = No (WrongType type value) (modeNoTypeF)
     typeCheck type value | ModuleTyDesc | ModuleTy
       = Yes ChkModule
-    typeCheck type value | ModuleTyDesc | (ChanTy x)
+    typeCheck type value | ModuleTyDesc | ChanTy
       = No (WrongType type value) (modeNoTypeC)
-    typeCheck type value | ModuleTyDesc | (PortTy x dir)
+    typeCheck type value | ModuleTyDesc | (PortTy dir)
       = No (WrongType type value) (modeNoTypePo)
     typeCheck type value | ModuleTyDesc | NatTy
       = No (WrongType type value) (modeNoTypeN)
@@ -328,51 +303,46 @@ typeCheck type value with (type)
     typeCheck type value | ModuleTyDesc | (FuncParamTy u a r)
       = No (WrongType type value) (modeNoTypeFD)
 
-  typeCheck type value | (ChanTyDesc x) with (value)
-    typeCheck type value | (ChanTyDesc x) | (FuncTy y z)
+  typeCheck type value | ChanTyDesc with (value)
+    typeCheck type value | ChanTyDesc | (FuncTy y z)
       = No (WrongType type value) (chanNotypeF)
-    typeCheck type value | (ChanTyDesc x) | ModuleTy
+    typeCheck type value | ChanTyDesc | ModuleTy
       = No (WrongType type value) (chanNotypeM)
 
-    typeCheck type value | (ChanTyDesc x) | (ChanTy y) with (DataTerms.decEq x y)
-      typeCheck type value | (ChanTyDesc x) | (ChanTy y) | (Yes prfWhy)
-        = Yes (ChkChan prfWhy)
-      typeCheck type value | (ChanTyDesc x) | (ChanTy y) | (No msgWhyNot prfWhyNot)
-        = No (WrongType type value) (chanHasWrongType prfWhyNot)
+    typeCheck type value | ChanTyDesc | ChanTy
+      = Yes ChkChan
 
-    typeCheck type value | (ChanTyDesc x) | (PortTy y dir)
+    typeCheck type value | ChanTyDesc | (PortTy dir)
       = No (WrongType type value) (chanNotypePo)
-    typeCheck type value | (ChanTyDesc x) | NatTy
+    typeCheck type value | ChanTyDesc | NatTy
       = No (WrongType type value) (chanNotypeN)
-    typeCheck type value | (ChanTyDesc x) | UnitTy
+    typeCheck type value | ChanTyDesc | UnitTy
       = No (WrongType type value) (chanNotypeU)
-    typeCheck type value | (ChanTyDesc x) | BoolTy
+    typeCheck type value | ChanTyDesc | BoolTy
       = No (WrongType type value) (chanNotypeB)
-    typeCheck type value | (ChanTyDesc x) | (FuncParamTy u a r)
+    typeCheck type value | ChanTyDesc | (FuncParamTy u a r)
       = No (WrongType type value) (chanNotypeFD)
 
-  typeCheck type value | (PortTyDesc x dir) with (value)
-    typeCheck type value | (PortTyDesc x dir) | (FuncTy y z)
+  typeCheck type value | (PortTyDesc dir) with (value)
+    typeCheck type value | (PortTyDesc dir) | (FuncTy y z)
       = No (WrongType type value) (portNoTypeF)
-    typeCheck type value | (PortTyDesc x dir) | ModuleTy
+    typeCheck type value | (PortTyDesc dir) | ModuleTy
       = No (WrongType type value) (portNoTypeM)
-    typeCheck type value | (PortTyDesc x dir) | (ChanTy y)
+    typeCheck type value | (PortTyDesc dir) | ChanTy
       = No (WrongType type value) (portNoTypeC)
-    typeCheck type value | (PortTyDesc x dir) | (PortTy y z) with (DataTerms.decEq x y)
-      typeCheck type value | (PortTyDesc x dir) | (PortTy y z) | (Yes prfWhy) with (Direction.decEq dir z)
-        typeCheck type value | (PortTyDesc x dir) | (PortTy y dir) | (Yes prfWhy) | (Yes Refl)
-          = Yes (ChkPort prfWhy Refl)
-        typeCheck type value | (PortTyDesc x dir) | (PortTy y z) | (Yes prfWhy) | (No contra)
+    typeCheck type value | (PortTyDesc dir) | (PortTy z) with (Direction.decEq dir z)
+        typeCheck type value | (PortTyDesc dir) | (PortTy dir) | (Yes Refl)
+          = Yes (ChkPort Refl)
+        typeCheck type value | (PortTyDesc dir) | (PortTy z) | (No contra)
           = No (WrongType type value) (portWrongDir contra)
-      typeCheck type value | (PortTyDesc x dir) | (PortTy y z) | (No msgWhyNot prfWhyNot)
-        = No (WrongType type value) (portWrongType prfWhyNot)
-    typeCheck type value | (PortTyDesc x dir) | NatTy
+
+    typeCheck type value | (PortTyDesc dir) | NatTy
       = No (WrongType type value) (portNoTypeN)
-    typeCheck type value | (PortTyDesc x dir) | UnitTy
+    typeCheck type value | (PortTyDesc dir) | UnitTy
       = No (WrongType type value) (portNoTypeU)
-    typeCheck type value | (PortTyDesc x dir) | BoolTy
+    typeCheck type value | (PortTyDesc dir) | BoolTy
       = No (WrongType type value) (portNoTypeB)
-    typeCheck type value | (PortTyDesc x dir) | (FuncParamTy u a r)
+    typeCheck type value | (PortTyDesc dir) | (FuncParamTy u a r)
       = No (WrongType type value) (portNoTypeFD)
 
   typeCheck type value | (NatTyDesc) with (value)
@@ -380,9 +350,9 @@ typeCheck type value with (type)
       = No (WrongType type value) natNoTypeF
     typeCheck type value | (NatTyDesc) | ModuleTy
       = No (WrongType type value) natNoTypeM
-    typeCheck type value | (NatTyDesc) | (ChanTy x)
+    typeCheck type value | (NatTyDesc) | ChanTy
       = No (WrongType type value) natNoTypeC
-    typeCheck type value | (NatTyDesc) | (PortTy x dir)
+    typeCheck type value | (NatTyDesc) | (PortTy dir)
       = No (WrongType type value) natNoTypeP
     typeCheck type value | (NatTyDesc) | (NatTy)
       = Yes ChkNat
@@ -399,9 +369,9 @@ typeCheck type value with (type)
       = No (WrongType type value) (unitNoTypeF)
     typeCheck type value | UnitTyDesc | ModuleTy
       = No (WrongType type value) (unitNoTypeM)
-    typeCheck type value | UnitTyDesc | (ChanTy x)
+    typeCheck type value | UnitTyDesc | ChanTy
       = No (WrongType type value) (unitNoTypeC)
-    typeCheck type value | UnitTyDesc | (PortTy x dir)
+    typeCheck type value | UnitTyDesc | (PortTy dir)
       = No (WrongType type value) (unitNoTypePo)
     typeCheck type value | UnitTyDesc | NatTy
       = No (WrongType type value) (unitNoTypeN)
@@ -419,9 +389,9 @@ typeCheck type value with (type)
 
     typeCheck type value | (FuncParamTy u x y) | ModuleTy
       = No (WrongType type value) (funcDefNoTypeM)
-    typeCheck type value | (FuncParamTy u x y) | (ChanTy z)
+    typeCheck type value | (FuncParamTy u x y) | ChanTy
       = No (WrongType type value) (funcDefNoTypeC)
-    typeCheck type value | (FuncParamTy u x y) | (PortTy z dir)
+    typeCheck type value | (FuncParamTy u x y) | (PortTy dir)
       = No (WrongType type value) (funcDefNoTypePo)
     typeCheck type value | (FuncParamTy u x y) | NatTy
       = No (WrongType type value) (funcDefNoTypeN)
@@ -441,9 +411,9 @@ typeCheck type value with (type)
       = No (WrongType type value) boolNoTypeFD
     typeCheck type value | BoolTyDesc | ModuleTy
       = No (WrongType type value) boolNoTypeM
-    typeCheck type value | BoolTyDesc | (ChanTy x)
+    typeCheck type value | BoolTyDesc | ChanTy
       = No (WrongType type value) boolNoTypeC
-    typeCheck type value | BoolTyDesc | (PortTy x dir)
+    typeCheck type value | BoolTyDesc | (PortTy dir)
       = No (WrongType type value) boolNoTypePo
     typeCheck type value | BoolTyDesc | UnitTy
       = No (WrongType type value) boolNoTypeU
@@ -456,18 +426,18 @@ typeCheck type value with (type)
 
 public export
 data CheckedNat : (TyCheck type value) -> Type where
-  IsCheckedNat : CheckedNat (ChkNat)
+  IsCheckedNat : CheckedNat ChkNat
 
 isBool : CheckedNat ChkBool -> Void
 isBool IsCheckedNat impossible
 
-isC : CheckedNat (ChkChan x) -> Void
+isC : CheckedNat ChkChan -> Void
 isC IsCheckedNat impossible
 
 isModule : CheckedNat ChkModule -> Void
 isModule IsCheckedNat impossible
 
-isP : CheckedNat (ChkPort x prf) -> Void
+isP : CheckedNat (ChkPort prf) -> Void
 isP IsCheckedNat impossible
 
 isUnit : CheckedNat ChkUnit -> Void
@@ -481,6 +451,6 @@ isCheckedNat ChkModule = No isModule
 isCheckedNat ChkUnit = No isUnit
 
 isCheckedNat ChkBool = No isBool
-isCheckedNat (ChkChan x) = No isC
-isCheckedNat (ChkPort x prf) = No isP
+isCheckedNat ChkChan = No isC
+isCheckedNat (ChkPort prf) = No isP
 -- [ EOF ]

@@ -1,5 +1,7 @@
 module SystemV.Param.Evaluation.Progress
 
+import Toolkit.Decidable.Equality.Views
+
 import SystemV.Common.Utilities
 import SystemV.Param.Types
 import SystemV.Param.Terms
@@ -8,23 +10,19 @@ import SystemV.Param.Terms
 import SystemV.Param.Terms.Renaming
 import SystemV.Param.Terms.Substitution
 
+import SystemV.Param.Evaluation.Error
 import SystemV.Param.Evaluation.Values
 
 import SystemV.Param.Evaluation.Casting
 import SystemV.Param.Evaluation.Slicing
 import SystemV.Param.Evaluation.Sizing
 
+import SystemV.Param.Evaluation.Equality
+import SystemV.Param.Evaluation.Check
+
 import SystemV.Param.Evaluation.Reduction
 
 %default total
-
-public export
-data Error = VectorCannotBeZero
-           | IndexOutOfBounds Nat Whole
-           | InvalidCast Cast.Error
-           | InvalidBound Sliceable.Error
-           | UnexpectedSeq
-           | ArithOpError Arithmetic.Error
 
 public export
 data Progress : (term : SystemV Nil type)
@@ -39,7 +37,7 @@ data Progress : (term : SystemV Nil type)
                       -> Progress this
 
     Halt : {term   : SystemV Nil type}
-        -> (reason : Progress.Error)
+        -> (reason : Param.Evaluation.Error)
                   -> Progress term
 
 export
@@ -112,8 +110,18 @@ progress (Func x body prf vld) = Done Func
 progress (App func param) with (progress func)
   progress (App (Func ty body prf vld) param) | (Done Func) with (progress param)
 
-    progress (App (Func ty body prf vld) param) | (Done Func) | (Done value)
-      = Step (ReduceFunc value {body=body})
+    progress (App (Func ty body prf vld) param) | (Done Func) | (Done value) with (progress ty)
+      progress (App (Func ty body prf vld) param) | (Done Func) | (Done value) | (Done tyV) with (check ty tyV param value prf vld)
+        progress (App (Func ty body prf vld) param) | (Done Func) | (Done value) | (Done tyV) | Left err
+          = case err of
+             UnexpectedSeq => Halt UnexpectedSeq
+             TypeMismatch a b => Halt (TypeMismatch a b)
+        progress (App (Func ty body prf vld) param) | (Done Func) | (Done value) | (Done tyV) | (Right x)
+          = Step (ReduceFunc tyV value x {body=body})
+      progress (App (Func ty body prf vld) param) | (Done Func) | (Done value) | (Step step)
+        = Step (SimplifyFuncAppType step)
+      progress (App (Func ty body prf vld) param) | (Done Func) | (Done value) | (Halt reason)
+        = Halt reason
 
     progress (App (Func ty body prf vld) param) | (Done Func) | (Step step)
       = Step (SimplifyFuncAppVar Func step)
@@ -274,7 +282,9 @@ progress (IfThenElseR test whenIsZ whenNotZ) with (progress test)
 progress (Connect portL portR prf) with (progress portL)
   progress (Connect (MkPort tyL dirL) portR prf) | (Done (MkPort x dirL)) with (progress portR)
     progress (Connect (MkPort tyL dirL) (MkPort tyR dirR) prf) | (Done (MkPort x dirL)) | (Done (MkPort y dirR))
-      = Done (Connect (MkPort x dirL) (MkPort y dirR))
+      = case decEq tyL x tyR y of
+          No c => Halt (TypeMismatch tyL tyR)
+          Yes Refl => Done (Connect (MkPort x dirL) (MkPort y dirR))
 
     progress (Connect (MkPort tyL dirL) (Seq left right) prf) | (Done (MkPort x dirL)) | (Done (Seq y z))
       = Step RewriteConnectRight
@@ -319,7 +329,8 @@ progress (Slice port alpha omega) with (progress port)
             = Step (ReduceSlice z prfWhy)
           progress (Slice (MkPort (TyVect (MkNat s) ty) dir) (MkNat a) (MkNat o)) | (Done (MkPort x dir)) | (Done MkNat) | (Done MkNat) | (TyVect y z) | (No msgWhyNot prfWhyNot)
             = Halt (InvalidBound msgWhyNot)
-
+        progress (Slice (MkPort TyLogic dir) (MkNat a) (MkNat o)) | (Done (MkPort x dir)) | (Done MkNat) | (Done MkNat) | TyLogic
+          = Halt ExpectedVector
       progress (Slice (MkPort tyP dir) (MkNat a) (Seq l r)) | (Done (MkPort x dir)) | (Done MkNat) | (Done (Seq x' y))
         = Step RewriteSliceOmega
 
@@ -358,7 +369,8 @@ progress (Index n port)  with (progress port)
           = Step (ReduceIndex prf)
         progress (Index (MkNat n) (MkPort (TyVect (MkNat s) ty) dir)) | (Done (MkPort tyV dir)) | (Done MkNat) | (TyVect x y) | (No contra)
           = Halt (IndexOutOfBounds n (W s y))
-
+      progress (Index (MkNat n) (MkPort TyLogic dir)) | (Done (MkPort tyV dir)) | (Done MkNat) | TyLogic
+        = Halt ExpectedVector
     progress (Index (Seq l r) (MkPort ty dir)) | (Done (MkPort tyV dir)) | (Done (Seq x y))
       = Step RewriteIndexIdx
 
@@ -366,8 +378,6 @@ progress (Index n port)  with (progress port)
       = Step (SimplifyIndexIdx step)
     progress (Index n (MkPort ty dir)) | (Done (MkPort tyV dir)) | (Halt reason)
       = Halt reason
-
-    -- Step (ReduceIndex (MkPort tyV dir))
 
   progress (Index n (Seq left right)) | (Done (Seq x y))
     = Step RewriteIndexPort
@@ -381,14 +391,17 @@ progress (Index n port)  with (progress port)
 -- #### Size
 
 progress (Size port) with (progress port)
-  progress (Size (MkPort ty dir)) | (Done (MkPort x dir))
-    = Step (ReduceSize x)
+  progress (Size (MkPort ty dir)) | (Done (MkPort tyV dir)) with (tyV)
+    progress (Size (MkPort TyLogic dir)) | (Done (MkPort tyV dir)) | TyLogic
+      = Halt ExpectedVector
+    progress (Size (MkPort (TyVect (MkNat s) ty) dir)) | (Done (MkPort tyV dir)) | (TyVect x y)
+      = Step (ReduceSize)
+
   progress (Size (Seq left right)) | (Done (Seq x y))
     = Step RewriteSize
 
   progress (Size port) | (Step step)
     = Step (SimplifySizePort step)
-
   progress (Size port) | (Halt reason)
     = Halt reason
 
@@ -399,7 +412,9 @@ progress (Not portO portI) with (progress portO)
   progress (Not (MkPort ty OUT) portI) | (Done (MkPort tyValO OUT)) with (progress portI)
 
     progress (Not (MkPort tyO OUT) (MkPort tyI IN)) | (Done (MkPort tyValO OUT)) | (Done (MkPort tyVa IN))
-      = Done (Not (MkPort tyValO OUT) (MkPort tyVa IN ))
+      = case decEq tyO tyValO tyI tyVa of
+          Yes Refl => Done (Not (MkPort tyValO OUT) (MkPort tyVa IN ))
+          No contra => Halt (TypeMismatch tyO tyI)
 
     progress (Not (MkPort tyO OUT) (Seq left right)) | (Done (MkPort tyValO OUT)) | (Done (Seq x y))
       = Step RewriteNotInSeq
@@ -425,7 +440,12 @@ progress (Gate kind portO portIA portIB) with (progress portO)
   progress (Gate kind (MkPort ty OUT) portIA portIB) | (Done (MkPort tyV OUT)) with (progress portIA)
     progress (Gate kind (MkPort ty OUT) (MkPort tyIA IN) portIB) | (Done (MkPort tyV OUT)) | (Done (MkPort tyVIA IN)) with (progress portIB)
       progress (Gate kind (MkPort ty OUT) (MkPort tyIA IN) (MkPort tyIB IN)) | (Done (MkPort tyV OUT)) | (Done (MkPort tyVIA IN)) | (Done (MkPort tyVIB IN))
-        = Done (Gate (MkPort tyV OUT) (MkPort tyVIA IN) (MkPort tyVIB IN))
+        = case decEq ty tyV tyIA tyVIA of
+            No c => Halt (TypeMismatch ty tyIA)
+            Yes Refl =>
+              case decEq ty tyV tyIB tyVIB of
+                No c => Halt (TypeMismatch ty tyIB)
+                Yes Refl => Done (Gate (MkPort tyV OUT) (MkPort tyVIA IN) (MkPort tyVIB IN))
 
       progress (Gate kind (MkPort ty OUT) (MkPort tyIA IN) (Seq left right)) | (Done (MkPort tyV OUT)) | (Done (MkPort tyVIA IN)) | (Done (Seq x y))
         = Step RewriteBinInB
@@ -625,4 +645,5 @@ progress (For cnt body) with (progress cnt)
     = Halt reason
 
 --progress (Var _) impossible
+
 -- [ EOF ]

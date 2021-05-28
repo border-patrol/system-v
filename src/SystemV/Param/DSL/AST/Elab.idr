@@ -23,6 +23,7 @@ import SystemV.Param.DSL.AST.Raw
 import SystemV.Param.DSL.AST
 
 %hide Boolean.Raw.value
+%hide SystemV.Common.Parser.Arithmetic.value
 
 %default covering
 
@@ -37,12 +38,12 @@ foldrM funcM init (x :: xs)
 
 namespace ValidKey
   public export
-  data ValidKey : (given : (String, Raw.AST))
+  data ValidKey : (given : (FileContext, String, Raw.AST))
                -> (exp   : String)
                         -> Type
     where
       IsValid : (prf : given === expected)
-                    -> ValidKey (given,val) expected
+                    -> ValidKey (fc, given,val) expected
 
   export
   data Error = NotSame String String
@@ -52,18 +53,18 @@ namespace ValidKey
     show (NotSame x y) = show x ++ " is not equal to " ++ show y
 
   notValid : (given = expected -> Void)
-          -> ValidKey (given, value) expected
+          -> ValidKey (fc, given, value) expected
           -> Void
   notValid f (IsValid Refl) = f Refl
 
   export
-  validKey : (given : (String, Raw.AST))
+  validKey : (given : (FileContext, String, Raw.AST))
           -> (exp   : String)
                    -> DecInfo ValidKey.Error (ValidKey given exp)
-  validKey (given, value) expected with (decEq given expected)
-    validKey (given, value) expected | (Yes prf)
+  validKey (fc, given, value) expected with (decEq given expected)
+    validKey (fc, given, value) expected | (Yes prf)
       = Yes (IsValid prf)
-    validKey (given, value) expected | (No contra)
+    validKey (fc, given, value) expected | (No contra)
       = No (NotSame given expected) (notValid contra)
 
 FuncSpec : Type
@@ -72,8 +73,8 @@ FuncSpec = List String
 Env : Type
 Env = List (String,FuncSpec)
 
-ext : String -> List (String,Raw.AST, Raw.AST) -> Env -> Env
-ext x ys = (::) (x,map fst ys)
+ext : String -> List (FileContext, String,Raw.AST, Raw.AST) -> Env -> Env
+ext x ys = (::) (x,map (fst . snd) ys)
 
 public export
 data Error = Err FileContext Elab.Error
@@ -137,17 +138,17 @@ elab env (Func fc params ports body)
     foldPorts : FileContext
              -> Env
              -> (end    : Param.AST)
-             -> (ports  : List (String, Raw.AST))
+             -> (ports  : List (FileContext, String, Raw.AST))
                        -> Either Elab.Error Param.AST
     foldPorts fc env
         = foldrM (foldPort fc env)
       where
         foldPort : FileContext
                 -> Env
-                -> (nt   : (String, Raw.AST))
+                -> (nt   : (FileContext, String, Raw.AST))
                 -> (rest : Param.AST)
                         -> Either Elab.Error Param.AST
-        foldPort fc env (n, ty) rest
+        foldPort fc env (_,n, ty) rest
           = pure (Func fc n !(elab env ty)
                             rest)
 
@@ -155,17 +156,17 @@ elab env (Func fc params ports body)
     foldParams : FileContext
               -> Env
               -> (end  : Param.AST)
-              -> (rest : List (String, Raw.AST, Raw.AST))
+              -> (rest : List (FileContext,String, Raw.AST, Raw.AST))
                       -> Either Elab.Error Param.AST
     foldParams fc env
         = foldrM (foldParam fc env)
       where
         foldParam : FileContext
                  -> Env
-                 -> (ntv  : (String, Raw.AST, Raw.AST))
+                 -> (ntv  : (FileContext, String, Raw.AST, Raw.AST))
                  -> (rest : Param.AST)
                          -> Either Elab.Error Param.AST
-        foldParam fc env (n, ty, def) rest
+        foldParam fc env (_, n, ty, def) rest
           = pure (FuncDef fc n !(elab env ty)
                                !(elab env def)
                                rest)
@@ -174,11 +175,11 @@ elab env (Func fc params ports body)
     runFold : FileContext
            -> Env
            -> (end    : Param.AST)
-           -> (params : List (String, Raw.AST, Raw.AST))
-           -> (ports  : List (String, Raw.AST))
+           -> (params : List (FileContext, String, Raw.AST, Raw.AST))
+           -> (ports  : List (FileContext, String, Raw.AST))
                      -> Either Elab.Error Param.AST
     runFold fc _ end [] []
-      = pure (Func fc "" TyUnit end)
+      = pure (Func fc "()" (TyUnit fc) end)
 
     runFold fc env end [] (x :: xs)
       = foldPorts fc env end (x :: xs)
@@ -207,7 +208,7 @@ elab env (App fc (Ref ref) params ports)
     mkAppDefs : (fc    : FileContext)
              -> (env   : Env)
              -> (acc : Param.AST)
-             -> (ps    : List (String, Raw.AST))
+             -> (ps    : List (FileContext, String, Raw.AST))
              -> (s     : List String)
              -> (prf   : Subset ValidKey ps s)
                       -> Either Elab.Error Param.AST
@@ -218,26 +219,26 @@ elab env (App fc (Ref ref) params ports)
     -- In this case no overridden parameters have been used.
     -- We still need to apply the defaults left.
     mkAppDefs fc env acc [] s EmptyThis
-        = foldlM mkApp' acc s
+        = foldlM (mkApp' fc) acc s
       where
-        mkApp' : Param.AST -> String -> Either Elab.Error Param.AST
-        mkApp' a _ = pure (AppDef a)
+        mkApp' : FileContext -> Param.AST -> String -> Either Elab.Error Param.AST
+        mkApp' fc a _ = pure (AppDef fc a)
 
-    mkAppDefs fc env acc ((_,v) :: xs) (y :: ys) (Keep prf rest)
+    mkAppDefs fc env acc ((fc', _,v) :: xs) (y :: ys) (Keep prf rest)
       = do v' <- elab env v
-           mkAppDefs fc env (AppOver acc v') xs ys rest
+           mkAppDefs fc env (AppOver fc' acc v') xs ys rest
 
-    mkAppDefs fc env acc ps (y :: ys) (Skip rest)
-      = mkAppDefs fc env (AppDef acc) ps ys rest
+    mkAppDefs fc env acc ps (_ :: ys) (Skip rest)
+      = mkAppDefs fc env (AppDef fc acc) ps ys rest
 
-    mkApps : Env -> Param.AST -> List1 Raw.AST -> Either Elab.Error Param.AST
-    mkApps env start (head ::: tail)
-        = foldlM (mkApp env) start (head::tail)
+    mkApps : Env -> Param.AST -> List1 (FileContext, Raw.AST) -> Either Elab.Error Param.AST
+    mkApps env start ((fc,head) ::: tail)
+        = foldlM (mkApp env) start ((fc, head)::tail)
       where
-        mkApp : Env -> Param.AST -> Raw.AST -> Either Elab.Error Param.AST
-        mkApp env p rest
+        mkApp : Env -> Param.AST -> (FileContext, Raw.AST) -> Either Elab.Error Param.AST
+        mkApp env p (fc, rest)
           = do r' <- elab env rest
-               pure (App p r')
+               pure (App fc p r')
 
 
 
@@ -253,10 +254,10 @@ elab env (Let fc name value body)
   = pure (Let fc name !(elab env value)
                       !(elab env body))
 
-elab env (BExpr x)
+elab env (BExpr fc x)
     = pure (mkBoolExpr x)
 
-elab env (AExpr x)
+elab env (AExpr fc x)
     = pure (mkArithExpr x)
 
 elab env (For fc n i body)
@@ -320,18 +321,18 @@ elab env (Cast fc port type dir)
                   !(elab env type)
                   dir)
 
-elab env (Seq x y)
-  = pure (Seq !(elab env x)
-              !(elab env y))
+elab env (Seq fc x y)
+  = pure (Seq fc !(elab env x)
+                 !(elab env y))
 
-elab env EndModule
-  = pure EndModule
+elab env (EndModule fc)
+  = pure (EndModule fc)
 
-elab env UnitVal
-  = pure UnitVal
+elab env (UnitVal fc)
+  = pure (UnitVal fc)
 
-elab env TyUnit
-  = pure TyUnit
+elab env (TyUnit fc)
+  = pure (TyUnit fc)
 
 elab env (NotGate fc o i)
   = pure (NotGate fc !(elab env o)

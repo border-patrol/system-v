@@ -11,12 +11,13 @@ import SystemV.Param.Terms.Renaming
 
 import SystemV.Param.Terms.Substitution
 
+import public SystemV.Param.Evaluation.Error
 import SystemV.Param.Evaluation.Values
 import SystemV.Param.Evaluation.Casting
 import SystemV.Param.Evaluation.Sizing
 import SystemV.Param.Evaluation.Slicing
 import SystemV.Param.Evaluation.Reduction
-import public SystemV.Param.Evaluation.Progress
+import SystemV.Param.Evaluation.Progress
 
 %default total
 
@@ -39,7 +40,7 @@ data Finished : (term : SystemV ctxt type)
                       -> Finished term
 
     ErrorFound : {term   : SystemV ctxt type}
-              -> (reason : Progress.Error)
+              -> (reason : Param.Evaluation.Error)
                         -> Finished term
 
     OOF : Finished term
@@ -65,36 +66,18 @@ compute (More fuel) term with (progress term)
   compute (More fuel) term | (Halt reason) = RunEval Refl (ErrorFound reason)
 
 namespace Param
-  public export
-  data Error = NoFuel | RunTime Progress.Error
-
-  export
-  Show Progress.Error where
-    show  VectorCannotBeZero     = "Err"
-    show  (IndexOutOfBounds n w) = "Err"
-    show  (InvalidCast err)      = "Err"
-    show  (InvalidBound err)     = "Err"
-    show  (UnexpectedSeq)        = "Err"
-    show  (ArithOpError err)     = "Err"
-
-  export
-  Show Param.Error where
-    show NoFuel = "NoFuel"
-    show (RunTime err) = show err
-
-
 
   covering
   run : forall type
       . (this : SystemV Nil type)
-             -> Either Param.Error
+             -> Either Param.Evaluation.Error
                        (DPair (SystemV Nil type) (Reduces this))
   run this with (compute forever this)
     run this | (RunEval steps (Normalised {term} x))
       = Right (term ** steps)
 
     run this | (RunEval steps (ErrorFound err))
-      = Left (RunTime err)
+      = Left err
 
     run this | (RunEval steps OOF) = Left NoFuel
 
@@ -103,7 +86,7 @@ namespace Param
   covering
   eval : forall type
        . (this : SystemV Nil type)
-              -> Either Param.Error (SystemV Nil type)
+              -> Either Param.Evaluation.Error (SystemV Nil type)
   eval this with (run this)
     eval this | Left err = Left err
     eval this | Right (fst ** snd) = Right fst

@@ -20,7 +20,7 @@ data ValidType : (level : Universe)
               -> (type  : TYPE level)
                        -> Type
   where
-    IsPortTyDesc : ValidType (IDX TYPE) (PortTyDesc type dir)
+    IsPortTyDesc : ValidType (IDX TYPE) (PortTyDesc dir)
     IsUnitTyDesc : ValidType (IDX TYPE) UnitTyDesc
 
 namespace ValidType
@@ -39,7 +39,7 @@ isTyDescFunc IsPortTyDesc impossible
 isTyDescFuncParam : ValidType (IDX TYPE) (FuncParamTy u param return) -> Void
 isTyDescFuncParam IsPortTyDesc impossible
 
-isTyDescChan : ValidType (IDX TYPE) (ChanTyDesc type) -> Void
+isTyDescChan : ValidType (IDX TYPE) ChanTyDesc  -> Void
 isTyDescChan IsPortTyDesc impossible
 
 isTyDescBool : ValidType (IDX TYPE) BoolTyDesc -> Void
@@ -68,12 +68,12 @@ validType (IDX TYPE) (FuncParamTy u param return)
   = No IsFuncParam isTyDescFuncParam
 validType (IDX TYPE) ModuleTyDesc
   = No IsModule isTyDescModule
-validType (IDX TYPE) (ChanTyDesc type)
+validType (IDX TYPE) ChanTyDesc
   = No IsChan isTyDescChan
 validType (IDX TYPE) BoolTyDesc
   = No IsBool isTyDescBool
 
-validType (IDX TYPE) (PortTyDesc type dir)
+validType (IDX TYPE) (PortTyDesc dir)
   = Yes IsPortTyDesc
 validType (IDX TYPE) UnitTyDesc
   = Yes IsUnitTyDesc
@@ -86,7 +86,7 @@ data ValidTerm : (level : Universe)
               -> (type  : TYPE level)
                        -> Type
   where
-    IsPortTy : ValidTerm (IDX TERM) (PortTy type dir)
+    IsPortTy : ValidTerm (IDX TERM) (PortTy dir)
     IsUnitTy : ValidTerm (IDX TERM) UnitTy
 
 namespace ValidTerm
@@ -117,7 +117,7 @@ isTermBool : ValidTerm (IDX TERM) BoolTy -> Void
 isTermBool IsPortTy impossible
 
 
-isTermChan : ValidTerm (IDX TERM) (ChanTy type) -> Void
+isTermChan : ValidTerm (IDX TERM) ChanTy  -> Void
 isTermChan IsPortTy impossible
 
 isTermNatTy : ValidTerm (IDX TERM) NatTy -> Void
@@ -139,12 +139,12 @@ validTerm (IDX TERM) (FuncParamTy u param return)
   = No IsFuncParam isTermFuncParam
 validTerm (IDX TERM) ModuleTy
   = No IsModule isTermModule
-validTerm (IDX TERM) (ChanTy type)
+validTerm (IDX TERM) ChanTy
   = No IsChan isTermChan
 validTerm (IDX TERM) BoolTy
   = No IsBool isTermBool
 
-validTerm (IDX TERM) (PortTy type dir) = Yes IsPortTy
+validTerm (IDX TERM) (PortTy dir) = Yes IsPortTy
 validTerm (IDX TERM) UnitTy = Yes IsUnitTy
 validTerm (IDX TERM) NatTy = No IsNat isTermNatTy
 

@@ -14,15 +14,6 @@ castDir : {dirTo : Direction}
                 -> Direction
 castDir {dirTo} _ = dirTo
 
-public export
-castTy : {fromTy, toTy : TYPE (DATA TERM)}
-
-      -> (prf : EquivTypes fromTy toTy)
-      -> (tm  : SystemV ctxt fromTy)
-      -> (val : Value tm)
-             -> SystemV ctxt toTy
-castTy {fromTy = fromTy} {toTy = fromTy} (Same (Same Refl Refl)) tm val = tm
-
 
 public export
 cast : {fromPort, toPort : TYPE (IDX TERM)}
@@ -30,11 +21,11 @@ cast : {fromPort, toPort : TYPE (IDX TERM)}
     -> (from  : SystemV ctxt fromPort)
     -> (value : Value from)
              -> SystemV ctxt toPort
-cast (CanCast castDir' castTy') (MkPort type dirA) (MkPort x dirA)
-  = MkPort (castTy castTy' type x)
+cast (CanCast castDir') (MkPort type dirA) (MkPort x dirA)
+  = MkPort type
            (castDir castDir')
 
-cast (CanCast castDir castTy) (Seq left right) (Seq x y)
-  = Seq left $ cast (CanCast castDir castTy) right y
+cast (CanCast castDir) (Seq left right) (Seq x y)
+  = Seq left $ cast (CanCast castDir) right y
 
 -- [ EOF ]

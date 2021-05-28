@@ -42,7 +42,7 @@ isTyDescFuncParam : ValidType (IDX TYPE) (FuncParamTy u param return) -> Void
 isTyDescFuncParam IsNatTyDesc impossible
 
 
-isTyDescChan : ValidType (IDX TYPE) (ChanTyDesc type) -> Void
+isTyDescChan : ValidType (IDX TYPE) ChanTyDesc  -> Void
 isTyDescChan IsNatTyDesc impossible
 
 isTyDescBool : ValidType (IDX TYPE) BoolTyDesc -> Void
@@ -52,7 +52,7 @@ isTyDescModule : ValidType (IDX TYPE) ModuleTyDesc -> Void
 isTyDescModule IsNatTyDesc impossible
 
 
-isPortTyDesc : ValidType (IDX TYPE) (PortTyDesc type dir) -> Void
+isPortTyDesc : ValidType (IDX TYPE) (PortTyDesc dir) -> Void
 isPortTyDesc IsNatTyDesc impossible
 
 isUnitTyDesc : ValidType (IDX TYPE) UnitTyDesc -> Void
@@ -77,12 +77,12 @@ validType (IDX TYPE) (FuncParamTy u param return)
   = No IsFuncParam isTyDescFuncParam
 validType (IDX TYPE) ModuleTyDesc
   = No IsModule isTyDescModule
-validType (IDX TYPE) (ChanTyDesc type)
+validType (IDX TYPE) ChanTyDesc
   = No IsChan isTyDescChan
 validType (IDX TYPE) BoolTyDesc
   = No IsBool isTyDescBool
 
-validType (IDX TYPE) (PortTyDesc type dir)
+validType (IDX TYPE) (PortTyDesc dir)
   = No IsPort isPortTyDesc
 
 validType (IDX TYPE) UnitTyDesc
@@ -124,11 +124,11 @@ isTermBool : ValidTerm (IDX TERM) BoolTy -> Void
 isTermBool IsNatTy impossible
 
 
-isTermChan : ValidTerm (IDX TERM) (ChanTy type) -> Void
+isTermChan : ValidTerm (IDX TERM) ChanTy  -> Void
 isTermChan IsNatTy impossible
 
 
-isTermPort : ValidTerm (IDX TERM) (PortTy type dir) -> Void
+isTermPort : ValidTerm (IDX TERM) (PortTy dir) -> Void
 isTermPort IsNatTy impossible
 
 
@@ -154,12 +154,12 @@ validTerm (IDX TERM) (FuncParamTy u param return)
   = No IsFuncParam isTermFuncParam
 validTerm (IDX TERM) ModuleTy
   = No IsModule isTermModule
-validTerm (IDX TERM) (ChanTy type)
+validTerm (IDX TERM) ChanTy
   = No IsChan isTermChan
 validTerm (IDX TERM) BoolTy
   = No IsBool isTermBool
 
-validTerm (IDX TERM) (PortTy type dir)
+validTerm (IDX TERM) (PortTy dir)
   = No IsPort isTermPort
 
 validTerm (IDX TERM) UnitTy

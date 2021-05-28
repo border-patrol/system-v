@@ -97,14 +97,36 @@ writeTo = sexpr "writeTo" ref WriteTo
 readFrom : Rule Token AST
 readFrom = sexpr "readFrom" ref ReadFrom
 
-portArg : Rule Token AST
-portArg =   ref
-        <|> writeTo
-        <|> readFrom
+portArg : Rule Token (FileContext, AST)
+portArg =   ref'
+        <|> writeTo'
+        <|> readFrom'
         <|> cast
+        <|> slice
         <|> index
   where
-    index : Rule Token AST
+    ref' : Rule Token (FileContext, AST)
+    ref'
+      = do s <- location
+           r <- ref
+           e <- location
+           pure (newFC s e, r)
+
+    writeTo' : Rule Token (FileContext, AST)
+    writeTo'
+      = do s <- location
+           w <- writeTo
+           e <- location
+           pure (newFC s e, w)
+
+    readFrom' : Rule Token (FileContext, AST)
+    readFrom'
+      = do s <- location
+           w <- readFrom
+           e <- location
+           pure (newFC s e, w)
+
+    index : Rule Token (FileContext, AST)
     index
       = do s <- location
            symbol "("
@@ -113,9 +135,9 @@ portArg =   ref
            p <- portArg
            symbol ")"
            e <- location
-           pure (Index (newFC s e) n p)
+           pure (newFC s e, Index (newFC s e) n (snd p))
 
-    slice : Rule Token AST
+    slice : Rule Token (FileContext, AST)
     slice
       = do s <- location
            symbol "("
@@ -125,19 +147,22 @@ portArg =   ref
            o <- natLit
            symbol ")"
            e <- location
-           pure (Slice (newFC s e) p a o)
+           pure (newFC s e, Slice (newFC s e) (snd p) a o)
 
-    cast : Rule Token AST
+    cast : Rule Token (FileContext, AST)
     cast
-      = do st <- location
+      = do b <- location
+           symbol "("
            keyword "cast"
            p <- portArg
            t <- type_
            d <- direction
            s <- sensitivity
            i <- intention
+           symbol ")"
            e <- location
-           pure (Cast (newFC st e) p t d s i)
+           pure (newFC b e, Cast (newFC b e) (snd p) t d s i)
+
 
 driveCatch : Rule Token AST
 driveCatch
@@ -165,7 +190,7 @@ assign
        symbol "="
        l <- portArg
        e <- location
-       pure (Connect (newFC st e) r l)
+       pure (Connect (newFC st e) (snd r) (snd l))
 
 gateNot : Rule Token AST
 gateNot = do s <- location
@@ -177,7 +202,7 @@ gateNot = do s <- location
              i <- portArg
              symbol ")"
              e <- location
-             pure (NotGate (newFC s e) o i)
+             pure (NotGate (newFC s e) (snd o) (snd i))
 
 gate : Rule Token AST
 gate
@@ -192,13 +217,20 @@ gate
        ib <- portArg
        symbol ")"
        e <- location
-       pure (Gate (newFC s e) ki o ia ib)
+       pure (Gate (newFC s e) ki (snd o) (snd ia) (snd ib))
 
 gates : Rule Token AST
 gates = gateNot <|> gate
 
 expr : Rule Token AST
 expr = driveCatch <|> assign <|> gates
+
+endModule : Rule Token AST
+endModule
+   = do s <- location
+        keyword "endmodule"
+        e <- location
+        pure (EndModule (newFC s e))
 
 moduleInst : Rule Token (FileContext, String, AST)
 moduleInst
@@ -210,10 +242,10 @@ moduleInst
          pure ((newFC s e), n, mkApp f as)
   where
     mkApp : AST
-         -> List1 AST
+         -> List1 (FileContext, AST)
          -> AST
-    mkApp f (a:::as)
-      = foldl App (App f a) as
+    mkApp f ((fc, a) ::: as)
+      = foldl (\acc, (fc,a) => App fc acc a) (App fc f a) as
 
 mutual
   cond : Rule Token AST
@@ -230,12 +262,11 @@ mutual
          f <- entries False
          keyword "end"
          e <- location
-         pure (IfThenElse (newFC s e) c t f)
+         pure (IfThenElse (newFC s e) (snd c) t f)
 
   data MBody = Expr AST
              | TDef (FileContext, String, AST)
              | Bindable (FileContext, String, AST)
-
 
   entry : Rule Token MBody
   entry = (entry' <* symbol ";")
@@ -247,27 +278,28 @@ mutual
            <|> (do { d <- typeDef;                  pure (TDef     d)})
            <|> (do { c <- (chanDef <|> moduleInst); pure (Bindable c)})
 
-  entries : Bool -> Rule Token AST
-  entries howEnd
-      = do es <- some' entry
-           pure (collapse howEnd es)
-    where
 
+  collapse : AST -> List1 MBody -> AST
+  collapse l (x:::xs)
+      = foldr foldEntry l (x::xs)
+    where
       foldEntry : MBody -> AST -> AST
       foldEntry (Expr expr) body
-        = Seq expr body
+        = Seq (getFC expr) expr body
       foldEntry (Bindable (fc, n, e)) body
         = Let fc n e body
       foldEntry (TDef (fc, n, e)) body
         = Let fc n e body
 
-      lastTerm : Bool -> AST
-      lastTerm True = EndModule
-      lastTerm False = UnitVal
-
-      collapse : Bool -> (es : List MBody ** NonEmpty es) -> AST
-      collapse b (x::xs ** IsNonEmpty)
-        = foldr foldEntry (lastTerm b) (x::xs)
+  entries : Bool -> Rule Token AST
+  entries True
+      = do es <- some entry
+           m <- endModule
+           pure (collapse m es)
+  entries False
+      = do es <- some entry
+           l <- location
+           pure (collapse (UnitVal (newFC l l)) es)
 
   moduleDefGen : Rule Token String -> Rule Token (FileContext, String, AST)
   moduleDefGen p
@@ -291,22 +323,23 @@ mutual
       foldPorts fc = foldr (foldPort fc)
 
       buildFunc : FileContext
+               -> FileContext
                -> AST
                -> List (String, AST)
                -> AST
-      buildFunc fc body Nil
-        = Func fc "" TyUnit body
-      buildFunc fc body ports
+      buildFunc ty fc body Nil
+        = Func fc "()" (TyUnit fc) body
+      buildFunc _ fc body ports
         = foldPorts fc body ports
 
       moduleFunc : Rule Token AST
       moduleFunc = do s <- location
                       xs <- ports
+                      e1 <- location
                       symbol ";"
-                      es <- option EndModule (entries True)
-                      keyword "endmodule"
+                      es <- (entries True <|> endModule)
                       e <- location
-                      pure (buildFunc (newFC s e) es xs)
+                      pure (buildFunc (newFC s e1) (newFC s e) es xs)
 
   moduleDef : Rule Token (FileContext, String, AST)
   moduleDef = moduleDefGen name

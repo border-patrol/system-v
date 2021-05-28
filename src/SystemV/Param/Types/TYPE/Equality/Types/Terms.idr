@@ -17,12 +17,12 @@ funcTypeTyNotModuleTy : (Equals Universe TYPE (FuncTy x y) ModuleTy)
 funcTypeTyNotModuleTy (Same Refl Refl) impossible
 
 export
-funcTypeTyNotChanTy : (Equals Universe TYPE (FuncTy x y) (ChanTy t))
+funcTypeTyNotChanTy : (Equals Universe TYPE (FuncTy x y) (ChanTy))
                            -> Void
 funcTypeTyNotChanTy (Same Refl Refl) impossible
 
 export
-funcTypeTyNotPortTy : (Equals Universe TYPE (FuncTy x y) (PortTy t d))
+funcTypeTyNotPortTy : (Equals Universe TYPE (FuncTy x y) (PortTy d))
                            -> Void
 funcTypeTyNotPortTy (Same Refl Refl) impossible
 
@@ -59,11 +59,11 @@ funcTypeNotFuncParamType : (Equals Universe TYPE (FuncTy x y) (FuncParamTy u a b
 funcTypeNotFuncParamType (Same Refl Refl) impossible
 
 export
-moduleTyNotChanTy : Equals Universe TYPE (ModuleTy) (ChanTy type) -> Void
+moduleTyNotChanTy : Equals Universe TYPE (ModuleTy) ChanTy -> Void
 moduleTyNotChanTy (Same Refl Refl) impossible
 
 export
-moduleTyNotPortTy : Equals Universe TYPE (ModuleTy) (PortTy type dir) -> Void
+moduleTyNotPortTy : Equals Universe TYPE (ModuleTy) (PortTy dir) -> Void
 moduleTyNotPortTy (Same Refl Refl) impossible
 
 export
@@ -83,57 +83,45 @@ moduleNotFuncParam : Equals Universe TYPE (ModuleTy) (FuncParamTy u a b) -> Void
 moduleNotFuncParam (Same Refl Refl) impossible
 
 export
-chanTyNotPortTy : Equals Universe TYPE (ChanTy type) (PortTy t d) -> Void
+chanTyNotPortTy : Equals Universe TYPE (ChanTy) (PortTy d) -> Void
 chanTyNotPortTy (Same Refl Refl) impossible
 
 export
-chanTyNotNatTy : Equals Universe TYPE (ChanTy type) NatTy -> Void
+chanTyNotNatTy : Equals Universe TYPE ChanTy NatTy -> Void
 chanTyNotNatTy (Same Refl Refl) impossible
 
 export
-chanTyNotUnitTy : Equals Universe TYPE (ChanTy type) UnitTy -> Void
+chanTyNotUnitTy : Equals Universe TYPE ChanTy UnitTy -> Void
 chanTyNotUnitTy (Same Refl Refl) impossible
 
 export
-chanTyNotBoolTy : Equals Universe TYPE (ChanTy type) BoolTy -> Void
+chanTyNotBoolTy : Equals Universe TYPE ChanTy BoolTy -> Void
 chanTyNotBoolTy (Same Refl Refl) impossible
 
 export
-chanTyDiffTypes : (contra : Equals Universe TYPE x y -> Void)
-                   -> (prf    : Equals Universe TYPE (ChanTy x) (ChanTy y))
-                             -> Void
-chanTyDiffTypes contra (Same Refl Refl) = contra (Same Refl Refl)
-
-export
-chanNotFuncParam : Equals Universe TYPE (ChanTy type) (FuncParamTy u t d) -> Void
+chanNotFuncParam : Equals Universe TYPE ChanTy (FuncParamTy u t d) -> Void
 chanNotFuncParam (Same Refl Refl) impossible
 
 export
-portTyNotNatTy : Equals Universe TYPE (PortTy type dir) NatTy -> Void
+portTyNotNatTy : Equals Universe TYPE (PortTy dir) NatTy -> Void
 portTyNotNatTy (Same Refl Refl) impossible
 
 export
-portTyNotUnitTy : Equals Universe TYPE (PortTy type dir) UnitTy -> Void
+portTyNotUnitTy : Equals Universe TYPE (PortTy dir) UnitTy -> Void
 portTyNotUnitTy (Same Refl Refl) impossible
 
 export
-portTyNotBoolTy : Equals Universe TYPE (PortTy type dir) BoolTy -> Void
+portTyNotBoolTy : Equals Universe TYPE (PortTy dir) BoolTy -> Void
 portTyNotBoolTy (Same Refl Refl) impossible
 
 export
-portTyDiffTypes : (contra : Equals Universe TYPE x y -> Void)
-                   -> (prf    : Equals Universe TYPE (PortTy x a) (PortTy y b))
-                             -> Void
-portTyDiffTypes contra (Same Refl Refl) = contra (Same Refl Refl)
-
-export
 portTyDiffDirs : (contra : a === b -> Void)
-                  -> (prf   : Equals Universe TYPE (PortTy type a) (PortTy x b))
-                           -> Void
+              -> (prf    : Equals Universe TYPE (PortTy a) (PortTy b))
+                        -> Void
 portTyDiffDirs contra (Same Refl Refl) = contra Refl
 
 export
-portNotFuncParam : Equals Universe TYPE (PortTy type dir) (FuncParamTy u x y) -> Void
+portNotFuncParam : Equals Universe TYPE (PortTy dir) (FuncParamTy u x y) -> Void
 portNotFuncParam (Same Refl Refl) impossible
 
 export

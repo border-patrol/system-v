@@ -43,39 +43,24 @@ namespace ValidType
 
 isTyDescData : Return.ValidType (DATA _) type -> Void
 isTyDescData IsModuleTyDesc impossible
-isTyDescData IsUnitTyDesc impossible
-isTyDescData (IsFuncParamTyDesc p x) impossible
-isTyDescData (IsFuncTyDesc o x) impossible
 
 isTyDescTerm : Return.ValidType (IDX TERM) type -> Void
 isTyDescTerm IsModuleTyDesc impossible
-isTyDescTerm IsUnitTyDesc impossible
-isTyDescTerm (IsFuncParamTyDesc p x) impossible
-isTyDescTerm (IsFuncTyDesc p x) impossible
 
-isTyDescChan : Return.ValidType (IDX TYPE) (ChanTyDesc type) -> Void
+
+isTyDescChan : Return.ValidType (IDX TYPE) ChanTyDesc -> Void
 isTyDescChan IsModuleTyDesc impossible
-isTyDescChan IsUnitTyDesc impossible
-isTyDescChan (IsFuncParamTyDesc p x) impossible
-isTyDescChan (IsFuncTyDesc p x) impossible
 
 isTyDescBool : Return.ValidType (IDX TYPE) BoolTyDesc -> Void
 isTyDescBool IsModuleTyDesc impossible
-isTyDescBool IsUnitTyDesc impossible
-isTyDescBool (IsFuncParamTyDesc p x) impossible
-isTyDescBool (IsFuncTyDesc p x) impossible
 
-isTyDescPort : Return.ValidType (IDX TYPE) (PortTyDesc type dir) -> Void
+
+isTyDescPort : Return.ValidType (IDX TYPE) (PortTyDesc dir) -> Void
 isTyDescPort IsModuleTyDesc impossible
-isTyDescPort IsUnitTyDesc impossible
-isTyDescPort (IsFuncParamTyDesc p x) impossible
-isTyDescPort (IsFuncTyDesc p x) impossible
+
 
 isTyDescNat : Return.ValidType (IDX TYPE) NatTyDesc -> Void
 isTyDescNat IsModuleTyDesc impossible
-isTyDescNat IsUnitTyDesc impossible
-isTyDescNat (IsFuncParamTyDesc p x) impossible
-isTyDescNat (IsFuncTyDesc p x) impossible
 
 isTyDescFuncParam : (Return.ValidType (IDX TYPE) return -> Void)
                -> Return.ValidType (IDX TYPE) (FuncParamTy u param return)
@@ -106,8 +91,8 @@ validType : (level : Universe)
 validType (DATA _) type = No IsData isTyDescData
 validType (IDX TERM) type = No IsTerm isTyDescTerm
 
-validType (IDX TYPE) (ChanTyDesc type) = No IsChan isTyDescChan
-validType (IDX TYPE) (PortTyDesc type dir) = No IsPort isTyDescPort
+validType (IDX TYPE) ChanTyDesc = No IsChan isTyDescChan
+validType (IDX TYPE) (PortTyDesc dir) = No IsPort isTyDescPort
 validType (IDX TYPE) NatTyDesc = No IsNat isTyDescNat
 validType (IDX TYPE) BoolTyDesc = No IsNat isTyDescBool
 
@@ -162,40 +147,22 @@ namespace ValidTerm
 
 isTermData : Return.ValidTerm (DATA _) type -> Void
 isTermData IsModuleTy impossible
-isTermData IsUnitTy impossible
-isTermData (IsFuncParamTy p x) impossible
-isTermData (IsFuncTy p x) impossible
+
 
 isTermTerm : Return.ValidTerm (IDX TYPE) type -> Void
 isTermTerm IsModuleTy impossible
-isTermTerm IsUnitTy impossible
-isTermTerm (IsFuncParamTy p x) impossible
-isTermTerm (IsFuncTy p x) impossible
 
-isTermChan : Return.ValidTerm (IDX TERM) (ChanTy type) -> Void
+isTermChan : Return.ValidTerm (IDX TERM) ChanTy -> Void
 isTermChan IsModuleTy impossible
-isTermChan IsUnitTy impossible
-isTermChan (IsFuncParamTy p x) impossible
-isTermChan (IsFuncTy p x) impossible
 
-isTermPort : Return.ValidTerm (IDX TERM) (PortTy type dir) -> Void
+isTermPort : Return.ValidTerm (IDX TERM) (PortTy dir) -> Void
 isTermPort IsModuleTy impossible
-isTermPort IsUnitTy impossible
-isTermPort (IsFuncParamTy p x) impossible
-isTermPort (IsFuncTy p x) impossible
 
 isTermNat : Return.ValidTerm (IDX TERM) NatTy -> Void
 isTermNat IsModuleTy impossible
-isTermNat IsUnitTy impossible
-isTermNat (IsFuncParamTy p x) impossible
-isTermNat (IsFuncTy p x) impossible
 
 isTermBool : Return.ValidTerm (IDX TERM) BoolTy -> Void
 isTermBool IsModuleTy impossible
-isTermBool IsUnitTy impossible
-isTermBool (IsFuncParamTy p x) impossible
-isTermBool (IsFuncTy p x) impossible
-
 
 isTermFuncParam : (Return.ValidTerm (IDX TERM) return -> Void)
              -> Return.ValidTerm (IDX TERM) (FuncParamTy u param return)
@@ -225,8 +192,8 @@ validTerm : (level : Universe)
 validTerm (DATA _) type = No IsData isTermData
 validTerm (IDX TYPE) type = No IsTerm isTermTerm
 
-validTerm (IDX TERM) (ChanTy type) = No IsChan isTermChan
-validTerm (IDX TERM) (PortTy type dir) = No IsPort isTermPort
+validTerm (IDX TERM) ChanTy = No IsChan isTermChan
+validTerm (IDX TERM) (PortTy dir) = No IsPort isTermPort
 validTerm (IDX TERM) NatTy = No IsNat isTermNat
 validTerm (IDX TERM) BoolTy = No IsBool isTermBool
 

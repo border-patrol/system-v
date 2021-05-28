@@ -65,10 +65,10 @@ isTyDescBool (IsValidType x y) impossible
 isTyDescUnit : Function.ValidType (IDX TYPE) UnitTyDesc -> Void
 isTyDescUnit (IsValidType x y) impossible
 
-isTyDescPort : Function.ValidType (IDX TYPE) (PortTyDesc type dir) -> Void
+isTyDescPort : Function.ValidType (IDX TYPE) (PortTyDesc dir) -> Void
 isTyDescPort (IsValidType x y) impossible
 
-isTyDescChan : Function.ValidType (IDX TYPE) (ChanTyDesc type) -> Void
+isTyDescChan : Function.ValidType (IDX TYPE) ChanTyDesc  -> Void
 isTyDescChan (IsValidType x y) impossible
 
 isTyDescModule : Function.ValidType (IDX TYPE) ModuleTyDesc -> Void
@@ -106,9 +106,9 @@ validType (IDX TERM) type
 
 validType (IDX TYPE) ModuleTyDesc
   = No IsModule isTyDescModule
-validType (IDX TYPE) (ChanTyDesc type)
+validType (IDX TYPE) ChanTyDesc
   = No IsChan isTyDescChan
-validType (IDX TYPE) (PortTyDesc type dir)
+validType (IDX TYPE) (PortTyDesc dir)
   = No IsPort isTyDescPort
 validType (IDX TYPE) UnitTyDesc
   = No IsUnit isTyDescUnit
@@ -182,10 +182,10 @@ isTermUnit (IsValidTerm x y) impossible
 isTermBool : Function.ValidTerm (IDX TERM) BoolTy -> Void
 isTermBool (IsValidTerm x y) impossible
 
-isTermPort : Function.ValidTerm (IDX TERM) (PortTy type dir) -> Void
+isTermPort : Function.ValidTerm (IDX TERM) (PortTy dir) -> Void
 isTermPort (IsValidTerm x y) impossible
 
-isTermChan : Function.ValidTerm (IDX TERM) (ChanTy type) -> Void
+isTermChan : Function.ValidTerm (IDX TERM) ChanTy -> Void
 isTermChan (IsValidTerm x y) impossible
 
 isTermModule : Function.ValidTerm (IDX TERM) ModuleTy -> Void
@@ -220,9 +220,9 @@ validTerm (IDX TYPE) type
 
 validTerm (IDX TERM) ModuleTy
   = No IsModule isTermModule
-validTerm (IDX TERM) (ChanTy type)
+validTerm (IDX TERM) ChanTy
   = No IsChan isTermChan
-validTerm (IDX TERM) (PortTy type dir)
+validTerm (IDX TERM) (PortTy dir)
   = No IsPort isTermPort
 validTerm (IDX TERM) UnitTy
   = No IsUnit isTermUnit
