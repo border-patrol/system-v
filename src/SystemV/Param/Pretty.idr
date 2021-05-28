@@ -1,29 +1,19 @@
 module SystemV.Param.Pretty
 
-import        Decidable.Equality
-
-import        Data.Vect
-import        Data.Nat
-import        Data.List
-import        Data.List1
-import        Data.List.Views
-import        Data.Strings
+import        Data.String
 import        Data.Maybe
+import        Data.List1
 
-import public Toolkit.Data.Location
-import public Toolkit.Data.DList
-import public Toolkit.Data.DList.Elem
+import Toolkit.Data.Location
+import Toolkit.Data.DList
+import Toolkit.Data.DList.Elem
 
 
 import public Toolkit.Decidable.Informative
 import public Toolkit.Decidable.Equality.Indexed
-import        SystemV.Common.Types.Boolean
-import        SystemV.Common.Types.Nat.Arithmetic
-import        SystemV.Common.Types.Nat.Comparison
-import        SystemV.Common.Parser.Arithmetic
-import        SystemV.Common.Parser.Boolean
 
-import        SystemV.Common.Utilities
+
+import public SystemV.Common.Pretty
 
 import        SystemV.Param.Types
 import        SystemV.Param.Terms
@@ -33,31 +23,6 @@ import        SystemV.Param.DSL.Error
 import        SystemV.Param.DSL.AST.Raw
 import        SystemV.Param.DSL.AST
 import        SystemV.Param.Types.TYPE.Function.Synthesis
-
-
-export
-layout : List String -> String
-layout = (trim . unlines)
-
-export
-prettyHeader : String -> IO ()
-prettyHeader s = putStrLn $ unwords ["-- [", s, "] ----------"]
-
-Show Direction where
-  show IN = "IN"
-  show OUT = "OUT"
-  show INOUT = "INOUT"
-
-
-Show Sliceable.Error where
-  show (BadBound k j) = "Bad Bound: " ++ "(" ++ show k ++ "," ++ show j ++ ")"
-  show (IndexStartsZero k) = "Index must start at zero " ++ show k
-  show (IndexToBig k) = "Index to Big " ++ show k
-
-
-Show Whole where
-  show (W n prf) = show n
-
 
 Show (TYPE level) where
   show DATATYPE
@@ -138,9 +103,6 @@ Show Cast.Error where
   show (NotCastableTo x)
     = "Cannot cast to: " ++ show x
 
-Show Flow.Error where
- show (CannotFlow x y)
-   = "Cannot flow between: " ++ show x ++ " & " ++ show y
 
 Show Argument.ValidType.Error where
   show IsData = "Is Data"
@@ -298,48 +260,6 @@ Show Param.Evaluation.Error where
   show  (ArithOpError err)     = "Math Error"
   show  (TypeMismatch a b)     = "Type mismatch"
   show  ExpectedVector         = "Vector Expected"
-
-Show GateKind where
-  show AND  = "AND"
-  show XOR  = "XOR"
-  show IOR  = "IOR"
-  show NAND = "NAND"
-  show XNOR = "XNOR"
-  show NIOR = "NIOR"
-
-Show BoolBinOp where
-  show AND = "and"
-  show IOR = "ior"
-  show XOR = "xor"
-
-Show ArithOp where
-  show MUL = "mul"
-  show DIV = "div"
-  show ADD = "add"
-  show SUB = "sub"
-
-Show CompOp where
-  show EQ = "eq"
-  show LT = "lt"
-  show GT = "gt"
-
-Show Arithmetic.Expr where
-  show (NatV x k) = show k
-  show (R x) = (show . get) x
-  show (Op x kind l r)
-    = unwords ["(" <+> show kind, show l , show r <+> ")"]
-
-Show Boolean.Expr where
-  show (NatV x y) = show y
-  show (BoolV x y) = show y
-  show (R x) = (show . get) x
-  show (Not x y) = unwords ["(not", show y <+> ")"]
-  show (NatCmp x kind l r)
-    = unwords ["(" <+> show kind, show l , show r <+> ")"]
-
-  show (BoolCmp x kind l r)
-    = unwords ["(" <+> show kind, show l , show r <+> ")"]
-
 
 
 export
@@ -542,9 +462,6 @@ Show Param.AST where
   show (NatOpArith x op l r)
     = unwords ["(" <+> show op, show l, show r <+> ")"]
 
-Show (Elem u t x xs) where
-  show (H y) = "H"
-  show (T later) = unwords ["(T", show later <+> ")"]
 
 export
 Show (SystemV ctxt type) where
@@ -625,7 +542,7 @@ Show (SystemV ctxt type) where
     = unwords ["(cast", show port, show dir <+> ")"]
 
   show (Index idx port)
-    = unwords ["(connect", show idx, show port <+> ")"]
+    = unwords ["(index", show idx, show port <+> ")"]
 
   show (Size port)
     = unwords ["(size", show port <+> ")"]
@@ -671,3 +588,5 @@ Show (SystemV ctxt type) where
              , unwords ["\t", show body]
              , "}"
              ]
+
+-- [ EOF ]

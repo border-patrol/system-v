@@ -31,10 +31,6 @@ namespace General
                  -> SystemV old type
                  -> SystemV new type)
   -- [ Types ]
-  subst f (TyFunc paramTy returnTy prf)
-    = TyFunc (subst f paramTy)
-             (subst f returnTy)
-             prf
 
   subst f TyUnit
     = TyUnit

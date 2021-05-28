@@ -83,6 +83,7 @@ modules =
         , SystemV.Common.Parser.Boolean
         , SystemV.Common.Parser.Arithmetic
 
+        , SystemV.Common.Pretty
         , SystemV.Common.Options
         , SystemV.Common.Run
 
@@ -151,6 +152,7 @@ modules =
 
 -- ### Main
 
+        , SystemV.Core.Pretty
         , SystemV.Core.Run
 
 -- ## SystemV 'Params'
@@ -263,6 +265,8 @@ modules =
         , SystemV.HigherOrder.DSL
 
 -- ### Run
+
+        , SystemV.HigherOrder.Pretty
         , SystemV.HigherOrder.Run
 
 -- ## SystemV 'Annotated'
@@ -332,6 +336,7 @@ modules =
 
 -- ### Main
 
+        , SystemV.Annotated.Pretty
         , SystemV.Annotated.Run
 
 

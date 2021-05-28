@@ -67,10 +67,6 @@ namespace Annotated
   data Error = NoFuel
 
   export
-  Show Evaluation.Annotated.Error where
-    show NoFuel = "NoFuel"
-
-  export
   covering
   eval : forall type
        . (this : SystemV Nil type)

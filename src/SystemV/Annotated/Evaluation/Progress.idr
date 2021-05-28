@@ -35,24 +35,6 @@ progress : (term : SystemV Nil type)
         -> Progress term
 
 -- [ Types ]
-progress (TyFunc paramTy returnTy prf) with (progress paramTy)
-
-  progress (TyFunc (Seq left right) returnTy prf) | (Done (Seq x y))
-    = Step RewriteTyFuncParam
-
-  progress (TyFunc paramTy returnTy prf) | (Done pvalue) with (progress returnTy)
-    progress (TyFunc paramTy (Seq left right) prf) | (Done pvalue) | (Done (Seq x y))
-      = Step RewriteTyFuncReturn
-
-    progress (TyFunc paramTy returnTy prf) | (Done pvalue) | (Done rvalue)
-      = Done (TyFunc pvalue rvalue)
-
-    progress (TyFunc paramTy returnTy prf) | (Done pvalue) | (Step step)
-      = Step (SimplifyTyFuncReturn step)
-
-  progress (TyFunc paramTy returnTy prf) | (Step step)
-    = Step (SimplifyTyFuncParam step)
-
 progress TyUnit
   = Done TyUnit
 

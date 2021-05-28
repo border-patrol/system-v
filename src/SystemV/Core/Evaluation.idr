@@ -66,9 +66,6 @@ namespace Core
   public export
   data Error = NoFuel
 
-  export
-  Show Evaluation.Core.Error where
-    show NoFuel = "NoFuel"
 
   export
   covering

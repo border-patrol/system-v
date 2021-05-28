@@ -68,10 +68,6 @@ namespace HigherOrder
   data Error = NoFuel
 
   export
-  Show HigherOrder.Error where
-    show NoFuel = "NoFuel"
-
-  export
   covering
   eval : forall type
        . (this : SystemV Nil type)

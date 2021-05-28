@@ -28,10 +28,6 @@ rename : (f : {level : Universe}
        -> SystemV new type)
 
 -- [ Types ]
-rename f (TyFunc paramTy returnTy prf)
-  = TyFunc (rename f paramTy)
-           (rename f returnTy)
-           prf
 
 rename f TyUnit
   = TyUnit
