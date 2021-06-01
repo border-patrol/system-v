@@ -12,18 +12,15 @@ import        SystemV.Core.Terms.NormalForm.Proofs
 namespace Core
   public export
   data NF : (term : SystemV Nil type) -> Type where
-    App : Design.Body.NF term -> Core.NF (App term MkUnit)
+    Design : Design.NF term -> Core.NF term
 
   export
   nf : (term : SystemV Nil ModuleTy)
             -> Either NormalForm.Error
                       (Core.NF term)
-  nf (App func MkUnit)
-    = do prf <- Design.Body.nf func
+  nf term
+    = do prf <- Design.nf term
 
-         pure (App prf)
-
-  nf _ = Left InvalidDesignTop
-
+         pure (Design prf)
 
 -- [ EOF ]

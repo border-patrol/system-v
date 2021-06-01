@@ -169,24 +169,24 @@ mutual
 
 namespace Design
   mutual
-    namespace Body
+    public export
+    data NF : (term : SystemV ctxt type) -> Type where
+      IsTop : Application.NF (App term MkUnit)
+           -> Design.NF (App term MkUnit)
+      IsDecl : Design.Decl.NF term -> Design.NF term
+
+    namespace Decl
       public export
       data NF : (term : SystemV ctxt type) -> Type where
-        IsFunc  : Function.NF term -> Design.Body.NF term
-        IsDecl  : Design.Body.Let.NF term -> Design.Body.NF term
 
-      namespace Let
-        public export
-        data NF : (term : SystemV ctxt type) -> Type where
+        DeclD : DataType.NF value
+             -> {rest  : SystemV (ctxt += a) b}
+             -> Design.NF rest
+             -> Design.Decl.NF (Let value rest prf)
 
-          DeclD : DataType.NF value
-               -> {rest  : SystemV (ctxt += a) b}
-               -> Design.Body.NF rest
-               -> Design.Body.Let.NF (Let value rest prf)
-
-          DeclM : Function.NF value
-               -> {rest  : SystemV (ctxt += a) b}
-               -> Design.Body.NF rest
-               -> Design.Body.Let.NF (Let value rest prf)
+        DeclM : Function.NF value
+             -> {rest  : SystemV (ctxt += a) b}
+             -> Design.NF rest
+             -> Design.Decl.NF (Let value rest prf)
 
 -- [ EOF ]

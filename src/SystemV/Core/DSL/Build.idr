@@ -316,10 +316,10 @@ namespace Core
   build ast with (termBuilder (Ctxt Nil Nil Nil) ast)
     build ast | (Left err)
       = Left err
-    build ast | (Right (Res _ (FuncTy UnitTy ModuleTy) term))
-      = Right (App term MkUnit)
+    build ast | (Right (Res _ ModuleTy term))
+      = Right term
     build ast | (Right (Res _ type term))
 
-      = Left (TypeMismatch (FuncTy UnitTy ModuleTy) type)
+      = Left (TypeMismatch ModuleTy type)
 
 -- --------------------------------------------------------------------- [ EOF ]

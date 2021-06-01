@@ -248,35 +248,35 @@ mutual
 
 namespace Design
   mutual
-    namespace Body
+
+    export
+    nf : (term : SystemV ctxt type)
+              -> Either NormalForm.Error
+                        (Design.NF term)
+    nf (App func MkUnit)
+      = do prf <- Application.nf (App func MkUnit)
+           pure (IsTop prf)
+
+    nf (Let value body prf)
+      = do prf <- Design.Decl.nf (Let value body prf)
+           pure (IsDecl prf)
+
+    nf _ = Left InvalidDesignBody
+
+    namespace Decl
       export
       nf : (term : SystemV ctxt type)
                 -> Either NormalForm.Error
-                          (Design.Body.NF term)
-      nf (Func x body prf vld)
-        = do prf <- Function.nf (Func x body prf vld)
-             pure (Design.Body.IsFunc prf)
+                          (Design.Decl.NF term)
+      nf (Let value rest prf)
+        = case Function.nf value of
+            Right prfM => do prfR <- Design.nf rest
+                             pure (DeclM prfM prfR)
 
-      nf (Let value body prf)
-        = do prf <- Design.Body.Let.nf (Let value body prf)
-             pure (IsDecl prf)
+            Left err => do prfD <- DataType.nf value
+                           prfR <- Design.nf rest
+                           pure (DeclD prfD prfR)
 
-      nf _ = Left InvalidDesignBody
-
-      namespace Let
-        export
-        nf : (term : SystemV ctxt type)
-                  -> Either NormalForm.Error
-                            (Design.Body.Let.NF term)
-        nf (Let value rest prf)
-          = case Function.nf value of
-              Right prfM => do prfR <- Design.Body.nf rest
-                               pure (DeclM prfM prfR)
-
-              Left err => do prfD <- DataType.nf value
-                             prfR <- Design.Body.nf rest
-                             pure (DeclD prfD prfR)
-
-        nf _ = Left InvalidDesignDecl
+      nf _ = Left InvalidDesignDecl
 
 -- [ EOF ]

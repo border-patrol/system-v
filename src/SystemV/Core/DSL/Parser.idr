@@ -343,8 +343,10 @@ decls : RuleEmpty Token (List Decl)
 decls = many (do {m <- moduleDef; pure (MDecl m)}
           <|> do {t <- typeDef <* symbol ";"; pure (TDecl t)})
 
-top : Rule Token AST
-top = pure $ (snd . snd) !(moduleDefGen isTop)
+top : Rule Token Decl
+top
+    = do m <- moduleDefGen isTop
+         pure (MDecl m)
   where
     isTop : Rule Token String
     isTop = do keyword "Top"
@@ -353,16 +355,24 @@ top = pure $ (snd . snd) !(moduleDefGen isTop)
 design : Rule Token AST
 design = do ds <- decls
             t <- top
-            pure (foldDecls t ds)
+            e <- location
+            pure (foldDecls (appTop (newFC e e))
+                            (ds ++ [t]))
   where
     foldDecl : Decl -> AST -> AST
-    foldDecl (TDecl (fc, n, e)) body = Let fc n e body
-    foldDecl (MDecl (fc, n, e)) body = Let fc n e body
+    foldDecl (TDecl (fc, n, expr)) body = Let fc n expr body
+    foldDecl (MDecl (fc, n, expr)) body = Let fc n expr body
 
     foldDecls : AST
              -> List Decl
              -> AST
     foldDecls = foldr foldDecl
+
+
+    appTop : FileContext -> AST
+    appTop loc = App loc
+                     (Ref (MkRef loc "Top"))
+                     (UnitVal loc)
 
 namespace Core
   parseSystemVStr : {e   : _}
