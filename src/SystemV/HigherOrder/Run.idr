@@ -23,15 +23,20 @@ namespace HigherOrder
                                 printLn ast
 
          term <- Run.timeToTryOrDie (timing opts)
-                                    "LOG: Typing Complete "
+                                    "LOG : Typing Complete "
                                     HigherOrder.build
                                     ast
 
          dump (debug opts) $ do prettyHeader "Term"
                                 printLn term
 
+         res <- Dep.timeToTryOrDie (timing opts)
+                                   "LOG : Is in Normal Form "
+                                   HigherOrder.nf
+                                   term
+
          v <- Run.timeToTryOrDie (timing opts)
-                                 "LOG: Evaluating "
+                                 "LOG : Evaluating "
                                  HigherOrder.eval
                                  term
 

@@ -30,6 +30,11 @@ namespace Annotated
          dump (debug opts) $ do prettyHeader "Term"
                                 printLn term
 
+         res <- Dep.timeToTryOrDie (timing opts)
+                                   "LOG : Is in Normal Form "
+                                   Annotated.nf
+                                   term
+
          v <- Run.timeToTryOrDie (timing opts)
                                  "LOG : Evaluating "
                                  Annotated.eval

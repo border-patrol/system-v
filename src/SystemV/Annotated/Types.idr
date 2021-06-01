@@ -28,6 +28,9 @@ import public SystemV.Annotated.Types.TYPE.Equiv
 import public SystemV.Annotated.Types.TYPE.Cast
 import public SystemV.Annotated.Types.TYPE.Function
 
+import public SystemV.Annotated.Types.TYPE.Seq
+import public SystemV.Annotated.Types.TYPE.Binding
+
 import public SystemV.Annotated.Types.TYPE.Check.Data
 import public SystemV.Annotated.Types.TYPE.Check.Types
 

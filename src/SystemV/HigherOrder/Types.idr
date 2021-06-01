@@ -26,6 +26,8 @@ import public SystemV.Core.Types.TYPE
 import public SystemV.Core.Types.TYPE.Equality
 import public SystemV.Core.Types.TYPE.Equiv
 import public SystemV.Core.Types.TYPE.Cast
+import public SystemV.Core.Types.TYPE.Seq
+import public SystemV.Core.Types.TYPE.Binding
 
 import public SystemV.HigherOrder.Types.Function
 

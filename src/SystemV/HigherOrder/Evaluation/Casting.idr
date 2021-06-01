@@ -33,8 +33,7 @@ cast : {fromPort, toPort : TYPE (IDX TERM)}
 cast (CanCast castDir' castTy') (MkPort type dirA) (MkPort x dirA)
   = MkPort (castTy castTy' type x)
            (castDir castDir')
-
-cast (CanCast castDir castTy) (Seq left right) (Seq x y)
-  = Seq left $ cast (CanCast castDir castTy) right y
+cast (CanCast _ _) (Seq _ _ IsUnit) (Seq _ _) impossible
+cast (CanCast _ _) (Seq _ _ IsMod) (Seq _ _) impossible
 
 -- [ EOF ]

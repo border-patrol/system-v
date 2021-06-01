@@ -1,7 +1,8 @@
 LOG : Starting SystemV 
 LOG : Running SystemV Core
 LOG : Parsing Complete
-LOG: Typing Complete 
-LOG: Evaluating 
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
 LOG : Exiting Core
 LOG : Bye

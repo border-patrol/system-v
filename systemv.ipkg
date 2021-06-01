@@ -241,6 +241,11 @@ modules =
 
         , SystemV.HigherOrder.Terms
 
+        , SystemV.HigherOrder.Terms.NormalForm.Error
+        , SystemV.HigherOrder.Terms.NormalForm.Types
+        , SystemV.HigherOrder.Terms.NormalForm.Proofs
+        , SystemV.HigherOrder.Terms.NormalForm
+
         , SystemV.HigherOrder.Terms.Renaming
         , SystemV.HigherOrder.Terms.Substitution
 
@@ -303,12 +308,20 @@ modules =
         , SystemV.Annotated.Types.TYPE.Equiv
         , SystemV.Annotated.Types.TYPE.Cast
 
+        , SystemV.Annotated.Types.TYPE.Seq
+        , SystemV.Annotated.Types.TYPE.Binding
+
         , SystemV.Annotated.Types
         , SystemV.Annotated.Types.Views
 
 -- ### Terms
 
         , SystemV.Annotated.Terms
+
+        , SystemV.Annotated.Terms.NormalForm.Error
+        , SystemV.Annotated.Terms.NormalForm.Types
+        , SystemV.Annotated.Terms.NormalForm.Proofs
+        , SystemV.Annotated.Terms.NormalForm
 
         , SystemV.Annotated.Terms.Renaming
         , SystemV.Annotated.Terms.Substitution

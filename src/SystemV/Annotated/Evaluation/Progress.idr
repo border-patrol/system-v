@@ -79,8 +79,8 @@ progress (App func param) with (progress func)
     progress (App (Func ty body prf vld) param) | (Done Func) | (Step step)
       = Step (SimplifyFuncAppVar Func step)
 
-  progress (App (Seq left right) param) | (Done (Seq x y))
-    = Step RewriteFuncAppFunc
+  progress (App (Seq left right IsUnit) param) | (Done (Seq x y)) impossible
+  progress (App (Seq left right IsMod) param) | (Done (Seq x y)) impossible
 
   progress (App func param) | (Step step)
     = Step (SimplifyFuncAppFunc step)
@@ -113,32 +113,39 @@ progress (MkChan typeD sense intent) with (progress typeD)
 progress (WriteTo chan) with (progress chan)
   progress (WriteTo (MkChan port sense intent)) | (Done (MkChan portVal))
     = Step ReduceWriteTo
-  progress (WriteTo (Seq left right)) | (Done (Seq x y))
-    = Step RewriteWriteTo
+
+  progress (WriteTo (Seq left right IsUnit)) | (Done (Seq x y)) impossible
+  progress (WriteTo (Seq left right IsMod)) | (Done (Seq x y)) impossible
+
   progress (WriteTo chan) | (Step step)
    = Step (SimplifyWriteTo step)
 
 progress (ReadFrom chan) with (progress chan)
   progress (ReadFrom (MkChan port sense intent)) | (Done (MkChan portVal))
     = Step ReduceReadFrom
-  progress (ReadFrom (Seq left right)) | (Done (Seq x y))
-    = Step RewriteReadFrom
+
+  progress (ReadFrom (Seq left right IsMod))  | (Done (Seq x y)) impossible
+  progress (ReadFrom (Seq left right IsUnit)) | (Done (Seq x y)) impossible
+
   progress (ReadFrom chan) | (Step step)
    = Step (SimplifyReadFrom step)
 
 progress (Drive sense intent chan) with (progress chan)
   progress (Drive sense intent (MkPort ty OUT sense intent)) | (Done (MkPort tyV))
     = Done (Drive (MkPort tyV))
-  progress (Drive sense intent  (Seq left right)) | (Done (Seq x y))
-    = Step RewriteDrive
+
+  progress (Drive sense intent  (Seq left right IsMod)) | (Done (Seq x y)) impossible
+  progress (Drive sense intent  (Seq left right IsUnit)) | (Done (Seq x y)) impossible
+
   progress (Drive sense intent chan) | (Step step)
    = Step (SimplifyDrive step)
 
 progress (Catch chan) with (progress chan)
   progress (Catch (MkPort ty IN sense intent)) | (Done (MkPort tyV))
     = Done (Catch (MkPort tyV))
-  progress (Catch (Seq left right)) | (Done (Seq x y))
-    = Step RewriteCatch
+
+  progress (Catch (Seq left right IsUnit)) | (Done (Seq x y)) impossible
+  progress (Catch (Seq left right IsMod))  | (Done (Seq x y)) impossible
 
   progress (Catch chan) | (Step step)
    = Step (SimplifyCatch step)
@@ -156,8 +163,9 @@ progress (IfThenElseR test whenIsZ whenNotZ) with (progress test)
     progress (IfThenElseR (MkPort ty IN sense intent) whenIsZ whenNotZ) | (Done (MkPort tyV)) | (Step step)
       = Step (SimplifyCondTrue step)
 
-  progress (IfThenElseR (Seq left right) whenIsZ whenNotZ) | (Done (Seq x y))
-    = Step RewriteCondTest
+  progress (IfThenElseR (Seq left right IsUnit) whenIsZ whenNotZ) | (Done (Seq x y)) impossible
+  progress (IfThenElseR (Seq left right IsMod) whenIsZ whenNotZ) | (Done (Seq x y)) impossible
+
 
   progress (IfThenElseR test whenIsZ whenNotZ) | (Step step)
     = Step (SimplifyCondTest step)
@@ -168,14 +176,15 @@ progress (Connect portL portR prf) with (progress portL)
     progress (Connect (MkPort tyL dirL sense intent) (MkPort tyR dirR sense intent) prf) | (Done (MkPort x)) | (Done (MkPort y))
       = Done (Connect (MkPort x) (MkPort y))
 
-    progress (Connect (MkPort tyL dirL sense intent) (Seq left right) prf) | (Done (MkPort x)) | (Done (Seq y z))
-      = Step RewriteConnectRight
+    progress (Connect (MkPort tyL dirL sense intent) (Seq left right IsUnit) prf) | (Done (MkPort x)) | (Done (Seq y z)) impossible
+    progress (Connect (MkPort tyL dirL sense intent) (Seq left right IsMod) prf) | (Done (MkPort x)) | (Done (Seq y z)) impossible
+
 
     progress (Connect (MkPort tyL dirL sense intent) portR prf) | (Done (MkPort x)) | (Step step)
       = Step (SimplifyConnectRight step)
 
-  progress (Connect (Seq left right) portR prf) | (Done (Seq x y))
-    = Step RewriteConnectLeft
+  progress (Connect (Seq left right IsMod) portR prf) | (Done (Seq x y)) impossible
+  progress (Connect (Seq left right IsUnit) portR prf) | (Done (Seq x y)) impossible
 
   progress (Connect portL portR prf) | (Step step)
     = Step (SimplifyConnectLeft step)
@@ -184,8 +193,9 @@ progress (Connect portL portR prf) with (progress portL)
 progress (Cast portA prf) with (progress portA)
   progress (Cast (MkPort ty dirA sense intent) prf) | (Done (MkPort x))
     = Step (ReduceCast (MkPort x))
-  progress (Cast (Seq left right) prf) | (Done (Seq x y))
-    = Step RewriteCast
+
+  progress (Cast (Seq left right IsUnit) prf) | (Done (Seq x y)) impossible
+  progress (Cast (Seq left right IsMod)  prf) | (Done (Seq x y)) impossible
 
   progress (Cast portA prf) | (Step step)
     = Step (SimplifyCast step)
@@ -196,8 +206,8 @@ progress (Slice port alpha omega prf) with (progress port)
   progress (Slice (MkPort tyP dir sense intent) alpha omega prf) | (Done (MkPort x))
         = Step (ReduceSlice (MkPort x))
 
-  progress (Slice (Seq left right) alpha omega prf) | (Done (Seq x y))
-    = Step RewriteSlicePort
+  progress (Slice (Seq left right IsUnit) alpha omega prf) | (Done (Seq x y)) impossible
+  progress (Slice (Seq left right IsMod) alpha omega prf) | (Done (Seq x y)) impossible
 
   progress (Slice port alpha omega prf) | (Step step)
     = Step (SimplifySlicePort step)
@@ -207,8 +217,8 @@ progress (Index n port prf) with (progress port)
   progress (Index n (MkPort ty dir sense intent) prf) | (Done (MkPort tyV))
     = Step (ReduceIndex (MkPort tyV))
 
-  progress (Index n (Seq left right) prf) | (Done (Seq x y))
-    = Step RewriteIndexPort
+  progress (Index n (Seq left right IsMod) prf) | (Done (Seq x y)) impossible
+  progress (Index n (Seq left right IsUnit) prf) | (Done (Seq x y)) impossible
 
   progress (Index n port prf) | (Step step)
     = Step (SimplifyIndexPort step)
@@ -222,14 +232,14 @@ progress (Not portO portI) with (progress portO)
     progress (Not (MkPort tyO OUT sense intent) (MkPort tyI IN sense intent)) | (Done (MkPort tyValO)) | (Done (MkPort tyVa))
       = Done (Not (MkPort tyValO) (MkPort tyVa))
 
-    progress (Not (MkPort tyO OUT sense intent) (Seq left right)) | (Done (MkPort tyValO)) | (Done (Seq x y))
-      = Step RewriteNotInSeq
+    progress (Not (MkPort tyO OUT sense intent) (Seq left right IsMod)) | (Done (MkPort tyValO)) | (Done (Seq x y)) impossible
+    progress (Not (MkPort tyO OUT sense intent) (Seq left right IsUnit)) | (Done (MkPort tyValO)) | (Done (Seq x y)) impossible
 
     progress (Not (MkPort tyO OUT sense intent) portI) | (Done (MkPort tyValO)) | (Step step)
       = Step (SimplifyNotIn step)
 
-  progress (Not (Seq left right) portI) | (Done (Seq x y))
-    = Step RewriteNotOutSeq
+  progress (Not (Seq left right IsMod) portI) | (Done (Seq x y)) impossible
+  progress (Not (Seq left right IsUnit) portI) | (Done (Seq x y)) impossible
 
   progress (Not portO portI) | (Step step)
     = Step (SimplifyNotOut step)
@@ -242,46 +252,46 @@ progress (Gate kind portO portIA portIB) with (progress portO)
       progress (Gate kind (MkPort ty OUT sense intent) (MkPort tyIA IN sense intent) (MkPort tyIB IN sense intent)) | (Done (MkPort tyV)) | (Done (MkPort tyVIA)) | (Done (MkPort tyVIB))
         = Done (Gate (MkPort tyV) (MkPort tyVIA) (MkPort tyVIB))
 
-      progress (Gate kind (MkPort ty OUT sense intent) (MkPort tyIA IN sense intent) (Seq left right)) | (Done (MkPort tyV)) | (Done (MkPort tyVIA)) | (Done (Seq x y))
-        = Step RewriteBinInB
+      progress (Gate kind (MkPort ty OUT sense intent) (MkPort tyIA IN sense intent) (Seq left right IsUnit)) | (Done (MkPort tyV)) | (Done (MkPort tyVIA)) | (Done (Seq x y)) impossible
+      progress (Gate kind (MkPort ty OUT sense intent) (MkPort tyIA IN sense intent) (Seq left right IsMod)) | (Done (MkPort tyV)) | (Done (MkPort tyVIA)) | (Done (Seq x y)) impossible
 
       progress (Gate kind (MkPort ty OUT sense intent) (MkPort tyIA IN sense intent) portIB) | (Done (MkPort tyV)) | (Done (MkPort tyVIA)) | (Step step)
         = Step (SimplifyBinInB step)
 
-    progress (Gate kind (MkPort ty OUT sense intent) (Seq left right) portIB) | (Done (MkPort tyV)) | (Done (Seq x y))
-      = Step RewriteBinInA
+    progress (Gate kind (MkPort ty OUT sense intent) (Seq left right IsUnit) portIB) | (Done (MkPort tyV)) | (Done (Seq x y)) impossible
+    progress (Gate kind (MkPort ty OUT sense intent) (Seq left right IsMod) portIB) | (Done (MkPort tyV)) | (Done (Seq x y)) impossible
 
     progress (Gate kind (MkPort ty OUT sense intent) portIA portIB) | (Done (MkPort tyV)) | (Step step)
       = Step (SimplifyBinInA step)
 
-  progress (Gate kind (Seq left right) portIA portIB) | (Done (Seq x y))
-    = Step RewriteBinOut
+  progress (Gate kind (Seq left right IsUnit) portIA portIB) | (Done (Seq x y)) impossible
+  progress (Gate kind (Seq left right IsMod)  portIA portIB) | (Done (Seq x y)) impossible
 
   progress (Gate kind portO portIA portIB) | (Step step)
     = Step (SimplifyBinOut step)
 
 -- ### Binders
-progress (Let value body) with (progress value)
-  progress (Let value body) | (Done val)
+progress (Let value body orf) with (progress value)
+  progress (Let value body prf) | (Done val)
     = Step (ReduceLetBody val)
 
-  progress (Let value body) | (Step step)
+  progress (Let value body prf) | (Step step)
     = Step (SimplifyLetValue step)
 
 -- ### Sequencing
-progress (Seq left right) with (progress left)
+progress (Seq left right prf) {type} with (progress left)
 
-  progress (Seq (Seq x y) right) | (Done (Seq xVal yVal))
+  progress (Seq (Seq l r IsUnit) right prf) {type = type} | (Done (Seq x y))
     = Step RewriteSeq
 
-  progress (Seq left right) | (Done leftVal) with (progress right)
-    progress (Seq left right) | (Done leftVal) | (Done rightVal)
-      = Done (Seq leftVal rightVal)
+  progress (Seq left right prf) | (Done value) with (progress right)
+    progress (Seq left right prf) | (Done l) | (Done r)
+      = Done (Seq l r)
 
-    progress (Seq left right) | (Done leftVal) | (Step step)
-      = Step (SimplifySeqRight leftVal step)
+    progress (Seq left right prf) | (Done l) | (Step step)
+      = Step (SimplifySeqRight l step)
 
-  progress (Seq left right) | (Step step)
+  progress (Seq left right prf) {type = type} | (Step step)
     = Step (SimplifySeqLeft step)
 
 -- [ EOF ]

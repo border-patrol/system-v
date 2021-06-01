@@ -41,14 +41,13 @@ cast : {fromPort, toPort : TYPE (IDX TERM)}
     -> (from  : SystemV ctxt fromPort)
     -> (value : Value from)
              -> SystemV ctxt toPort
-cast (CanCast castTy' castDir' castSense' castIntent') from value with (value)
-  cast (CanCast castTy' castDir' castSense' castIntent') (MkPort type dirA sA iA) value | (MkPort v)
-    = MkPort (castTy castTy' type v)
-             (castDir castDir')
-             (castSense castSense')
-             (castIntent castIntent')
+cast (CanCast castTy' castDir' castSense' castIntent') (MkPort type dirA sA iA) (MkPort x)
+  = MkPort (castTy castTy' type x)
+           (castDir castDir')
+           (castSense castSense')
+           (castIntent castIntent')
 
-  cast (CanCast castTy' castDir' castSense' castIntent') (Seq left right) value | (Seq x y)
-    = Seq left $ cast (CanCast castTy' castDir' castSense' castIntent') right y
+cast (CanCast _ _ _ _) (Seq _ _ IsUnit) (Seq _ _) impossible
+cast (CanCast _ _ _ _) (Seq _ _ IsMod) (Seq _ _) impossible
 
 -- [ EOF ]

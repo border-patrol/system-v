@@ -226,6 +226,6 @@ data Redux : (this : SystemV ctxt type)
               -> {c   : SystemV ctxt type}
 
                      -> Redux (Seq (Seq a b IsUnit) c pB)
-                       (Seq a (Seq b c pB) pB)
+                              (Seq a (Seq b c pB) pB)
 
 -- --------------------------------------------------------------------- [ EOF ]

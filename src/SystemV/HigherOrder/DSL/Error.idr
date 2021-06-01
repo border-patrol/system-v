@@ -52,6 +52,7 @@ namespace Build
                | InvalidFlow  Flow.Error
                | InvalidFuncSynth Synthesis.Argument.Error (TYPE a)
                | InvalidFunc Function.Term.Error (TYPE a) (TYPE b)
-
+               | InvalidSeq ValidSeq.Error
+               | InvalidBind ValidBind.Error
 
 -- [ EOF ]

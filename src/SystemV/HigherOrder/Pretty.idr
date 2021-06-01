@@ -16,6 +16,23 @@ export
 Show Evaluation.HigherOrder.Error where
   show NoFuel = "NoFuel"
 
+export
+Show HigherOrder.NormalForm.Error where
+  show IsNotDataType       = "NF Error:\n\t Is Not DataType"
+  show IsNotTermType       = "NF Error:\n\t Is Not TermType"
+  show InvalidPortArgument = "NF Error:\n\t Invalid Port Argument"
+  show InvalidMkChan       = "NF Error:\n\t Invalid MkChan"
+  show InvalidGate         = "NF Error:\n\t Invalid Gate"
+  show InvalidFunc         = "NF Error:\n\t Invalid Func"
+  show InvalidFuncBody     = "NF Error:\n\t Invalid Func Body"
+  show InvalidFuncLet      = "NF Error:\n\t Invalid Func Let"
+  show InvalidSeq          = "NF Error:\n\t Invalid Seq"
+  show InvalidConditional  = "NF Error:\n\t Invalid Conditional"
+  show InvalidApp          = "NF Error:\n\t Invalid App"
+  show InvalidDesignDecl   = "NF Error:\n\t Invalid DesignDecl"
+  show InvalidDesignBody   = "NF Error:\n\t Invalid DesignBody"
+  show InvalidDesignTop    = "NF Error:\n\t Invalid DesignTop"
+
 
 mutual
   Show Function.Type.Error where
@@ -89,7 +106,7 @@ mutual
 
 export
 Show Build.HigherOrder.Error where
-  show (Err fc err) = trim (unlines [show fc, show err])
+  show (Err fc err) = layout [show fc, show err]
 
   show (NotAName a)
     = unwords ["NotAName", show a]
@@ -98,24 +115,24 @@ Show Build.HigherOrder.Error where
     = "Vectors cannot have size zero."
 
   show (TypeMismatch x y)
-    = trim $ unlines [ "Type Mismatch:"
-                     , "Expected:"
-                     , "\t" ++ show x
-                     , "Given:"
-                     , "\t" ++ show y
-                     ]
+    = layout [ "Type Mismatch:"
+             , "Expected:"
+             , "\t" ++ show x
+             , "Given:"
+             , "\t" ++ show y
+             ]
 
   show (WrongType ctxt type) = "Wrong type"
 
   show (InvalidCast err from to)
-    = trim (unlines [ "Invalid Cast"
-                    , "Reason:"
-                    , "\t" ++ show err
-                    , "From:"
-                    , "\t" ++ show from
-                    , "To:"
-                    , "\t" ++ show to
-                    ])
+    = layout [ "Invalid Cast"
+             , "Reason:"
+             , "\t" ++ show err
+             , "From:"
+             , "\t" ++ show from
+             , "To:"
+             , "\t" ++ show to
+             ]
 
   show (IndexOutOfBounds n w)
     = trim (unlines [ "Index Out of Bounds:"
@@ -132,22 +149,34 @@ Show Build.HigherOrder.Error where
     = "Invalid Flow\n" ++ show err
 
   show (InvalidFuncSynth err type)
-    = trim (unlines [ "Invalid Synthesis"
-                    , "Reason:"
-                    , "\t" ++ show err
-                    , "Type:"
-                    , "\t" ++ show type
-                    ])
+    = layout [ "Invalid Synthesis"
+             , "Reason:"
+             , "\t" ++ show err
+             , "Type:"
+             , "\t" ++ show type
+             ]
 
   show (InvalidFunc err p r)
-    = trim (unlines [ "Invalid Function"
-                    , "Reason:"
-                    , "\t" ++ show err
-                    , "Argument:"
-                    , "\t" ++ show p
-                    , "Return:"
-                    , "\t" ++ show r
-                    ])
+    = layout [ "Invalid Function"
+             , "Reason:"
+             , "\t" ++ show err
+             , "Argument:"
+             , "\t" ++ show p
+             , "Return:"
+             , "\t" ++ show r
+             ]
+
+  show (InvalidSeq err)
+    = layout [ "Invalid Sequencing"
+             , "Reason:"
+             , "\t" ++ show err
+             ]
+
+  show (InvalidBind err)
+    = layout [ "Invalid Bind"
+             , "Reason:"
+             , "\t" ++ show err
+             ]
 
 export
 Show AST where
@@ -305,11 +334,11 @@ Show (SystemV ctxt type) where
   show (Gate kind portO portIA portIB)
      = unwords ["(" <+> show kind, show portO, show portIA, show portIB <+> ")"]
 
-  show (Let value body)
+  show (Let value body prf)
       = layout [unwords ["let", show value, "in"]
              , show body]
 
-  show (Seq left right)
+  show (Seq left right prf)
     = layout [unwords [show left, ";"], show right ]
 
 

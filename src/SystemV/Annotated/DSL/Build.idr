@@ -317,8 +317,18 @@ termBuilder (Ctxt lvls names types) (Gate fc kind portOut portInA portInB)
 -- ### Let binding
 termBuilder (Ctxt lvls names types) (Let fc name value body)
   = do (Res u tyV v) <- termBuilder (Ctxt lvls names types) value
-       (Res _ _   b) <- termBuilder (Ctxt (u::lvls) ((MkName (Just name) u)::names) (tyV::types)) body
-       pure (Res _ _ (Let v b))
+
+       case validBind u tyV of
+         No err contra => Left (Err (getFC value) (InvalidBind err))
+         Yes prf =>
+           do bres <- termBuilder (Ctxt (u::lvls)
+                                        ((MkName (Just name) u)::names)
+                                        (tyV::types))
+                                        body
+
+              TTerm ty b <- isTermTerm (getFC body) bres
+
+              pure (Res _ _ (Let v b prf))
 
 -- ### Sequencing
 termBuilder (Ctxt lvls names types) (Seq fc left right)
@@ -326,9 +336,12 @@ termBuilder (Ctxt lvls names types) (Seq fc left right)
        l    <- isUnit (getFC left) lres
 
        rres <- termBuilder (Ctxt lvls names types) right
-       (T ty r) <- isTerm (getFC right) rres
 
-       pure (Res _ _ (Seq l r))
+       (TTerm ty r) <- isTermTerm (getFC right) rres
+
+       case validSeq (IDX TERM) ty of
+         No err contra => Left (Err (getFC right) (InvalidSeq err))
+         Yes prf => pure (Res _ _ (Seq l r prf))
 
 -- ## Indicies
 termBuilder (Ctxt lvls names types) (Index fc i port)
@@ -347,10 +360,10 @@ namespace Annotated
   build ast with (termBuilder (Ctxt Nil Nil Nil) ast)
     build ast | (Left err)
       = Left err
-    build ast | (Right (Res _ (FuncTy UnitTy ModuleTy) term))
-      = Right (App term MkUnit)
+    build ast | (Right (Res _ ModuleTy term))
+      = Right term
     build ast | (Right (Res _ type term))
 
-      = Left (TypeMismatch (FuncTy UnitTy ModuleTy) type)
+      = Left (TypeMismatch ModuleTy type)
 
 -- --------------------------------------------------------------------- [ EOF ]
