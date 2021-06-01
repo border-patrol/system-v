@@ -45,8 +45,6 @@ data Redux : (this : SystemV ctxt type)
                        -> Redux (App this var)
                                 (App that var)
 
-    RewriteFuncAppFunc : Redux (App (Seq left func) param)
-                               (Seq left (App func param))
 
     SimplifyFuncAppVar : {func : SystemV ctxt (FuncTy param return)}
 
@@ -87,17 +85,11 @@ data Redux : (this : SystemV ctxt type)
     SimplifyWriteTo : (chan : Redux this that)
                            -> Redux (WriteTo this) (WriteTo that)
 
-    RewriteWriteTo : Redux (WriteTo (Seq left port))
-                           (Seq left (WriteTo port))
-
     ReduceWriteTo : Redux (WriteTo (MkChan typeD)) (MkPort typeD OUT)
 
     -- ##### ReadFrom
     SimplifyReadFrom : (chan : Redux this that)
                             -> Redux (ReadFrom this) (ReadFrom that)
-
-    RewriteReadFrom : Redux (ReadFrom (Seq left port))
-                            (Seq left (ReadFrom port))
 
     ReduceReadFrom : Redux (ReadFrom (MkChan typeD)) (MkPort typeD IN)
 
@@ -107,15 +99,11 @@ data Redux : (this : SystemV ctxt type)
     SimplifyDrive : (chan : Redux this that)
                          -> Redux (Drive this) (Drive that)
 
-    RewriteDrive : Redux (Drive (Seq left port))
-                         (Seq left (Drive port))
 
     -- ##### Catching
     SimplifyCatch : (chan : Redux this that)
                          -> Redux (Catch this) (Catch that)
 
-    RewriteCatch : Redux (Catch (Seq left port))
-                         (Seq left (Catch port))
 
     -- ### Conditionals
 
@@ -123,8 +111,6 @@ data Redux : (this : SystemV ctxt type)
                     -> Redux (IfThenElseR this t f)
                              (IfThenElseR that t f)
 
-    RewriteCondTest : Redux (IfThenElseR (Seq left test) t f)
-                            (Seq left (IfThenElseR test t f))
 
     SimplifyCondTrue : Redux this that
                     -> Redux (IfThenElseR test this f)
@@ -139,15 +125,9 @@ data Redux : (this : SystemV ctxt type)
                        -> Redux (Connect this portR prf)
                                 (Connect that portR prf)
 
-    RewriteConnectLeft : Redux (Connect (Seq left portL) portR prf)
-                               (Seq left (Connect portL portR prf))
-
     SimplifyConnectRight : Redux this that
                         -> Redux (Connect portL this prf)
                                  (Connect portL that prf)
-
-    RewriteConnectRight : Redux (Connect portL (Seq left portR) prf)
-                               (Seq left (Connect portL portR prf))
 
     -- ### Casting
 
@@ -155,8 +135,6 @@ data Redux : (this : SystemV ctxt type)
                 -> Redux (Cast this prf)
                          (Cast that prf)
 
-    RewriteCast : Redux (Cast (Seq left port) prf)
-                        (Seq left (Cast port prf))
 
     ReduceCast : (val : Value port)
                      -> Redux (Cast port prf)
@@ -168,10 +146,6 @@ data Redux : (this : SystemV ctxt type)
                      -> Redux (Slice this alpha omega prf)
                               (Slice that alpha omega prf)
 
-    RewriteSlicePort : Redux (Slice (Seq left port) alpha omega prf)
-                             (Seq left (Slice port alpha omega prf))
-
-
     ReduceSlice : (val : Value port)
                       -> Redux (Slice port (a) (o) prf)
                                (slice a o prf port val)
@@ -181,8 +155,6 @@ data Redux : (this : SystemV ctxt type)
                      -> Redux (Index (n) this prf)
                               (Index (n) that prf)
 
-    RewriteIndexPort : Redux (Index (n) (Seq left port) prf)
-                             (Seq left (Index (n) port prf))
 
     ReduceIndex : (val : Value port)
                       -> Redux (Index (n) port prf)
@@ -196,15 +168,9 @@ data Redux : (this : SystemV ctxt type)
                   -> Redux (Not this input)
                            (Not that input)
 
-    RewriteNotOutSeq : Redux (Not (Seq left right) input)
-                             (Seq left (Not right input))
-
     SimplifyNotIn : Redux this that
                  -> Redux (Not out this)
                           (Not out that)
-
-    RewriteNotInSeq : Redux (Not out (Seq left input))
-                            (Seq left (Not out input))
 
     -- #### Binary
 
@@ -212,22 +178,15 @@ data Redux : (this : SystemV ctxt type)
                   -> Redux (Gate k this inA inB)
                            (Gate k that inA inB)
 
-    RewriteBinOut : Redux (Gate k (Seq left out) inA inB)
-                          (Seq left (Gate k out inA inB))
 
     SimplifyBinInA : Redux this that
                   -> Redux (Gate k out this inB)
                            (Gate k out that inB)
 
-    RewriteBinInA : Redux (Gate k out (Seq left inA) inB)
-                          (Seq left (Gate k out inA inB))
 
     SimplifyBinInB : Redux this that
                   -> Redux (Gate k out inA this)
                            (Gate k out inA that)
-
-    RewriteBinInB : Redux (Gate k out inA (Seq left inB))
-                          (Seq left (Gate k out inA inB))
 
     -- ## Let-Binders
 
@@ -235,14 +194,14 @@ data Redux : (this : SystemV ctxt type)
                     -> {body       : SystemV (ctxt += typeV) typeB}
 
                     -> (value      : Redux this that)
-                                  -> Redux (Let this body)
-                                           (Let that body)
+                                  -> Redux (Let this body prf)
+                                           (Let that body prf)
 
     ReduceLetBody : {value : SystemV  ctxt    typeV}
                  -> {body  : SystemV (ctxt += typeV) typeB}
 
                           -> Value value
-                          -> Redux (Let value body)
+                          -> Redux (Let value body prf)
                                    (subst value body)
     -- ## Sequencing
 
@@ -252,21 +211,21 @@ data Redux : (this : SystemV ctxt type)
                    -> {right      : SystemV ctxt type}
 
                    -> Redux this that
-                   -> Redux (Seq this right)
-                            (Seq that right)
+                   -> Redux (Seq this right prf)
+                            (Seq that right prf)
 
     SimplifySeqRight : {left : SystemV ctxt UnitTy}
                     -> {this, that : SystemV ctxt type}
 
                     -> Value left
                     -> Redux this that
-                    -> Redux (Seq left this)
-                             (Seq left that)
+                    -> Redux (Seq left this prf)
+                             (Seq left that prf)
 
     RewriteSeq : {a,b : SystemV ctxt UnitTy}
               -> {c   : SystemV ctxt type}
 
-                     -> Redux (Seq (Seq a b) c)
-                       (Seq a (Seq b c))
+                     -> Redux (Seq (Seq a b IsUnit) c pB)
+                       (Seq a (Seq b c pB) pB)
 
 -- --------------------------------------------------------------------- [ EOF ]

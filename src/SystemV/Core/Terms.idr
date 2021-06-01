@@ -162,21 +162,22 @@ namespace Core
 
     -- [ Binders ]
 
-    Let : {typeU,typeB : Universe}
-       -> {typeValue   : TYPE typeU}
-       -> {typeBody    : TYPE typeB}
+    Let : {typeU     : Universe}
+       -> {typeValue : TYPE typeU}
+       -> {typeBody  : TYPE (IDX TERM)}
 
        -> (value : SystemV  ctxt    typeValue)
        -> (body  : SystemV (ctxt += typeValue) typeBody)
+       -> (prf   : ValidBind typeU typeValue)
                 -> SystemV  ctxt               typeBody
 
     -- [ Sequencing ]
 
-    Seq : {level : Level}
-       -> {type : TYPE (IDX level)}
+    Seq : {type : TYPE (IDX TERM)}
 
        -> (left  : SystemV ctxt UnitTy)
        -> (right : SystemV ctxt type)
+       -> (prf   : ValidSeq (IDX TERM) type)
                 -> SystemV ctxt type
 
--- --------------------------------------------------------------------- [ EOF ]
+-- [ EOF ]

@@ -14,12 +14,11 @@ slice : (a,o : Nat)
      -> (port : SystemV ctxt (PortTy (VectorTyDesc s type) dir))
      -> (val  : Value port)
              -> SystemV ctxt (PortTy (VectorTyDesc (minus s o a prf) type) dir)
-slice a o prf port val with (val)
-  slice a o prf (MkPort ty dir) val | (MkPort x dir) with (x)
-    slice a o prf (MkPort (TyVect s ty) dir) val | (MkPort x dir) | (TyVect s z)
-      = MkPort (TyVect (minus s o a prf) ty) dir
+slice a o prf (MkPort type dir) (MkPort x dir) with (x)
+  slice a o prf (MkPort (TyVect s tyV) dir) (MkPort x dir) | (TyVect s z)
+    = MkPort (TyVect (minus s o a prf) tyV) dir
 
-  slice a o prf (Seq left right) val | (Seq x y)
-    = Seq left (slice a o prf right y)
+slice _ _ _ (Seq _ _ IsUnit) (Seq _ _) impossible
+slice _ _ _ (Seq _ _ IsMod) (Seq _ _) impossible
 
 -- [ EOF ]

@@ -85,6 +85,6 @@ data Value : SystemV ctxt type -> Type where
 
      -> Value left
      -> Value right
-     -> Value (Seq left right)
+     -> Value (Seq left right prf)
 
 -- --------------------------------------------------------------------- [ EOF ]

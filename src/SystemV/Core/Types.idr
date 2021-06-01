@@ -28,8 +28,12 @@ import public SystemV.Core.Types.TYPE.Equiv
 import public SystemV.Core.Types.TYPE.Cast
 import public SystemV.Core.Types.TYPE.Function
 
+import public SystemV.Core.Types.TYPE.Seq
+import public SystemV.Core.Types.TYPE.Binding
+
 import public SystemV.Core.Types.TYPE.Check.Data
 import public SystemV.Core.Types.TYPE.Check.Types
+
 
 %default total
 

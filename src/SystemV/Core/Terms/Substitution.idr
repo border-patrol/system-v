@@ -126,13 +126,15 @@ namespace General
                 (subst f portIA)
                 (subst f portIB)
 
-  subst f (Let value body)
+  subst f (Let value body prf)
     = Let (subst          f  value)
           (subst (weakens f) body)
+          prf
 
-  subst f (Seq left right)
+  subst f (Seq left right prf)
     = Seq (subst f left)
           (subst f right)
+          prf
 
 namespace Single
   public export

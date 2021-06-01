@@ -14,26 +14,26 @@ namespace Annotated
   run opts
     = do putStrLn "LOG : Running SystemV Annotated"
 
-         ast <- timeToTryOrDie (timing opts)
-                               "LOG : Parsing Complete"
-                               Annotated.fromFile
-                               (getFirstFile opts)
+         ast <- IO.timeToTryOrDie (timing opts)
+                                  "LOG : Parsing Complete"
+                                  Annotated.fromFile
+                                  (getFirstFile opts)
 
          dump (debug opts) $ do prettyHeader "AST"
                                 printLn ast
 
-         term <- timeToTryOrDie (timing opts)
-                                "LOG : Typing Complete "
-                                Annotated.build
-                                ast
+         term <- Run.timeToTryOrDie (timing opts)
+                                    "LOG : Typing Complete "
+                                    Annotated.build
+                                    ast
 
          dump (debug opts) $ do prettyHeader "Term"
                                 printLn term
 
-         v <- timeToTryOrDie (timing opts)
-                             "LOG : Evaluating "
-                             Annotated.eval
-                             term
+         v <- Run.timeToTryOrDie (timing opts)
+                                 "LOG : Evaluating "
+                                 Annotated.eval
+                                 term
 
          dump (debug opts) $ do prettyHeader "Value"
                                 printLn v

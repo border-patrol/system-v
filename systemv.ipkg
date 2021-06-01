@@ -108,8 +108,13 @@ modules =
         , SystemV.Core.Types.TYPE.Function.Synthesis
         , SystemV.Core.Types.TYPE.Function
 
+        , SystemV.Core.Types.TYPE.Seq
+        , SystemV.Core.Types.TYPE.Binding
+
         , SystemV.Core.Types.TYPE.Check.Data
         , SystemV.Core.Types.TYPE.Check.Types
+
+
 
         , SystemV.Core.Types
 
@@ -118,6 +123,9 @@ modules =
 -- ### Terms
 
         , SystemV.Core.Terms
+        , SystemV.Core.Terms.NormalForm.Error
+        , SystemV.Core.Terms.NormalForm.Types
+        , SystemV.Core.Terms.NormalForm.Proofs
         , SystemV.Core.Terms.NormalForm
 
         , SystemV.Core.Terms.Renaming

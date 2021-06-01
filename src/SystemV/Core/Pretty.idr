@@ -2,6 +2,7 @@ module SystemV.Core.Pretty
 
 import SystemV.Common.Run
 import SystemV.Common.Options
+
 import public SystemV.Common.Pretty
 
 import SystemV.Core
@@ -128,6 +129,22 @@ Show Function.ValidTerm.Error where
   show IsPort    = "Is a port"
 
 export
+Show ValidSeq.Error where
+  show IsFunc = "Is a function"
+  show IsData    = "Is a data type"
+  show IsType    = "Is a type"
+  show IsModule  = "Is a module"
+  show IsChan    = "Is a chan"
+  show IsUnit    = "Is unit"
+  show IsPort    = "Is a port"
+
+export
+Show ValidBind.Error where
+  show IsType    = "Is a type"
+  show IsUnit    = "Is unit"
+  show IsPort    = "Is a port"
+
+export
 Show Build.Core.Error where
   show (Err fc err) = layout [show fc, show err]
 
@@ -188,6 +205,35 @@ Show Build.Core.Error where
              , "Return:"
              , "\t" ++ show r
              ]
+
+  show (InvalidSeq err)
+    = layout [ "Invalid Sequencing"
+             , "Reason:"
+             , "\t" ++ show err
+             ]
+
+  show (InvalidBind err)
+    = layout [ "Invalid Bind"
+             , "Reason:"
+             , "\t" ++ show err
+             ]
+export
+Show NormalForm.Error where
+  show IsNotDataType       = "NF Error:\n\t Is Not DataType"
+  show IsNotTermType       = "NF Error:\n\t Is Not TermType"
+  show InvalidPortArgument = "NF Error:\n\t Invalid Port Argument"
+  show InvalidMkChan       = "NF Error:\n\t Invalid MkChan"
+  show InvalidGate         = "NF Error:\n\t Invalid Gate"
+  show InvalidFunc         = "NF Error:\n\t Invalid Func"
+  show InvalidFuncBody     = "NF Error:\n\t Invalid Func Body"
+  show InvalidFuncLet      = "NF Error:\n\t Invalid Func Let"
+  show InvalidSeq          = "NF Error:\n\t Invalid Seq"
+  show InvalidConditional  = "NF Error:\n\t Invalid Conditional"
+  show InvalidApp          = "NF Error:\n\t Invalid App"
+  show InvalidDesignDecl   = "NF Error:\n\t Invalid DesignDecl"
+  show InvalidDesignBody   = "NF Error:\n\t Invalid DesignBody"
+  show InvalidDesignTop    = "NF Error:\n\t Invalid DesignTop"
+
 
 export
 Show AST where
@@ -336,11 +382,11 @@ Show (SystemV ctxt type) where
   show (Gate kind portO portIA portIB)
      = unwords ["(" <+> show kind, show portO, show portIA, show portIB <+> ")"]
 
-  show (Let value body)
+  show (Let value body prf)
       = layout [unwords ["let", show value, "in"]
              , show body]
 
-  show (Seq left right)
+  show (Seq left right prf)
     = layout [unwords [show left, ";"], show right ]
 
 

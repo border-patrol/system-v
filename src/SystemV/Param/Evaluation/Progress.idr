@@ -15,7 +15,6 @@ import SystemV.Param.Evaluation.Values
 
 import SystemV.Param.Evaluation.Casting
 import SystemV.Param.Evaluation.Slicing
-import SystemV.Param.Evaluation.Sizing
 
 import SystemV.Param.Evaluation.Equality
 import SystemV.Param.Evaluation.Check

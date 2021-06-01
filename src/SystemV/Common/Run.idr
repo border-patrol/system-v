@@ -63,7 +63,29 @@ timeToTryOrDie timing msg f a
                            printLog timing diff msg
                            pure res
 
-
+namespace Dep
+  export
+  timeToTryOrDie : {a : Type} -> {type : a -> Type}
+                -> Show err
+                => Bool
+                -> String
+                -> ((y : a) -> Either err (type y))
+                -> (x : a)
+                -> IO (type x)
+  timeToTryOrDie timing msg f a
+      = do start <- clockTime UTC
+           let r = f a
+           case r of
+             Left err => do stop <- clockTime UTC
+                            putStrLn "Error Happened"
+                            printLn err
+                            let diff = timeDifference stop start
+                            printLog timing diff msg
+                            exitFailure
+             Right res => do stop <- clockTime UTC
+                             let diff =  timeDifference stop start
+                             printLog timing diff msg
+                             pure res
 export
 debug : Show a => Bool -> a -> IO ()
 debug b e = when b (printLn e)

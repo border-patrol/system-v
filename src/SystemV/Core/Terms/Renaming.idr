@@ -123,12 +123,14 @@ rename f (Gate kind portO portIA portIB)
               (rename f portIA)
               (rename f portIB)
 
-rename f (Let value body)
+rename f (Let value body prf)
   = Let (rename         f  value)
         (rename (weaken f) body)
+        prf
 
-rename f (Seq left right)
+rename f (Seq left right prf)
   = Seq (rename f left)
         (rename f right)
+        prf
 
 -- --------------------------------------------------------------------- [ EOF ]

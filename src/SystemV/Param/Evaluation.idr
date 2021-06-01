@@ -14,7 +14,7 @@ import SystemV.Param.Terms.Substitution
 import public SystemV.Param.Evaluation.Error
 import SystemV.Param.Evaluation.Values
 import SystemV.Param.Evaluation.Casting
-import SystemV.Param.Evaluation.Sizing
+
 import SystemV.Param.Evaluation.Slicing
 import SystemV.Param.Evaluation.Reduction
 import SystemV.Param.Evaluation.Progress
