@@ -2,6 +2,7 @@ module SystemV.Annotated.Pretty
 
 import SystemV.Common.Run
 import SystemV.Common.Options
+
 import public SystemV.Common.Pretty
 
 import SystemV.Annotated

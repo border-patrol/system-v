@@ -115,6 +115,7 @@ mutual
         public export
         data NF : (term : SystemV ctxt type) -> Type where
           EndModule : Sequence.NF EndModule
+          MkUnit    : Sequence.NF MkUnit
           Drive   : Port.Argument.NF term -> Sequence.NF (Drive s i term)
           Catch   : Port.Argument.NF term -> Sequence.NF (Catch term)
           Connect : {left  : SystemV ctxt (PortTy ty dirL s i)}

@@ -181,6 +181,7 @@ mutual
                             (Sequence.NF term)
 
         nf EndModule = Right EndModule
+        nf MkUnit    = Right MkUnit
 
         nf (Drive chan)
           = do prf <- Port.Argument.nf chan

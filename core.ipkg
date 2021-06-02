@@ -1,0 +1,11 @@
+package core
+
+depends = contrib
+
+main = SystemV.Core.Main
+
+executable = systemv-core
+
+sourcedir = "src"
+
+---- [ EOF ]

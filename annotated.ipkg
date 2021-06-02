@@ -1,0 +1,11 @@
+package annotated
+
+depends = contrib
+
+main = SystemV.Annotated.Main
+
+executable = systemv-annotated
+
+sourcedir = "src"
+
+---- [ EOF ]

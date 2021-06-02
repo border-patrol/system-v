@@ -1,0 +1,11 @@
+package params
+
+depends = contrib
+
+main = SystemV.Params.Main
+
+executable = systemv-params
+
+sourcedir = "src"
+
+---- [ EOF ]

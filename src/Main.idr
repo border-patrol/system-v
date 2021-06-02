@@ -7,17 +7,18 @@ import SystemV.Common.Options
 import SystemV.Core.Run
 import SystemV.Annotated.Run
 import SystemV.HigherOrder.Run
-import SystemV.Param.Run
+import SystemV.Params.Run
 
 exec : Mode -> Opts -> IO ()
 exec CORE        = Core.run
 exec ANNOTATED   = Annotated.run
 exec HIGHERORDER = HigherOrder.run
-exec PARAM       = Param.run
+exec PARAM       = Params.run
 
 main : IO ()
 main
   = do putStrLn "LOG : Starting SystemV "
+
        Right (m,opts) <- processArgs
          | Left err => do printLn err
                           exitFailure

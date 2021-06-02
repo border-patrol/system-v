@@ -34,8 +34,6 @@ namespace Core
                                    Core.nf
                                    term
 
-
-
          v <- Run.timeToTryOrDie (timing opts)
                                  "LOG : Evaluating "
                                  Core.eval

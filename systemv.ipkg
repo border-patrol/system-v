@@ -1,7 +1,7 @@
 package systemv
 
 depends = contrib
---opts = "--timing"
+
 main = Main
 executable = systemv
 
@@ -114,8 +114,6 @@ modules =
         , SystemV.Core.Types.TYPE.Check.Data
         , SystemV.Core.Types.TYPE.Check.Types
 
-
-
         , SystemV.Core.Types
 
         , SystemV.Core.Types.Views
@@ -162,72 +160,6 @@ modules =
 
         , SystemV.Core.Pretty
         , SystemV.Core.Run
-
--- ## SystemV 'Params'
-
--- ### Types
-
-        , SystemV.Param.Types.TYPE
-
-        , SystemV.Param.Types.TYPE.Equality.Error
-        , SystemV.Param.Types.TYPE.Equality.View
-        , SystemV.Param.Types.TYPE.Equality.DataTypes
-        , SystemV.Param.Types.TYPE.Equality.DataTerms
-        , SystemV.Param.Types.TYPE.Equality.Types.Types
-        , SystemV.Param.Types.TYPE.Equality.Types.Terms
-        , SystemV.Param.Types.TYPE.Equality.Types
-        , SystemV.Param.Types.TYPE.Equality
-
-        , SystemV.Param.Types.TYPE.Function.Argument
-        , SystemV.Param.Types.TYPE.Function.Argument.Default
-        , SystemV.Param.Types.TYPE.Function.Return
-        , SystemV.Param.Types.TYPE.Function.Synthesis
-        , SystemV.Param.Types.TYPE.Function
-
-        , SystemV.Param.Types.TYPE.Check.Data
-        , SystemV.Param.Types.TYPE.Check.Types
-        , SystemV.Param.Types.TYPE.Check.Default
-
-        , SystemV.Param.Types.TYPE.Equiv
-        , SystemV.Param.Types.TYPE.Cast
-
-        , SystemV.Param.Types
-        , SystemV.Param.Types.Views
-
--- ### Terms
-
-        , SystemV.Param.Terms
-        , SystemV.Param.Terms.Renaming
-        , SystemV.Param.Terms.Substitution
-
--- ### Elaboration
-
-        , SystemV.Param.Evaluation.Values
-
-        , SystemV.Param.Evaluation.Casting
-        , SystemV.Param.Evaluation.Slicing
-
-        , SystemV.Param.Evaluation.Equality
-        , SystemV.Param.Evaluation.Check
-
-        , SystemV.Param.Evaluation.Reduction
-        , SystemV.Param.Evaluation.Progress
-        , SystemV.Param.Evaluation
-
--- ### DSL
-
-        , SystemV.Param.DSL.AST.Raw
-        , SystemV.Param.DSL.AST
-        , SystemV.Param.DSL.AST.Elab
-        , SystemV.Param.DSL.Parser
-        , SystemV.Param.DSL.Error
-        , SystemV.Param.DSL.Build.Helpers
-        , SystemV.Param.DSL.Build
-        , SystemV.Param.DSL
-
--- ### Main
-        , SystemV.Param.Pretty
-        , SystemV.Param.Run
 
 -- ## SystemV 'HigherOrder'
 
@@ -360,6 +292,85 @@ modules =
         , SystemV.Annotated.Pretty
         , SystemV.Annotated.Run
 
+
+-- ## SystemV 'Params'
+
+-- ### Types
+
+        , SystemV.Params.Types.TYPE
+
+        , SystemV.Params.Types.TYPE.Equality.Error
+        , SystemV.Params.Types.TYPE.Equality.View
+        , SystemV.Params.Types.TYPE.Equality.DataTypes
+        , SystemV.Params.Types.TYPE.Equality.DataTerms
+        , SystemV.Params.Types.TYPE.Equality.Types.Types
+        , SystemV.Params.Types.TYPE.Equality.Types.Terms
+        , SystemV.Params.Types.TYPE.Equality.Types
+        , SystemV.Params.Types.TYPE.Equality
+
+        , SystemV.Params.Types.TYPE.Function.Argument
+        , SystemV.Params.Types.TYPE.Function.Argument.Default
+        , SystemV.Params.Types.TYPE.Function.Return
+        , SystemV.Params.Types.TYPE.Function.Synthesis
+        , SystemV.Params.Types.TYPE.Function
+
+        , SystemV.Params.Types.TYPE.Check.Data
+        , SystemV.Params.Types.TYPE.Check.Types
+        , SystemV.Params.Types.TYPE.Check.Default
+
+        , SystemV.Params.Types.TYPE.Equiv
+        , SystemV.Params.Types.TYPE.Cast
+        , SystemV.Params.Types.TYPE.Seq
+        , SystemV.Params.Types.TYPE.Binding
+
+        , SystemV.Params.Types
+        , SystemV.Params.Types.Views
+
+---- ### Terms
+
+        , SystemV.Params.Terms
+
+        , SystemV.Params.Terms.NormalForm.Error
+        , SystemV.Params.Terms.NormalForm.Types
+        , SystemV.Params.Terms.NormalForm.Proofs
+        , SystemV.Params.Terms.NormalForm
+
+        , SystemV.Params.Terms.Renaming
+        , SystemV.Params.Terms.Substitution
+
+-- ### Elaboration
+
+        , SystemV.Params.Evaluation.Values
+
+        , SystemV.Params.Evaluation.Casting
+        , SystemV.Params.Evaluation.Slicing
+
+        , SystemV.Params.Evaluation.Equality
+        , SystemV.Params.Evaluation.Check
+
+        , SystemV.Params.Evaluation.Reduction
+        , SystemV.Params.Evaluation.Progress
+        , SystemV.Params.Evaluation
+
+-- ### Core
+
+        , SystemV.Params
+
+-- ### DSL
+
+        , SystemV.Params.DSL.AST.Raw
+        , SystemV.Params.DSL.AST
+        , SystemV.Params.DSL.AST.Elab
+        , SystemV.Params.DSL.Parser
+        , SystemV.Params.DSL.Error
+        , SystemV.Params.DSL.Build.Helpers
+        , SystemV.Params.DSL.Build
+        , SystemV.Params.DSL
+
+-- ### Main
+
+        , SystemV.Params.Pretty
+        , SystemV.Params.Run
 
 -- ## Main
         , Main

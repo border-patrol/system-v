@@ -22,8 +22,6 @@ import SystemV.Common.Lexer
 
 import public SystemV.Common.Parser.Ref
 
-import SystemV.Core.DSL.AST
-
 %default total
 
 export

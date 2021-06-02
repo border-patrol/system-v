@@ -16,6 +16,11 @@ record FileContext where
   start  : Location
   end    : Location
 
+
+public export
+FC : Type
+FC = FileContext
+
 export
 newFC : Maybe String -> Location -> Location -> FileContext
 newFC n s e = MkFC n (record {source = n} s) (record {source = n} e)

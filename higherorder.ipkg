@@ -1,0 +1,11 @@
+package higherorder
+
+depends = contrib
+
+main = SystemV.HigherOrder.Main
+
+executable = systemv-higherorder
+
+sourcedir = "src"
+
+---- [ EOF ]

@@ -3,6 +3,7 @@ LOG : Running SystemV Param
 LOG : Parsing Complete
 LOG : Elaboration 
 LOG : Static Typing Complete 
+LOG : Is in Normal Form 
 LOG : Runtime Checking Complete 
 LOG : Exiting Param
 LOG : Bye
@@ -11,6 +12,7 @@ LOG : Running SystemV Param
 LOG : Parsing Complete
 LOG : Elaboration 
 LOG : Static Typing Complete 
+LOG : Is in Normal Form 
 LOG : Runtime Checking Complete 
 LOG : Exiting Param
 LOG : Bye
@@ -19,6 +21,9 @@ LOG : Running SystemV Param
 LOG : Parsing Complete
 LOG : Elaboration 
 LOG : Static Typing Complete 
+LOG : Is in Normal Form 
 Error Happened
-Type mismatch
+fail.sysv:39:18-16:
+Runtime Error:
+	Type mismatch
 LOG : Runtime Checking Complete 

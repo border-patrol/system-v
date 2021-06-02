@@ -8,6 +8,7 @@ import public SystemV.Common.Pretty
 import SystemV.Core
 import SystemV.Core.DSL
 
+%default total
 
 export
 Show Evaluation.Core.Error where

@@ -115,6 +115,7 @@ mutual
         public export
         data NF : (term : SystemV ctxt type) -> Type where
           EndModule : Sequence.NF EndModule
+          MkUnit    : Sequence.NF MkUnit
           Drive   : Port.Argument.NF term -> Sequence.NF (Drive term)
           Catch   : Port.Argument.NF term -> Sequence.NF (Catch term)
           Connect : {left  : SystemV ctxt (PortTy ty dirL)}
@@ -159,13 +160,6 @@ mutual
              -> {param : SystemV ctxt a}
              -> Function.Argument.NF param
              -> Application.NF (App func param)
-
---      AppFunc : {func : SystemV ctxt (FuncTy a b)}
---             -> Function.NF func
---             -> {param : SystemV ctxt a}
---             -> Function.Argument.NF param
---             -> Application.NF (App func param)
-
 
 namespace Design
   mutual
