@@ -10,8 +10,6 @@ all: systemv test
 systemv:
 	$(IDRIS2) --build systemv.ipkg
 
-systemv-timed:
-	$(IDRIS2) --build systemv.ipkg --timing
 
 clobber: clean
 	${MAKE} -C tests clobber
