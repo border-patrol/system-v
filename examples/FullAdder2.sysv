@@ -1,0 +1,56 @@
+module HalfAdder
+ #(parameter datatype type = logic)
+  ( input  wire type a
+  , input  wire type b
+  , output wire type partial_sum
+  , output wire type carry
+  );
+
+  xor (partial_sum, a, b);
+  and (carry,       a, b);
+
+endmodule
+
+module FullAdder
+ #(parameter datatype type = logic)
+  ( input  wire type a
+  , input  wire type b
+  , input  wire type c
+  , output wire type abc1
+  , output wire type cout
+  );
+
+  wire logic ab1;
+  wire logic abh;
+
+  HalfAdder #(type=type) foo0 (a, b, (writeTo ab1), (writeTo abh));
+
+  wire logic abc1;
+  wire logic abch;
+
+  HalfAdder #(type=type) foo1 ((readFrom ab1), c, (writeTo abc1), (writeTo abch));
+
+  ior (cout, (readFrom abh), (readFrom abch));
+
+endmodule
+
+module Top();
+
+  wire logic a;
+  wire logic b;
+  wire logic c;
+
+  wire logic sum;
+  wire logic cout;
+
+  drive (writeTo a);
+  drive (writeTo b);
+  drive (writeTo c);
+
+  FullAdder #(type=logic) foo ( (readFrom a), (readFrom b), (readFrom c)
+                              , (writeTo sum), (writeTo cout));
+
+  catch (readFrom sum);
+  catch (readFrom cout);
+
+endmodule

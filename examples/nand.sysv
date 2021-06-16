@@ -1,0 +1,27 @@
+module MyNand
+  ( input  wire logic a
+  , input  wire logic b
+  , output wire logic c);
+
+  wire logic about;
+
+  and ((writeTo about), a, b);
+
+  not (c, (readFrom about));
+
+endmodule
+
+module Top();
+
+  wire logic a;
+  wire logic b;
+  wire logic c;
+
+  drive (writeTo a);
+  drive (writeTo b);
+
+  MyNand foo ((readFrom a), (readFrom b), (writeTo c));
+
+  catch (readFrom c);
+
+endmodule

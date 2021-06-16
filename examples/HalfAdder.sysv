@@ -1,0 +1,28 @@
+module HalfAdder
+  ( input  wire logic a
+  , input  wire logic b
+  , output wire logic partial_sum
+  , output wire logic carry
+  );
+
+  xor (partial_sum, a, b);
+  and (carry,       a, b);
+
+endmodule
+
+module Top();
+
+  wire logic a;
+  wire logic b;
+  wire logic psum;
+  wire logic carr;
+
+  drive (writeTo a);
+  drive (writeTo b);
+
+  HalfAdder foo ((readFrom a), (readFrom b), (writeTo psum), (writeTo carr));
+
+  catch (readFrom psum);
+  catch (readFrom carr);
+
+endmodule

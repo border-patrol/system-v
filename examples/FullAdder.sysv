@@ -1,0 +1,54 @@
+module HalfAdder
+  ( input  wire logic a
+  , input  wire logic b
+  , output wire logic partial_sum
+  , output wire logic carry
+  );
+
+  xor (partial_sum, a, b);
+  and (carry,       a, b);
+
+endmodule
+
+module FullAdder
+  ( input  wire logic a
+  , input  wire logic b
+  , input  wire logic c
+  , output wire logic abc1
+  , output wire logic cout
+  );
+
+  wire logic ab1;
+  wire logic abh;
+
+  HalfAdder foo0 (a, b, (writeTo ab1), (writeTo abh));
+
+  wire logic abc1;
+  wire logic abch;
+
+  HalfAdder foo1 ((readFrom ab1), c, (writeTo abc1), (writeTo abch));
+
+  ior (cout, (readFrom abh), (readFrom abch));
+
+endmodule
+
+module Top();
+
+  wire logic a;
+  wire logic b;
+  wire logic c;
+
+  wire logic sum;
+  wire logic cout;
+
+  drive (writeTo a);
+  drive (writeTo b);
+  drive (writeTo c);
+
+  FullAdder foo ( (readFrom a), (readFrom b), (readFrom c)
+                , (writeTo sum), (writeTo cout));
+
+  catch (readFrom sum);
+  catch (readFrom cout);
+
+endmodule
