@@ -30,7 +30,7 @@ We position SystemV as a base formalism that we will look to either:
 
 + extend :: by introducing new reducible terms;
 + expand :: by introducing new values;
-+ excite :: by taking *full* advantage of the STLC as a host formalism
++ excite :: by taking *full* advantage of the STLC as a host formalism;
 
 Doing so supports:
 
