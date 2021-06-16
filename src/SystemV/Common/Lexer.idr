@@ -20,7 +20,9 @@ keywords = [ "input", "output", "inout"
            , "assign", "drive", "catch", "writeTo", "readFrom", "slice"
            , "logic"
            , "Top"
-           , "xor", "nor", "nand", "nxor"
+           , "not"
+           , "and",  "ior", "xor"
+           , "nand", "nior", "nxor"
            , "index"
 
            -- annotated
@@ -28,7 +30,7 @@ keywords = [ "input", "output", "inout"
            , "data", "address", "clock", "reset", "info", "interrupt", "control", "general"
 
            -- params
-           , "and", "not", "or", "eq", "lt", "gt"
+           , "eq", "lt", "gt"
            , "add", "mul", "sub", "div"
            , "nat", "datatype"
            , "for"
