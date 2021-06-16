@@ -225,7 +225,7 @@ namespace Single
        -> {typeA  : TYPE levelA}
        -> FC
        -> (this   : SystemV ctxt typeB)
-       -> (idx    : Contains (ctxt += typeB) typeA)
+       -> (idx    : Types.Contains (ctxt += typeB) typeA)
                  -> SystemV ctxt typeA
   apply _  this (H (Same Refl Refl)) = this
   apply fc this (T rest) = Var fc rest

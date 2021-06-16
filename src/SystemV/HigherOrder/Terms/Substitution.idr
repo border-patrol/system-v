@@ -145,7 +145,7 @@ namespace Single
   apply : {levelA : Universe}
        -> {typeA  : TYPE levelA}
        -> (this   : SystemV ctxt typeB)
-       -> (idx    : Contains (ctxt += typeB) typeA)
+       -> (idx    : Types.Contains (ctxt += typeB) typeA)
                  -> SystemV ctxt typeA
   apply this (H (Same Refl Refl)) = this
   apply this (T rest) = Var rest

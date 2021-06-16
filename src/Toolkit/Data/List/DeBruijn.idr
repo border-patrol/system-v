@@ -97,7 +97,8 @@ namespace KV
 
 
   public export
-  indexEmpty : (t ** Index (String, type) [] (k, t))
+  indexEmpty : {k : String}
+            -> (t ** Index (String, type) [] (k, t))
             -> Void
   indexEmpty (MkDPair fst snd) impossible
 
