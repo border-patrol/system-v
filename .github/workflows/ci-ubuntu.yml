@@ -24,9 +24,6 @@ jobs:
       - name: Initialise variables
         run: |
           # Only deploy if the build follows from pushing to main
-          if [[ '${{ github.ref }}' == 'refs/heads/main' ]]; then
-             echo "FREX_DEPLOY=true" >> $GITHUB_ENV
-          fi
           echo "$HOME/.idris2/bin" >> $GITHUB_PATH
 
       # This caching step allows us to save a lot of building time by only
