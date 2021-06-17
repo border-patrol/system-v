@@ -120,40 +120,33 @@ mutual
   ports =  do {p <- parens (commaSepBy1 port'); pure (forget p)}
        <|> symbol "(" *> symbol ")" *> pure Nil
 
-writeTo : Rule Token AST
-writeTo = sexpr "writeTo" ref WriteTo
-
-readFrom : Rule Token AST
-readFrom = sexpr "readFrom" ref ReadFrom
-
 portArg : Rule Token (FileContext, AST)
-portArg =   ref'
-        <|> writeTo'
-        <|> readFrom'
+portArg =   (do r <- ref; pure (getFC r, r))
+        <|> writeTo
+        <|> readFrom
         <|> cast
         <|> slice
         <|> index
   where
-    ref' : Rule Token (FileContext, AST)
-    ref'
+    writeTo : Rule Token (FileContext, AST)
+    writeTo
       = do s <- location
-           r <- ref
+           symbol "("
+           keyword "writeTo"
+           p <- portArg
+           symbol ")"
            e <- location
-           pure (newFC s e, r)
+           pure (newFC s e, WriteTo (newFC s e) (snd p))
 
-    writeTo' : Rule Token (FileContext, AST)
-    writeTo'
+    readFrom : Rule Token (FileContext, AST)
+    readFrom
       = do s <- location
-           w <- writeTo
+           symbol "("
+           keyword "readFrom"
+           p <- portArg
+           symbol ")"
            e <- location
-           pure (newFC s e, w)
-
-    readFrom' : Rule Token (FileContext, AST)
-    readFrom'
-      = do s <- location
-           w <- readFrom
-           e <- location
-           pure (newFC s e, w)
+           pure (newFC s e, ReadFrom (newFC s e) (snd p))
 
     index : Rule Token (FileContext, AST)
     index
@@ -191,8 +184,8 @@ portArg =   ref'
            pure (newFC s e, Cast (newFC s e) (snd p) t d)
 
 driveCatch : Rule Token AST
-driveCatch = WithFileContext.inserts (keyword "drive" *> writeTo)  Drive
-         <|> WithFileContext.inserts (keyword "catch" *> readFrom) Catch
+driveCatch = inserts (do p <- (keyword "drive" *> portArg); pure (snd p))  Drive
+         <|> inserts (do p <- (keyword "catch" *> portArg); pure (snd p)) Catch
 
 assign : Rule Token AST
 assign

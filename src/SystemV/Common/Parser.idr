@@ -188,7 +188,11 @@ namespace WithFileContext
        -> Rule Token a
        -> (FileContext -> a -> b)
        -> Rule Token b
-  sexpr s value ctor = parens (inserts (keyword s *> value) ctor)
+  sexpr s value ctor
+    = do symbol "("
+         res <- inserts (keyword s *> value) ctor
+         symbol ")"
+         pure res
 
 
   export

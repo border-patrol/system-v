@@ -2,7 +2,7 @@ LOG : Starting SystemV
 LOG : Running SystemV Annotated
 LOG : Parsing Complete
 Error Happened
-example.sysv:5:9-26:
+example.sysv:5:8-28:
 Type Mismatch:
 Expected:
 	Port(Logic,OUT,High,Control)

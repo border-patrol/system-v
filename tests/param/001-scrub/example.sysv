@@ -20,7 +20,9 @@ module Top ();
 
   wire logic[32] chanPS;
   wire logic[32] chanSC;
+
   Scrub s ((readFrom chanPS),(writeTo chanSC));
+
   Producer pA ((writeTo chanPS));
   Producer pB ((writeTo chanPS));
   Consumer c ((readFrom chanSC));

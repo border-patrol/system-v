@@ -91,40 +91,34 @@ ports
            e <- location
            pure (label, TyPort (newFC st e) t d s i)
 
-writeTo : Rule Token AST
-writeTo = sexpr "writeTo" ref WriteTo
-
-readFrom : Rule Token AST
-readFrom = sexpr "readFrom" ref ReadFrom
-
 portArg : Rule Token (FileContext, AST)
-portArg =   ref'
-        <|> writeTo'
-        <|> readFrom'
+portArg =   (do r <- ref; pure (getFC r, r))
+        <|> writeTo
+        <|> readFrom
         <|> cast
         <|> slice
         <|> index
   where
-    ref' : Rule Token (FileContext, AST)
-    ref'
-      = do s <- location
-           r <- ref
-           e <- location
-           pure (newFC s e, r)
 
-    writeTo' : Rule Token (FileContext, AST)
-    writeTo'
+    writeTo : Rule Token (FileContext, AST)
+    writeTo
       = do s <- location
-           w <- writeTo
+           symbol "("
+           keyword "writeTo"
+           p <- portArg
+           symbol ")"
            e <- location
-           pure (newFC s e, w)
+           pure (newFC s e, WriteTo (newFC s e) (snd p))
 
-    readFrom' : Rule Token (FileContext, AST)
-    readFrom'
+    readFrom : Rule Token (FileContext, AST)
+    readFrom
       = do s <- location
-           w <- readFrom
+           symbol "("
+           keyword "readFrom"
+           p <- portArg
+           symbol ")"
            e <- location
-           pure (newFC s e, w)
+           pure (newFC s e, ReadFrom (newFC s e) (snd p))
 
     index : Rule Token (FileContext, AST)
     index
@@ -167,18 +161,18 @@ portArg =   ref'
 driveCatch : Rule Token AST
 driveCatch
     =  drive
-   <|> inserts (keyword "catch" *> (ref <|> readFrom)) Catch
+   <|> inserts (do p <- (keyword "catch" *> portArg); pure (snd p)) Catch
   where
     drive : Rule Token AST
     drive
       = do st <- location
            keyword "drive"
            commit
-           p <- (ref <|> writeTo)
+           p <- portArg
            s <- option Insensitive sensitivity
            i <- option General     intention
            e <- location
-           pure (Drive (newFC st e) s i p)
+           pure (Drive (newFC st e) s i (snd p))
 
 
 assign : Rule Token AST

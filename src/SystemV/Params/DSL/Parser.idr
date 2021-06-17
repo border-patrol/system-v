@@ -123,41 +123,35 @@ params
                e <- location
                pure (newFC s e, l, ty, v)
 
-writeTo : Rule Token AST
-writeTo = sexpr "writeTo" ref WriteTo
-
-readFrom : Rule Token AST
-readFrom = sexpr "readFrom" ref ReadFrom
 
 mutual
   portArg : Rule Token (FileContext, AST)
-  portArg =   ref'
-          <|> writeTo'
-          <|> readFrom'
+  portArg =   (do r <- ref; pure (getFC r, r))
+          <|> writeTo
+          <|> readFrom
           <|> cast
           <|> slice
           <|> index
     where
-      ref' : Rule Token (FileContext, AST)
-      ref'
+      writeTo : Rule Token (FileContext, AST)
+      writeTo
         = do s <- location
-             r <- ref
+             symbol "("
+             keyword "writeTo"
+             p <- portArg
+             symbol ")"
              e <- location
-             pure (newFC s e, r)
+             pure (newFC s e, WriteTo (newFC s e) (snd p))
 
-      writeTo' : Rule Token (FileContext, AST)
-      writeTo'
+      readFrom : Rule Token (FileContext, AST)
+      readFrom
         = do s <- location
-             w <- writeTo
+             symbol "("
+             keyword "readFrom"
+             p <- portArg
+             symbol ")"
              e <- location
-             pure (newFC s e, w)
-
-      readFrom' : Rule Token (FileContext, AST)
-      readFrom'
-        = do s <- location
-             w <- readFrom
-             e <- location
-             pure (newFC s e, w)
+             pure (newFC s e, ReadFrom (newFC s e) (snd p))
 
       index : Rule Token (FileContext, AST)
       index
@@ -225,8 +219,8 @@ paramArgs
 
 
 driveCatch : Rule Token AST
-driveCatch = inserts (keyword "drive" *> (ref <|> writeTo))  Drive
-         <|> inserts (keyword "catch" *> (ref <|> readFrom)) Catch
+driveCatch = inserts (do p <- (keyword "drive" *> portArg); pure (snd p))  Drive
+         <|> inserts (do p <- (keyword "catch" *> portArg); pure (snd p)) Catch
 
 assign : Rule Token AST
 assign
