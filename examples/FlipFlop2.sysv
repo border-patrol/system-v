@@ -1,0 +1,58 @@
+module FlipFlop
+  ( clock     input  wire logic clk
+  , reset low input  wire logic resetn // active low reset
+  , data      input  wire logic d
+  , data      output wire logic q
+  );
+
+  if resetn
+  begin
+    assign q = d;
+  end
+  else
+  begin
+    drive q data;
+  end
+  /*
+        always @ (posedge clk)
+                if (! resetn)
+                        q <= 0;
+                else
+                        q <= d;
+  */
+endmodule
+
+module Top ();
+
+  clock     wire logic clk;
+  reset low wire logic resetn;
+  data      wire logic d;
+  data      wire logic q;
+
+  // Create a clock
+  //always #10 clk <= ~clk;
+
+  drive (writeTo clk) clock;
+
+
+  FlipFlop ff ( (readFrom clk)
+              , (readFrom resetn)
+              , (readFrom d)
+              , (writeTo q)
+              );
+
+  drive (writeTo resetn) low reset;
+  drive (writeTo d) data;
+  catch (readFrom q);
+
+  // initial begin
+  //	     resetn <= 0;
+  //	     d <= 0;
+  //
+  //	     #10 resetn <= 1;
+  //	     #5	     d <= 1;
+  //	     #8	     d <= 0;
+  //	     #2	     d <= 1;
+  //	     #10     d <= 0;
+  // end
+endmodule
