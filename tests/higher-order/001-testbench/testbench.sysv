@@ -1,0 +1,56 @@
+module GenericTestBench
+  ( module Counter
+     ( input  wire logic clk
+     , input  wire logic rstn
+     , output wire logic[4] out
+     )
+
+  , input wire logic clk
+  , input wire logic rstn
+  );
+
+  wire logic[4] out;
+
+  Counter c0 (clk,rstn, (writeTo out));
+
+endmodule
+
+
+module CounterA
+  ( input wire logic     clk
+  , input wire logic     rstn
+  , output wire logic[4] out
+  );
+
+  // ...
+
+endmodule
+
+module CounterB
+  ( input wire logic     clk
+  , input wire logic     rstn
+  , output wire logic[4] out
+  );
+
+  // ...
+
+endmodule
+
+module Top();
+
+  wire logic clk;
+
+  wire logic rstn;
+
+  GenericTestBench c0
+    ( CounterA
+    , (readFrom clk)
+    , (readFrom rstn)
+    );
+
+  GenericTestBench c1
+    ( CounterB
+    , (readFrom clk)
+    , (readFrom rstn)
+    );
+endmodule

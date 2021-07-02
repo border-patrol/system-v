@@ -1,0 +1,9 @@
+LS="core param annotated higherorder"
+
+for lang in $LS;
+do
+        echo $lang
+        $1 --$lang scrub.sysv
+        $1 --$lang scrub-good-bad.sysv
+        $1 --$lang scrub-bad.sysv
+done

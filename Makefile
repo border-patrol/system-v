@@ -33,4 +33,4 @@ bench: systemv
 	${MAKE} -C tests testbin
 	$(HYPERFINE) --warmup 10 '${MAKE} -C tests test SYSTEMV_BIN=$(TARGET) SYSTEMV_TEST_U=$(SYSTEMV_TEST_U) SYSTEMV_TEST_O=$(SYSTEMV_TEST_O)'
 
-.PHONY: all clobber clean test systemv bench systemv-timed
+.PHONY: all clobber clean test systemv bench

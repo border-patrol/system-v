@@ -1,0 +1,2 @@
+$1 --param fulladder.sysv
+$1 --param halfadder.sysv

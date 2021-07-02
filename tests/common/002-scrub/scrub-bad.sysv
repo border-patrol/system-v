@@ -1,0 +1,30 @@
+module Scrub ( input  wire logic[32] dirty
+             , output wire logic[32] clean
+             );
+  assign clean = dirty;
+endmodule
+
+module Producer (output wire logic[32] stuff);
+
+  //
+
+endmodule
+
+module Consumer (input wire logic[32] stuff);
+
+  //
+
+endmodule
+
+module Top ();
+
+  wire logic[31] chanPS;
+  wire logic[32] chanSC;
+
+  Scrub s ((readFrom chanPS),(writeTo chanSC));
+
+  Producer pA ((writeTo chanPS));
+  Producer pB ((writeTo chanPS));
+  Consumer c ((readFrom chanSC));
+
+endmodule

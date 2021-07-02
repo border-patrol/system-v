@@ -1,0 +1,31 @@
+module Split
+  #(parameter nat width = 32)
+   ( input  wire logic[width] this
+   , output wire logic[(div width 2)] thatA
+   , output wire logic[(div width 2)] thatB
+   );
+
+ assign thatB = (slice this 16 31);
+ assign thatA = (slice this 0  15);
+
+endmodule
+
+module Top ();
+
+  wire logic[32] chanDS;
+  wire logic[16] chanSCa;
+  wire logic[16] chanSCb;
+
+  drive (writeTo chanDS);
+
+  Split #(width=32)
+        s ( (readFrom chanDS)
+          , (writeTo  chanSCa)
+          , (writeTo  chanSCb)
+          );
+
+  catch (readFrom chanSCa);
+  catch (readFrom chanSCb);
+
+
+endmodule

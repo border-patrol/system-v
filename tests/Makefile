@@ -9,7 +9,7 @@ test: testbin
 			     $(SYSTEMV_TEST_U) \
 			     --only $(SYSTEMV_TEST_O)
 
-testbin:
+testbin: clean
 	${IDRIS2} --build tests.ipkg
 
 clean:

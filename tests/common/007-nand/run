@@ -1,0 +1,7 @@
+LS="core param annotated higherorder"
+
+for lang in $LS;
+do
+        echo $lang
+        $1 --$lang nand.sysv
+done

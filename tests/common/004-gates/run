@@ -1,0 +1,8 @@
+LS="core param annotated higherorder"
+
+for lang in $LS;
+do
+        echo $lang
+        $1 --$lang gates.sysv
+        $1 --$lang gates-bad.sysv
+done

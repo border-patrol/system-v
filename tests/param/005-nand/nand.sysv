@@ -1,0 +1,28 @@
+module MyNand
+ #( parameter datatype type = logic)
+  ( input  wire type a
+  , input  wire type b
+  , output wire type c);
+
+  wire logic about;
+
+  and ((writeTo about), a, b);
+
+  not (c, (readFrom about));
+
+endmodule
+
+module Top();
+
+  wire logic a;
+  wire logic b;
+  wire logic c;
+
+  drive (writeTo a);
+  drive (writeTo b);
+
+  MyNand #(type=logic) foo ((readFrom a), (readFrom b), (writeTo c));
+
+  catch (readFrom c);
+
+endmodule

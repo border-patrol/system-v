@@ -1,0 +1,36 @@
+module Temp ( input  wire logic[32] i
+            , output wire logic[32] a
+             );
+
+ assign a = (slice i 0 31);
+
+endmodule
+
+module Split ( input  wire logic[32] i
+             , output wire logic[16] a
+             , output wire logic[16] b
+             );
+
+ assign b = (slice i 16 31);
+ assign a = (slice i 0  15);
+
+endmodule
+
+module Top ();
+
+  wire logic[32] chanDS;
+  wire logic[16] chanSCa;
+  wire logic[16] chanSCb;
+
+  drive (writeTo chanDS);
+
+  Split s ( (writeTo  chanSCa)
+          , (readFrom chanDS)
+          , (writeTo  chanSCb)
+          );
+
+  catch (readFrom chanSCa);
+  catch (readFrom chanSCb);
+
+
+endmodule

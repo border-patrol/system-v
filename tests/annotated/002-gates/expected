@@ -2,10 +2,10 @@ LOG : Starting SystemV
 LOG : Running SystemV Annotated
 LOG : Parsing Complete
 Error Happened
-scrub-good-bad.sysv:35:12-10:
+gates.sysv:5:8-28:
 Type Mismatch:
 Expected:
-	Port(Logic,IN,Insensitive,Clock)
+	Port(Logic,OUT,High,Control)
 Given:
-	Port(Logic,IN,Low,Reset)
+	Port(Logic,OUT,Insensitive,General)
 LOG : Typing Complete 

@@ -1,0 +1,82 @@
+core
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Core
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+Error Happened
+gates-bad.sysv:7:8-6:
+Type Mismatch:
+Expected:
+	Port(Logic, OUT)
+Given:
+	Port(Logic, IN)
+LOG : Typing Complete 
+param
+LOG : Starting SystemV 
+LOG : Running SystemV Param
+LOG : Parsing Complete
+LOG : Elaboration 
+LOG : Static Typing Complete 
+LOG : Is in Normal Form 
+LOG : Runtime Checking Complete 
+LOG : Exiting Param
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Param
+LOG : Parsing Complete
+LOG : Elaboration 
+Error Happened
+gates-bad.sysv:7:8-6:
+Type Mismatch:
+Expected:
+	Port(OUT)
+Given:
+	Port(IN)
+LOG : Static Typing Complete 
+annotated
+LOG : Starting SystemV 
+LOG : Running SystemV Annotated
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Annotated
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Annotated
+LOG : Parsing Complete
+Error Happened
+gates-bad.sysv:7:8-6:
+Type Mismatch:
+Expected:
+	Port(Logic,OUT,Insensitive,General)
+Given:
+	Port(Logic,IN,Insensitive,General)
+LOG : Typing Complete 
+higherorder
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Core
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+Error Happened
+gates-bad.sysv:7:8-6:
+Type Mismatch:
+Expected:
+	Port(Logic, OUT)
+Given:
+	Port(Logic, IN)
+LOG : Typing Complete 

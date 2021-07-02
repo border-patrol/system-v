@@ -1,0 +1,82 @@
+core
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Core
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+Error Happened
+swap-bad.sysv:27:11-10:
+Type Mismatch:
+Expected:
+	Port(Logic, IN)
+Given:
+	Port(Logic, OUT)
+LOG : Typing Complete 
+param
+LOG : Starting SystemV 
+LOG : Running SystemV Param
+LOG : Parsing Complete
+LOG : Elaboration 
+LOG : Static Typing Complete 
+LOG : Is in Normal Form 
+LOG : Runtime Checking Complete 
+LOG : Exiting Param
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Param
+LOG : Parsing Complete
+LOG : Elaboration 
+Error Happened
+swap-bad.sysv:27:11-10:
+Type Mismatch:
+Expected:
+	Port(IN)
+Given:
+	Port(OUT)
+LOG : Static Typing Complete 
+annotated
+LOG : Starting SystemV 
+LOG : Running SystemV Annotated
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Annotated
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Annotated
+LOG : Parsing Complete
+Error Happened
+swap-bad.sysv:27:11-10:
+Type Mismatch:
+Expected:
+	Port(Logic,IN,Insensitive,General)
+Given:
+	Port(Logic,OUT,Insensitive,General)
+LOG : Typing Complete 
+higherorder
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Core
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+Error Happened
+swap-bad.sysv:27:11-10:
+Type Mismatch:
+Expected:
+	Port(Logic, IN)
+Given:
+	Port(Logic, OUT)
+LOG : Typing Complete 

@@ -1,0 +1,54 @@
+module Scrub ( clock      input  wire logic     clk
+             , reset  low input  wire logic     rstn
+             , control    input  wire logic     ready
+             , data       input  wire logic[32] dirty
+             , data       output wire logic[32] clean
+             );
+  assign clean = dirty;
+endmodule
+
+module Producer ( clock     input  wire logic     clk
+                , reset low input  wire logic     rstn
+                , control   output wire logic     ready
+                , data      output wire logic[32] stuff);
+
+  //
+
+endmodule
+
+module Consumer ( clock     input  wire logic    clk
+                , reset low input  wire logic    rstn
+                , control   input  wire logic    ready
+                , data      input wire logic[32] stuff);
+
+  //
+
+endmodule
+
+module Top ();
+
+  clock     wire logic     clk;
+  reset low wire logic     rstn;
+  control   wire logic     ready;
+  data      wire logic[32] chanPS;
+  data      wire logic[32] chanSC;
+
+  Scrub s ( (readFrom rstn)
+          , (readFrom clk)
+          , (readFrom ready)
+          , (readFrom chanPS)
+          , (writeTo chanSC)
+          );
+
+  Producer p ( (readFrom clk)
+             , (readFrom rstn)
+             , (writeTo  ready)
+             , (writeTo chanPS)
+             );
+
+  Consumer c ( (readFrom clk)
+             , (readFrom rstn)
+             , (readFrom ready)
+             , (readFrom chanSC)
+             );
+endmodule

@@ -1,0 +1,36 @@
+module Scrub
+  #( parameter nat width = 32
+   , parameter datatype type = logic)
+   ( input  wire type[width] dirty
+   , output wire type[width] clean
+   );
+
+  assign clean = dirty;
+
+endmodule
+
+module Producer (output wire logic[32] stuff);
+
+  //
+
+endmodule
+
+module Consumer
+  #(parameter nat width = 16)
+   (input wire logic[width] stuff);
+
+  //
+
+endmodule
+
+module Top ();
+
+  wire logic[32] chanPS;
+  wire logic[32] chanSC;
+
+  Scrub #(width=32) s ((readFrom chanPS),(writeTo chanSC));
+
+  Producer p ((writeTo chanPS));
+
+  Consumer #(width=32) c ((readFrom chanSC));
+endmodule

@@ -1,0 +1,54 @@
+module Scrub ( input  wire logic     clk
+             , input  wire logic     rstn
+             , input  wire logic     ready
+             , input  wire logic[32] dirty
+             , output wire logic[32] clean
+             );
+  assign clean = dirty;
+endmodule
+
+module Producer ( input  wire logic     clk
+                , input  wire logic     rstn
+                , output wire logic     ready
+                , output wire logic[32] stuff);
+
+  //
+
+endmodule
+
+module Consumer ( input  wire logic    clk
+                , input  wire logic    rstn
+                , input  wire logic    ready
+                , input wire logic[32] stuff);
+
+  //
+
+endmodule
+
+module Top ();
+
+  wire logic     clk;
+  wire logic     rstn;
+  wire logic     ready;
+  wire logic[32] chanPS;
+  wire logic[32] chanSC;
+
+  Scrub s ( (readFrom rstn)
+          , (readFrom clk)
+          , (readFrom ready)
+          , (readFrom chanPS)
+          , (writeTo chanSC)
+          );
+
+  Producer p ( (readFrom clk)
+             , (readFrom rstn)
+             , (writeTo  ready)
+             , (writeTo chanPS)
+             );
+
+  Consumer c ( (readFrom clk)
+             , (readFrom rstn)
+             , (readFrom ready)
+             , (readFrom chanSC)
+             );
+endmodule

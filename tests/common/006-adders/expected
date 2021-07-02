@@ -1,0 +1,70 @@
+core
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Core
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Core
+LOG : Bye
+param
+LOG : Starting SystemV 
+LOG : Running SystemV Param
+LOG : Parsing Complete
+LOG : Elaboration 
+LOG : Static Typing Complete 
+LOG : Is in Normal Form 
+LOG : Runtime Checking Complete 
+LOG : Exiting Param
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Param
+LOG : Parsing Complete
+LOG : Elaboration 
+LOG : Static Typing Complete 
+LOG : Is in Normal Form 
+LOG : Runtime Checking Complete 
+LOG : Exiting Param
+LOG : Bye
+annotated
+LOG : Starting SystemV 
+LOG : Running SystemV Annotated
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Annotated
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Annotated
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Annotated
+LOG : Bye
+higherorder
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Core
+LOG : Bye
+LOG : Starting SystemV 
+LOG : Running SystemV Core
+LOG : Parsing Complete
+LOG : Typing Complete 
+LOG : Is in Normal Form 
+LOG : Evaluating 
+LOG : Exiting Core
+LOG : Bye
