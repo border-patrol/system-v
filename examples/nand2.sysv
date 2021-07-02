@@ -21,7 +21,7 @@ module Top();
   drive (writeTo a);
   drive (writeTo b);
 
-  MyNand #(type=logic) foo ((readFrom a), (readFrom b), (writeTo c));
+  MyNand foo ((readFrom a), (readFrom b), (writeTo c));
 
   catch (readFrom c);
 

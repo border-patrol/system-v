@@ -192,7 +192,11 @@ elab env (Func fc params ports body)
 
 elab env (App fc (Ref ref) params ports)
     = case params of
-       Nothing => mkApps env (Ref ref) ports
+       Nothing => case lookup (get ref) env of
+                    Nothing => mkApps env (Ref ref) ports
+                    Just spec => do acc <- mkAppDefs fc env (Ref ref) Nil spec EmptyThis
+                                    mkApps env acc ports
+       --
        (Just (x:::xs)) =>
          case lookup (get ref) env of
            Nothing => Left (Err fc (NotAFunc (get ref)))
