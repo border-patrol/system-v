@@ -13,7 +13,7 @@ import SystemV.Annotated.Types.Sensitivity
 %default total
 
 export
-sensitivity : Rule Token Sensitivity
+sensitivity : Rule Sensitivity
 sensitivity
     =  gives "high"        High
    <|> gives "low"         Low

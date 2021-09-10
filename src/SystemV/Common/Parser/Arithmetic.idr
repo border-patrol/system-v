@@ -15,7 +15,7 @@ import SystemV.Common.Types.Nat.Arithmetic
 
 %default total
 
-arithOpKind : Rule Token ArithOp
+arithOpKind : Rule ArithOp
 arithOpKind
     = gives "mul" MUL
   <|> gives "div" DIV
@@ -33,20 +33,20 @@ data Expr : Type where
               -> Expr
 
 export
-value : Rule Token Expr
+value : Rule Expr
 value = WithFileContext.inserts natLit NatV
 
 export
-expr : Rule Token Expr
+expr : Rule Expr
 expr =  value
     <|> inserts rawRef R
-    <|> do s <- location
+    <|> do s <- Toolkit.location
            symbol "("
            k <- arithOpKind
            l <- expr
            r <- expr
            symbol ")"
-           e <- location
+           e <- Toolkit.location
            pure (Op (newFC s e) k l r)
 
 -- [ EOF ]

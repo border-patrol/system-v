@@ -13,7 +13,7 @@ import SystemV.Annotated.Types.Intention
 %default total
 
 export
-intention : Rule Token Intention
+intention : Rule Intention
 intention
     =  gives "data"      Data
    <|> gives "address"   Address

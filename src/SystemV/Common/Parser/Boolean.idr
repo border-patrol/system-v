@@ -21,25 +21,25 @@ import SystemV.Common.Parser.Arithmetic as A
 
 namespace Raw
   export
-  true : Rule Token Bool
+  true : Rule Bool
   true = gives "true" True
 
   export
-  false : Rule Token Bool
+  false : Rule Bool
   false = gives "false" False
 
   export
-  value : Rule Token Bool
+  value : Rule Bool
   value = true <|> false
 
 
-boolOpKind : Rule Token BoolBinOp
+boolOpKind : Rule BoolBinOp
 boolOpKind
     = gives "and" AND
   <|> gives "ior" IOR
   <|> gives "xor" XOR
 
-natOpKind : Rule Token CompOp
+natOpKind : Rule CompOp
 natOpKind
       = gives "lt" LT
     <|> gives "gt" GT
@@ -63,32 +63,32 @@ data Expr : Type where
                  -> Expr
 
 export
-expr : Rule Token Boolean.Expr
+expr : Rule Boolean.Expr
 expr =  WithFileContext.inserts A.expr NatV
     <|> WithFileContext.inserts value BoolV
     <|> inserts rawRef R
-    <|> do s <- location
+    <|> do s <- Toolkit.location
            symbol "("
            keyword "not"
            e <- Boolean.expr
            symbol ")"
-           f <- location
+           f <- Toolkit.location
            pure (Not (newFC s f) e)
-    <|> do s <- location
+    <|> do s <- Toolkit.location
            symbol "("
            k <- natOpKind
            l <- Boolean.expr
            r <- Boolean.expr
            symbol ")"
-           e <- location
+           e <- Toolkit.location
            pure (NatCmp (newFC s e) k l r)
-    <|> do s <- location
+    <|> do s <- Toolkit.location
            symbol "("
            k <- boolOpKind
            l <- Boolean.expr
            r <- Boolean.expr
            symbol ")"
-           e <- location
+           e <- Toolkit.location
            pure (BoolCmp (newFC s e) k l r)
 
 -- [ EOF ]

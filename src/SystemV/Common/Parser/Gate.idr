@@ -13,7 +13,7 @@ import SystemV.Common.Types.Gate
 %default total
 
 export
-gateKind : Rule Token GateKind
+gateKind : Rule GateKind
 gateKind
     = gives "and"    AND
   <|> gives "xor"    XOR

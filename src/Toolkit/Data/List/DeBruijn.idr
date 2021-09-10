@@ -202,4 +202,34 @@ namespace Substitution
     subst {ctxt} {typeA} {typeB} this inThis
       = subst (apply this) inThis
 
+  namespace Double
+
+    public export
+    apply : {type : Type}
+         -> {term : List type -> type -> Type}
+         -> Rename type term
+         => {ctxt          : List type}
+         -> {typeA, typeB, typeC : type}
+         -> (this    : term       ctxt                     typeA)
+         -> (andThis : term       ctxt                     typeB)
+         -> (idx     : Contains ((ctxt += typeA) += typeB) typeC)
+                    -> term       ctxt                     typeC
+    apply this andThis Here              = andThis
+    apply this andThis (There Here)      = this
+    apply this andThis (There (There x)) = var x
+
+    public export
+    subst : {type : Type}
+         -> {term : List type -> type -> Type}
+         -> Rename type term
+         => Substitute type term
+         => {ctxt          : List type}
+         -> {typeA, typeB, typeC : type}
+         -> (this    : term  ctxt                     typeA)
+         -> (andThis : term  ctxt                     typeB)
+         -> (inThis  : term ((ctxt += typeA) += typeB) typeC)
+                    -> term   ctxt                     typeC
+    subst {ctxt} {typeA} {typeB} {typeC} this andThis inThis
+      = General.subst (apply this andThis) inThis
+
 -- --------------------------------------------------------------------- [ EOF ]

@@ -70,6 +70,24 @@ namespace SystemV
     (==) _ _ = False
 
 
+  showToken : Show a => String -> a -> String
+  showToken n a = "(" <+> n <+> " " <+> show a <+> ")"
+
+  export
+  Show Token where
+    show (ID id)             = showToken "ID" id
+    show (Keyword str)       = showToken "Keyword" str
+    show (LineComment str)   = showToken "LineComment" str
+    show (BlockComment str)  = showToken "BlockComment" str
+    show (Documentation str) = showToken "Documentation" str
+
+    show (LitNat n) = showToken "Nat" n
+
+    show (Symbol s) = showToken "Symbol" s
+    show (WS ws) = "WS"
+    show (NotRecognised s) = showToken "Urgh" s
+    show EndInput          = "EndInput"
+
   identifier : Lexer
   identifier = pred startIdent <+> many (pred validIdent)
     where
@@ -100,21 +118,22 @@ namespace SystemV
     , (any, NotRecognised)
     ]
 
-keep : TokenData SystemV.Token -> Bool
-keep t = case tok t of
-    BlockComment _ => False
-    LineComment  _ => False
-    WS           _ => False
-    _              => True
+keep : WithBounds SystemV.Token -> Bool
+keep (MkBounded t _ _)
+  = case t of
+      BlockComment _ => False
+      LineComment  _ => False
+      WS           _ => False
+      _              => True
 
 export
 SystemVLexer : Lexer Token
 SystemVLexer = MkLexer SystemV.tokenMap (keep) EndInput
 
 export
-lexSystemVStr : String -> Either LexError (List (TokenData Token))
+lexSystemVStr : String -> Either LexError (List (WithBounds Token))
 lexSystemVStr = lexString SystemVLexer
 
 export
-lexSystemVFile : String -> IO $ Either LexFail (List (TokenData Token))
+lexSystemVFile : String -> IO $ Either LexFail (List (WithBounds Token))
 lexSystemVFile = lexFile SystemVLexer

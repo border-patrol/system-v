@@ -6,7 +6,7 @@ import Data.List
 
 import Data.List.Views
 import Data.List1
-import Data.Strings
+import Data.String
 import Data.Maybe
 
 import Text.Lexer
@@ -24,112 +24,121 @@ import public SystemV.Common.Parser.Ref
 
 %default total
 
-export
-eoi : RuleEmpty Token ()
-eoi = eoi isEOI
-  where
-    isEOI : Token -> Bool
-    isEOI EndInput = True
-    isEOI _ = False
+namespace SystemV
+  public export
+  Rule : Type -> Type
+  Rule = Rule () Token
+
+  public export
+  RuleEmpty : Type -> Type
+  RuleEmpty = RuleEmpty () Token
+
+  export
+  eoi : RuleEmpty ()
+  eoi = eoi isEOI
+    where
+      isEOI : Token -> Bool
+      isEOI EndInput = True
+      isEOI _ = False
 
 export
-symbol : String -> Rule Token ()
+symbol : String -> Rule ()
 symbol str
   = terminal ("Expected Symbol '" ++ str ++ "'")
-             (\x => case tok x of
+             (\x => case x of
                            Symbol s => if s == str then Just ()
                                                    else Nothing
                            _ => Nothing)
 
 
 export
-keyword : String -> Rule Token ()
+keyword : String -> Rule ()
 keyword str
   = terminal ("Expected Keyword '" ++ str ++ "'")
-               (\x => case tok x of
+               (\x => case x of
                            Keyword s => if s == str then Just ()
                                                     else Nothing
                            _ => Nothing)
 
 export
-natLit : Rule Token Nat
+natLit : Rule Nat
 natLit = terminal "Expected nat literal"
-             (\x => case tok x of
+             (\x => case x of
                          LitNat i => Just i
                          _ => Nothing)
 
 export
-identifier : Rule Token String
+identifier : Rule String
 identifier
   = terminal "Expected Identifier"
-             (\x => case tok x of
+             (\x => case x of
                                 ID str => Just str
                                 _ => Nothing)
 
 export
-name : Rule Token String
+name : Rule String
 name = identifier
 
 export
-braces : Inf (Rule Token a)
-      -> Rule Token a
-braces = between (symbol "[")
-                 (symbol "]")
+braces : Inf (Rule a)
+      -> Rule a
+braces p = between (symbol "[")
+                   (symbol "]") p
 
 export
-brackets : Inf (Rule Token a )
-        -> Rule Token a
-brackets = between (symbol "{") (symbol "}")
+brackets : Inf (Rule a )
+        -> Rule a
+brackets p = between (symbol "{") (symbol "}") p
 
 export
-parens : Inf (Rule Token a)
-      -> Rule Token a
-parens = between (symbol "(") (symbol ")")
+parens : Inf (Rule a)
+      -> Rule a
+parens p = between (symbol "(") (symbol ")") p
 
 export
-commaSepBy1 : Rule Token a -> Rule Token (List1 a)
+commaSepBy1 : Rule a -> Rule (List1 a)
 commaSepBy1 = sepBy1 (symbol ",")
 
 export
-rawRef : Rule Token Ref
+rawRef : Rule Ref
 rawRef =
-  do s <- location
+  do s <- Toolkit.location
      n <- name
-     e <- location
+     e <- Toolkit.location
      pure (MkRef (newFC s e) n)
 
 export
-gives : String -> a -> Rule Token a
+gives : String -> a -> Rule a
 gives s ctor
   = do keyword s
        pure ctor
 
 
 export
-inserts : Rule Token a -> (a -> b) -> Rule Token b
+inserts : Rule a -> (a -> b) -> Rule b
 inserts value ctor
   = do v <- value
        pure (ctor v)
 
 export
 sexpr : String
-     -> Rule Token a
+     -> Rule a
      -> (a -> b)
-     -> Rule Token b
+     -> Rule b
 sexpr s value ctor
   = parens (inserts (keyword s *> value) ctor)
 
 
 export
 sexpr2 : String
-      -> Rule Token a
-      -> Rule Token b
+      -> Rule a
+      -> Rule b
       -> (a -> b -> c)
-      -> Rule Token c
+      -> Rule c
 sexpr2 s pa pb ctor
     = sexpr s body build
   where
-    body : Rule Token (a,b)
+    body : Rule (a,b)
     body = (do {v <- pa; w <- pb; pure (v,w)})
 
     build : (a,b) -> c
@@ -138,15 +147,15 @@ sexpr2 s pa pb ctor
 
 export
 sexpr3 : String
-      -> Rule Token a
-      -> Rule Token b
-      -> Rule Token c
+      -> Rule a
+      -> Rule b
+      -> Rule c
       -> (a -> b -> c -> d)
-      -> Rule Token d
+      -> Rule d
 sexpr3 s pa pb pc ctor
     = sexpr s body build
   where
-    body : Rule Token (a,b,c)
+    body : Rule (a,b,c)
     body = (do {v <- pa; w <- pb; x <- pc; pure (v,w,x)})
 
     build : (a,b,c) -> d
@@ -154,40 +163,40 @@ sexpr3 s pa pb pc ctor
 
 namespace WithFileContext
   export
-  inserts : Rule Token a -> (FileContext -> a -> b) -> Rule Token b
+  inserts : Rule a -> (FileContext -> a -> b) -> Rule b
   inserts value ctor
-    = do s <- location
+    = do s <- Toolkit.location
          v <- value
-         e <- location
+         e <- Toolkit.location
          pure (ctor (newFC s e) v)
 
   export
-  inserts2 : Rule Token a
-          -> Rule Token b
+  inserts2 : Rule a
+          -> Rule b
           -> (FileContext -> a -> b -> c)
-          -> Rule Token c
+          -> Rule c
   inserts2 pa pb ctor
       = inserts body build
     where
-      body : Rule Token (a,b)
+      body : Rule (a,b)
       body = (do {z <- pa; y <- pb; pure (z,y)})
 
       build : FileContext -> (a,b) -> c
       build fc (a,b) = ctor fc a b
 
   export
-  gives : String -> (FileContext -> a) -> Rule Token a
+  gives : String -> (FileContext -> a) -> Rule a
   gives s ctor
-    = do b <- location
+    = do b <- Toolkit.location
          keyword s
-         e <- location
+         e <- Toolkit.location
          pure (ctor (newFC b e))
 
   export
   sexpr : String
-       -> Rule Token a
+       -> Rule a
        -> (FileContext -> a -> b)
-       -> Rule Token b
+       -> Rule b
   sexpr s value ctor
     = do symbol "("
          res <- inserts (keyword s *> value) ctor
@@ -197,14 +206,14 @@ namespace WithFileContext
 
   export
   sexpr2 : String
-        -> Rule Token a
-        -> Rule Token b
+        -> Rule a
+        -> Rule b
         -> (FileContext -> a -> b -> c)
-        -> Rule Token c
+        -> Rule c
   sexpr2 s pa pb ctor
       = sexpr s body build
     where
-      body : Rule Token (a,b)
+      body : Rule (a,b)
       body = (do {v <- pa; w <- pb; pure (v,w)})
 
       build : FileContext -> (a,b) -> c
@@ -212,15 +221,15 @@ namespace WithFileContext
 
   export
   sexpr3 : String
-        -> Rule Token a
-        -> Rule Token b
-        -> Rule Token c
+        -> Rule a
+        -> Rule b
+        -> Rule c
         -> (FileContext -> a -> b -> c -> d)
-        -> Rule Token d
+        -> Rule d
   sexpr3 s pa pb pc ctor
       = sexpr s body build
     where
-      body : Rule Token (a,b,c)
+      body : Rule (a,b,c)
       body = (do {v <- pa; w <- pb; x <- pc; pure (v,w,x)})
 
       build : FileContext -> (a,b,c) -> d

@@ -13,7 +13,7 @@ import SystemV.Common.Types.Direction
 %default total
 
 export
-direction : Rule Token Direction
+direction : Rule Direction
 direction = gives "input"  IN
         <|> gives "output" OUT
         <|> gives "inout"  INOUT

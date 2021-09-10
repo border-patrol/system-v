@@ -6,7 +6,7 @@ import        Data.Vect
 import        Data.Nat
 import        Data.List
 import        Data.List.Views
-import        Data.Strings
+import        Data.String
 import        Data.Maybe
 
 import public Toolkit.Data.Location

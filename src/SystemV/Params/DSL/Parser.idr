@@ -6,7 +6,7 @@ import        Data.List
 
 import        Data.List.Views
 import        Data.List1
-import        Data.Strings
+import        Data.String
 import        Data.Maybe
 
 import public Text.Lexer
@@ -32,100 +32,99 @@ import        SystemV.Common.Parser.Gate
 import        SystemV.Common.Parser.Arithmetic
 import        SystemV.Common.Parser.Boolean
 
-
 import        SystemV.Params.DSL.AST.Raw
 
-%default total -- is actually covering but portArg cannot pass.
+%default total
 
-ref : Rule Token AST
+ref : Rule AST
 ref = inserts rawRef Ref
 
-number : Rule Token AST
+number : Rule AST
 number = inserts Arithmetic.expr AExpr
 
-boolean : Rule Token AST
+boolean : Rule AST
 boolean = inserts Boolean.expr BExpr
 
-logic : Rule Token AST
+logic : Rule AST
 logic = WithFileContext.gives "logic" TyLogic
 
-array : Rule Token AST
+array : Rule AST
 array = do
-  s <- location
+  s <- Toolkit.location
   ty <- ref <|> logic
   symbol "["
   commit
   idx <- number
   symbol "]"
-  e <- location
+  e <- Toolkit.location
   pure (TyVect (newFC s e) idx ty)
 
 
-type_ : Rule Token AST
+type_ : Rule AST
 type_ = array <|> logic <|> ref
 
-chanDef : Rule Token (FileContext, String, AST)
+chanDef : Rule (FileContext, String, AST)
 chanDef
-  = do st <- location
+  = do st <- Toolkit.location
        keyword "wire"
        commit
        ty <- type_
        n <- name
-       e <- location
+       e <- Toolkit.location
        pure (newFC st e, n, MkChan (newFC st e) ty)
 
-typeDef : Rule Token (FileContext, String, AST)
+typeDef : Rule (FileContext, String, AST)
 typeDef = do
-  s <- location
+  s <- Toolkit.location
   keyword "typedef"
   commit
   decl <- type_
   n <- name
-  e <- location
+  e <- Toolkit.location
   pure (newFC s e, n, decl)
 
-ports : Rule Token (List (FileContext, String, AST))
+ports : Rule (List (FileContext, String, AST))
 ports =  symbol "(" *> symbol ")" *> pure Nil
      <|> do {p <- parens (commaSepBy1 port); pure (forget p)}
 
   where
-    port : Rule Token (FileContext, String, AST)
+    port : Rule (FileContext, String, AST)
     port
-      = do st <- location
+      = do st <- Toolkit.location
            d <- direction
            keyword "wire"
            t <- type_
            label <- name
-           e <- location
+           e <- Toolkit.location
            pure (newFC st e, label, TyPort (newFC st e) t d)
 
-params : Rule Token (List (FileContext, String, AST, AST))
+params : Rule (List (FileContext, String, AST, AST))
 params
     = do symbol "#"
          ps <- parens (commaSepBy1 param)
          pure (forget ps)
   where
-      paramVal : Rule Token AST
+      paramVal : Rule AST
       paramVal = inserts (WithFileContext.inserts natLit NatV) AExpr  <|> type_
 
-      paramTy : Rule Token AST
+      paramTy : Rule AST
       paramTy =  WithFileContext.gives "nat"      TyNat
              <|> WithFileContext.gives "datatype" TyDATA
 
-      param : Rule Token (FileContext, String, AST, AST)
+      param : Rule (FileContext, String, AST, AST)
       param
-          = do s <- location
+          = do s <- Toolkit.location
                keyword "parameter"
                ty <- paramTy
                l <- name
                symbol "="
                v <- paramVal
-               e <- location
+               e <- Toolkit.location
                pure (newFC s e, l, ty, v)
 
 
 mutual
-  portArg : Rule Token (FileContext, AST)
+  portArg : Rule (FileContext, AST)
   portArg =   (do r <- ref; pure (getFC r, r))
           <|> writeTo
           <|> readFrom
@@ -133,120 +132,120 @@ mutual
           <|> slice
           <|> index
     where
-      writeTo : Rule Token (FileContext, AST)
+      writeTo : Rule (FileContext, AST)
       writeTo
-        = do s <- location
+        = do s <- Toolkit.location
              symbol "("
              keyword "writeTo"
              p <- portArg
              symbol ")"
-             e <- location
+             e <- Toolkit.location
              pure (newFC s e, WriteTo (newFC s e) (snd p))
 
-      readFrom : Rule Token (FileContext, AST)
+      readFrom : Rule (FileContext, AST)
       readFrom
-        = do s <- location
+        = do s <- Toolkit.location
              symbol "("
              keyword "readFrom"
              p <- portArg
              symbol ")"
-             e <- location
+             e <- Toolkit.location
              pure (newFC s e, ReadFrom (newFC s e) (snd p))
 
-      index : Rule Token (FileContext, AST)
+      index : Rule (FileContext, AST)
       index
-        = do s <- location
+        = do s <- Toolkit.location
              symbol "("
              keyword "index"
              n <- (number <|> size)
              p <- portArg
              symbol ")"
-             e <- location
+             e <- Toolkit.location
              pure (newFC s e, Index (newFC s e) n (snd p))
 
-      slice : Rule Token (FileContext, AST)
+      slice : Rule (FileContext, AST)
       slice
-        = do s <- location
+        = do s <- Toolkit.location
              symbol "("
              keyword "slice"
              p <- portArg
              a <- (number <|> size)
              o <- (number <|> size)
              symbol ")"
-             e <- location
+             e <- Toolkit.location
              pure (newFC s e, Slice (newFC s e) (snd p) a o)
 
-      cast : Rule Token (FileContext, AST)
+      cast : Rule (FileContext, AST)
       cast
-        = do s <- location
+        = do s <- Toolkit.location
              symbol "("
              keyword "cast"
              p <- portArg
              t <- type_
              d <- direction
              symbol ")"
-             e <- location
+             e <- Toolkit.location
              pure (newFC s e, Cast (newFC s e) (snd p) t d)
 
-  size : Rule Token AST
+  size : Rule AST
   size
       = inserts body Size
     where
-      body : Rule Token AST
+      body : Rule AST
       body
         = do keyword "size"
              p <- portArg
              pure (snd p)
 
-portArgs : Rule Token (List1 (FileContext, AST))
+portArgs : Rule (List1 (FileContext, AST))
 portArgs = parens (commaSepBy1 portArg)
 
 
 
-paramArgs : Rule Token (List1 (FileContext, (String, AST)))
+paramArgs : Rule (List1 (FileContext, (String, AST)))
 paramArgs
     = do symbol "#"
          parens (commaSepBy1 paramArg)
   where
-    paramArg : Rule Token (FileContext, String, AST)
+    paramArg : Rule (FileContext, String, AST)
     paramArg
-      = do l <- location
+      = do l <- Toolkit.location
            n <- name
            symbol "="
            v <- (number <|> size <|> type_)
-           e <- location
+           e <- Toolkit.location
            pure (newFC l e, n,v)
 
 
-driveCatch : Rule Token AST
+driveCatch : Rule AST
 driveCatch = inserts (do p <- (keyword "drive" *> portArg); pure (snd p))  Drive
          <|> inserts (do p <- (keyword "catch" *> portArg); pure (snd p)) Catch
 
-assign : Rule Token AST
+assign : Rule AST
 assign
-  = do st <- location
+  = do st <- Toolkit.location
        keyword "assign"
        commit
        r <- portArg
        symbol "="
        l <- portArg
-       e <- location
+       e <- Toolkit.location
        pure (Connect (newFC st e) (snd r) (snd l))
 
 
 
-moduleInst : Rule Token (FileContext, String, AST)
+moduleInst : Rule (FileContext, String, AST)
 moduleInst
-    = do s <- location
+    = do s <- Toolkit.location
          f <- portArg
          ps <- optional paramArgs
          n <- name
          as <- portArgs
-         e <- location
+         e <- Toolkit.location
          pure ((newFC s e), n, App (newFC s e) (snd f) ps as)
 
-gateNot : Rule Token AST
-gateNot = do s <- location
+gateNot : Rule AST
+gateNot = do s <- Toolkit.location
              keyword "not"
              symbol "("
              commit
@@ -254,12 +253,12 @@ gateNot = do s <- location
              symbol ","
              i <- portArg
              symbol ")"
-             e <- location
+             e <- Toolkit.location
              pure (NotGate (newFC s e) (snd o) (snd i))
 
-gate : Rule Token AST
+gate : Rule AST
 gate
-  = do s <- location
+  = do s <- Toolkit.location
        ki <- gateKind
        symbol "("
        commit
@@ -269,26 +268,26 @@ gate
        symbol ","
        ib <- portArg
        symbol ")"
-       e <- location
+       e <- Toolkit.location
        pure (Gate (newFC s e) ki (snd o) (snd ia) (snd ib))
 
-gates : Rule Token AST
+gates : Rule AST
 gates = gateNot <|> gate
 
-expr : Rule Token AST
+expr : Rule AST
 expr = driveCatch <|> assign <|> gates
 
-endModule : Rule Token AST
+endModule : Rule AST
 endModule
-   = do s <- location
+   = do s <- Toolkit.location
         keyword "endmodule"
-        e <- location
+        e <- Toolkit.location
         pure (EndModule (newFC s e))
 
 mutual
-  cond : Rule Token AST
+  cond : Rule AST
   cond
-      = do s <- location
+      = do s <- Toolkit.location
            keyword "if"
            commit
            c <- (pArg <|> boolean)
@@ -299,23 +298,23 @@ mutual
            keyword "begin"
            f <- entries False
            keyword "end"
-           e <- location
+           e <- Toolkit.location
            pure (IfThenElse (newFC s e) c t f)
     where
-      pArg : Rule Token AST
+      pArg : Rule AST
       pArg
         = do p <- portArg
              pure (snd p)
 
-  for : Rule Token AST
+  for : Rule AST
   for
-    = do s <- location
+    = do s <- Toolkit.location
          keyword "for"
          n <- parens (do {i <- name; symbol "="; n <- (number <|> size); pure (i,n)})
          keyword "begin"
          b <- (entries False)
          keyword "end"
-         e <- location
+         e <- Toolkit.location
          pure (For (newFC s e) (fst n) (snd n) b)
 
 
@@ -325,12 +324,12 @@ mutual
 
 
 
-  entry : Rule Token MBody
+  entry : Rule MBody
   entry = (entry' <* symbol ";")
       <|> (do {c <- (cond <|> for); pure (Expr c)})
       <|> (do {m <- moduleDef; pure (Bindable m)})
     where
-      entry' : Rule Token MBody
+      entry' : Rule MBody
       entry' = (do { e <- expr;                     pure (Expr     e)})
            <|> (do { d <- typeDef;                  pure (TDef     d)})
            <|> (do { c <- (chanDef <|> moduleInst); pure (Bindable c)})
@@ -347,59 +346,59 @@ mutual
       foldEntry (TDef (fc, n, e)) body
         = Let fc n e body
 
-  entries : Bool -> Rule Token AST
+  entries : Bool -> Rule AST
   entries True
       = do es <- some entry
            m <- endModule
            pure (collapse m (forget es))
   entries False
       = do es <- some entry
-           l <- location
+           l <- Toolkit.location
            pure (collapse (UnitVal (newFC l l)) (forget es))
 
 
-  moduleDefGen : Rule Token String -> Rule Token (FileContext, String, AST)
+  moduleDefGen : Rule String -> Rule (FileContext, String, AST)
   moduleDefGen p
-      = do s <- location
+      = do s <- Toolkit.location
            keyword "module"
            n <- p
            value <- moduleFunc
-           e <- location
+           e <- Toolkit.location
            pure (newFC s e, n, value)
     where
 
-      moduleFunc : Rule Token AST
-      moduleFunc = do s <- location
+      moduleFunc : Rule AST
+      moduleFunc = do s <- Toolkit.location
                       as <- option Nil params
                       ps <- ports
                       symbol ";"
                       body <- ((entries True) <|> endModule)
-                      e <- location
+                      e <- Toolkit.location
                       pure (Func (newFC s e) as ps body)
 
-  moduleDef : Rule Token (FileContext, String, AST)
+  moduleDef : Rule (FileContext, String, AST)
   moduleDef = moduleDefGen name
 
 data Decl = TDecl (FileContext, String, AST)
           | MDecl (FileContext, String, AST)
 
-decls : RuleEmpty Token (List Decl)
+decls : RuleEmpty (List Decl)
 decls = many (do {m <- moduleDef; pure (MDecl m)}
           <|> do {t <- typeDef <* symbol ";"; pure (TDecl t)})
 
-top : Rule Token Decl
+top : Rule Decl
 top
     = do m <- moduleDefGen isTop
          pure (MDecl m)
   where
-    isTop : Rule Token String
+    isTop : Rule String
     isTop = do keyword "Top"
                pure "Top"
 
-design : Rule Token AST
+design : Rule AST
 design = do ds <- decls
             t <- top
-            e <- location
+            e <- Toolkit.location
             pure (foldDecls (appTop (newFC e e))
                             (ds ++ [t]))
   where
@@ -421,21 +420,6 @@ design = do ds <- decls
 
 
 namespace Params
-  parseSystemVStr : {e   : _}
-               -> (rule : Grammar (TokenData Token) e ty)
-               -> (str : String)
-               -> Either (Run.ParseError Token) ty
-  parseSystemVStr rule str
-    = parseString SystemVLexer rule str
-
-
-  parseSystemVFile : {e     : _}
-                -> (rule  : Grammar (TokenData Token) e ty)
-                -> (fname : String)
-                         -> IO (Either (Run.ParseError Token) ty)
-  parseSystemVFile
-    = parseFile SystemVLexer
-
   export
   fromFile : (fname : String)
                    -> IO (Either (Run.ParseError Token) AST)
